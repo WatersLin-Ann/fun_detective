@@ -1,0 +1,98 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Fun Detective Case",
+  "description": "案件数据结构定义",
+  "type": "object",
+  "required": ["id", "基本信息", "故事视图", "设计视图", "元数据"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^case-\\d{3}$"
+    },
+    "基本信息": {
+      "type": "object",
+      "required": ["案件名称", "来源类型", "地区", "一句话简介"],
+      "properties": {
+        "案件名称": {"type": "string", "minLength": 1},
+        "来源类型": {"type": "string", "enum": ["虚构推理", "真实案件", "游戏案例", "影视综艺"]},
+        "来源作品/事件": {"type": "string"},
+        "作者/创作者": {"type": "string"},
+        "地区": {"type": "string", "enum": ["日本", "欧美", "中国", "其他"]},
+        "年代": {"type": "string"},
+        "案件状态": {"type": "string", "enum": ["已破案", "悬案", "部分破解"]},
+        "一句话简介": {"type": "string", "minLength": 1, "maxLength": 200}
+      }
+    },
+    "故事视图": {
+      "type": "object",
+      "properties": {
+        "故事摘要": {"type": "string"},
+        "完整故事": {"type": "string"},
+        "人物关系": {"type": "string"},
+        "关键时间线": {"type": "string"},
+        "结局/真相": {"type": "string"}
+      }
+    },
+    "设计视图": {
+      "type": "object",
+      "properties": {
+        "核心诡计简述": {"type": "string"},
+        "诡计类型": {
+          "type": "array",
+          "items": {"type": "string", "enum": ["密室", "不在场证明", "叙述性诡计", "身份诡计", "心理操控", "时刻表", "物理机关", "毒杀", "其他"]}
+        },
+        "可复用机制": {
+          "type": "array",
+          "items": {"type": "string", "enum": ["封闭空间", "限时破案", "多视角叙事", "连环案件", "叙述者不可靠", "死亡信息", "其他"]}
+        },
+        "信息差分析": {"type": "string"},
+        "红鲱鱼/误导": {"type": "string"},
+        "难度评分": {
+          "type": "object",
+          "properties": {
+            "线索密度": {"type": "number", "minimum": 1, "maximum": 5},
+            "误导数量": {"type": "number", "minimum": 1, "maximum": 5},
+            "诡计隐蔽度": {"type": "number", "minimum": 1, "maximum": 5},
+            "综合": {"type": "number", "minimum": 1, "maximum": 5}
+          }
+        },
+        "线索链": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "线索编号": {"type": "string"},
+              "线索内容": {"type": "string"},
+              "线索类型": {"type": "string", "enum": ["关键线索", "误导线索", "背景信息"]},
+              "指向结论": {"type": "string"},
+              "出现时机": {"type": "string", "enum": ["开篇", "前期", "中期", "后期", "终局"]}
+            }
+          }
+        }
+      }
+    },
+    "游戏设计": {
+      "type": "object",
+      "properties": {
+        "游戏平台": {"type": "array", "items": {"type": "string"}},
+        "玩法类型": {"type": "array", "items": {"type": "string"}},
+        "核心玩法机制": {"type": "array", "items": {"type": "string"}},
+        "关卡结构": {"type": "string"},
+        "玩家引导方式": {"type": "string"},
+        "推理系统设计": {"type": "string"},
+        "可复用游戏模板": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "元数据": {
+      "type": "object",
+      "required": ["录入状态", "录入日期", "最后更新"],
+      "properties": {
+        "录入状态": {"type": "string", "enum": ["待录入", "故事完成", "设计完成", "完整"]},
+        "录入日期": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$"},
+        "最后更新": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$"},
+        "飞书记录ID": {"type": "string"},
+        "版本": {"type": "integer", "minimum": 1}
+      }
+    }
+  }
+}
