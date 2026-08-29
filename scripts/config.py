@@ -19,7 +19,11 @@ def _load_dotenv(env_path: str = None):
             if "=" in line:
                 key, value = line.split("=", 1)
                 key = key.strip()
-                value = value.strip().strip('"').strip("'")
+                value = value.strip()
+                # 处理行内注释（# 后面的内容），但要注意值中可能包含 #
+                if " #" in value:
+                    value = value[:value.index(" #")].strip()
+                value = value.strip('"').strip("'")
                 if key and key not in os.environ:
                     os.environ[key] = value
 
