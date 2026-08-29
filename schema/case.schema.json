@@ -14,12 +14,12 @@
       "required": ["案件名称", "来源类型", "地区", "一句话简介"],
       "properties": {
         "案件名称": {"type": "string", "minLength": 1},
-        "来源类型": {"type": "string", "enum": ["虚构推理", "真实案件", "游戏案例", "影视综艺"]},
+        "来源类型": {"type": "string", "enum": ["推理小说", "真实案件", "影视", "游戏", "历史谜案", "其他"]},
         "来源作品/事件": {"type": "string"},
         "作者/创作者": {"type": "string"},
         "地区": {"type": "string", "enum": ["日本", "欧美", "中国", "其他"]},
         "年代": {"type": "string"},
-        "案件状态": {"type": "string", "enum": ["已破案", "悬案", "部分破解"]},
+        "案件状态": {"type": "string", "enum": ["已破案", "悬案", "虚构结局"]},
         "一句话简介": {"type": "string", "minLength": 1, "maxLength": 200}
       }
     },
@@ -87,7 +87,7 @@
       "type": "object",
       "required": ["录入状态", "录入日期", "最后更新"],
       "properties": {
-        "录入状态": {"type": "string", "enum": ["待录入", "故事完成", "设计完成", "完整"]},
+        "录入状态": {"type": "string", "enum": ["完整", "草稿", "待审核"]},
         "录入日期": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$"},
         "最后更新": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$"},
         "飞书记录ID": {"type": "string"},
