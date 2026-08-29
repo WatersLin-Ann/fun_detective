@@ -1,32 +1,19 @@
-[
-  {
-    "record_id": "recvtEjMyGntdH",
-    "fields": {
+{
+  "update_records": {
+    "recvtEjMyGntdH": {
       "参考链接": "[{\"标题\":\"维基百科 - 血字的研究\",\"URL\":\"https://zh.wikipedia.org/wiki/血字的研究\",\"类型\":\"维基百科\"},{\"标题\":\"豆瓣 - 福尔摩斯探案全集\",\"URL\":\"https://book.douban.com/subject/1015671/\",\"类型\":\"豆瓣\"}]"
-    }
-  },
-  {
-    "record_id": "recvtEjMyGy2gk",
-    "fields": {
+    },
+    "recvtEjMyGy2gk": {
       "参考链接": "[{\"标题\":\"维基百科 - 东方快车谋杀案\",\"URL\":\"https://zh.wikipedia.org/wiki/东方快车谋杀案\",\"类型\":\"维基百科\"},{\"标题\":\"豆瓣 - 东方快车谋杀案\",\"URL\":\"https://book.douban.com/subject/2567696/\",\"类型\":\"豆瓣\"},{\"标题\":\"IMDb - Murder on the Orient Express\",\"URL\":\"https://www.imdb.com/title/tt0071877/\",\"类型\":\"IMDb\"}]"
-    }
-  },
-  {
-    "record_id": "recvtEjMyGiDta",
-    "fields": {
+    },
+    "recvtEjMyGiDta": {
       "参考链接": "[{\"标题\":\"维基百科 - 开膛手杰克\",\"URL\":\"https://zh.wikipedia.org/wiki/开膛手杰克\",\"类型\":\"维基百科\"},{\"标题\":\"百度百科 - 开膛手杰克\",\"URL\":\"https://baike.baidu.com/item/开膛手杰克\",\"类型\":\"百度百科\"}]"
-    }
-  },
-  {
-    "record_id": "recvtEjMyGi2N7",
-    "fields": {
+    },
+    "recvtEjMyGi2N7": {
       "参考链接": "[{\"标题\":\"维基百科 - 嫌疑人X的献身\",\"URL\":\"https://zh.wikipedia.org/wiki/嫌疑人X的献身\",\"类型\":\"维基百科\"},{\"标题\":\"豆瓣 - 嫌疑人X的献身\",\"URL\":\"https://book.douban.com/subject/3211779/\",\"类型\":\"豆瓣\"}]"
-    }
-  },
-  {
-    "record_id": "recvtEjMyG5uqj",
-    "fields": {
+    },
+    "recvtEjMyG5uqj": {
       "参考链接": "[{\"标题\":\"维基百科 - 逆转裁判\",\"URL\":\"https://zh.wikipedia.org/wiki/逆转裁判\",\"类型\":\"维基百科\"},{\"标题\":\"Steam - 逆转裁判123：成步堂精选集\",\"URL\":\"https://store.steampowered.com/app/787490/\",\"类型\":\"Steam\"}]"
     }
   }
-]
+}

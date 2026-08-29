@@ -1,0 +1,350 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import { getCaseBySlug, loadAllCases } from '@lib/caseLoader';
+
+export async function getStaticPaths() {
+  const cases = loadAllCases();
+  return cases.map((caseData) => ({
+    params: { slug: caseData.slug },
+    props: { caseData },
+  }));
+}
+
+const { slug } = Astro.params;
+const caseData = Astro.props.caseData;
+
+if (!caseData) {
+  return Astro.redirect('/fun_detective/404');
+}
+
+const { 基本信息, 故事视图, 设计视图, 游戏设计, 元数据 } = caseData;
+const hasGameDesign = Boolean(caseData.sourceType === '游戏' || (游戏设计 && (游戏设计.游戏平台?.length || 游戏设计.玩法类型?.length)));
+const hasReferenceLinks = Boolean(基本信息.参考链接 && 基本信息.参考链接.length > 0);
+const hasClueChain = Boolean(设计视图.线索链 && 设计视图.线索链.length > 0);
+
+// 线索链按出现时机排序
+const timingOrder = ['开篇', '前期', '中期', '后期', '终局'];
+const sortedClues = hasClueChain ? [...设计视图.线索链].sort((a, b) => {
+  const ai = timingOrder.indexOf(a.出现时机);
+  const bi = timingOrder.indexOf(b.出现时机);
+  return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+}) : [];
+
+// 线索类型颜色
+const clueTypeColor: Record<string, string> = {
+  '关键线索': 'bg-blue-100 text-blue-800',
+  '误导线索': 'bg-red-100 text-red-800',
+  '背景信息': 'bg-stone-100 text-stone-700',
+};
+
+// 参考链接类型图标
+const linkTypeIcon: Record<string, string> = {
+  '维基百科': '📖',
+  '百度百科': '📚',
+  '豆瓣': '🎬',
+  'IMDb': '🎥',
+  'Steam': '🎮',
+  'B站': '📺',
+  '官方网站': '🌐',
+  '其他': '🔗',
+};
+---
+
+<BaseLayout title={`${基本信息.案件名称} - Fun Detective`}>
+  <div class="bg-gradient-to-br from-primary-900 via-primary-800 to-primary-900 text-white py-12">
+    <div class="container-page">
+      <!-- 面包屑 -->
+      <nav class="text-sm text-primary-200 mb-4">
+        <a href="/fun_detective/" class="hover:text-white">首页</a>
+        <span class="mx-2">/</span>
+        <a href={`/fun_detective/categories/${encodeURIComponent(基本信息.来源类型)}`} class="hover:text-white">{基本信息.来源类型}</a>
+        <span class="mx-2">/</span>
+        <span class="text-white">{基本信息.案件名称}</span>
+      </nav>
+
+      <h1 class="text-4xl font-bold mb-3 font-serif">{基本信息.案件名称}</h1>
+      <p class="text-lg text-primary-100 mb-6 max-w-2xl">{基本信息.一句话简介}</p>
+
+      <div class="flex flex-wrap gap-2 mb-6">
+        <span class="tag tag-primary bg-white/20 text-white">{基本信息.来源类型}</span>
+        <span class="tag bg-white/20 text-white">{基本信息.地区}</span>
+        {基本信息.年代 && <span class="tag bg-white/20 text-white">{基本信息.年代}</span>}
+        <span class="tag bg-white/20 text-white">{基本信息.案件状态}</span>
+        <span class="tag tag-accent">难度 {设计视图.难度评分?.综合 || '-'}</span>
+      </div>
+
+      <div class="flex gap-8 text-sm text-primary-200">
+        <div>
+          <span class="text-primary-300">录入日期</span>
+          <div class="text-white font-medium">{元数据.录入日期}</div>
+        </div>
+        <div>
+          <span class="text-primary-300">最后更新</span>
+          <div class="text-white font-medium">{元数据.最后更新}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container-page py-8">
+    <!-- 视图切换 -->
+    <div class="flex gap-1 overflow-x-auto border-b border-stone-200 mb-8">
+      <button class="view-tab active px-4 py-3 font-medium text-sm border-b-2 border-primary-600 text-primary-700" data-view="story">
+        📖 故事视图
+      </button>
+      <button class="view-tab px-4 py-3 font-medium text-sm border-b-2 border-transparent text-stone-500 hover:text-stone-700" data-view="design">
+        🎯 设计视图
+      </button>
+      {hasGameDesign && (
+        <button class="view-tab px-4 py-3 font-medium text-sm border-b-2 border-transparent text-stone-500 hover:text-stone-700" data-view="game">
+          🎮 游戏设计
+        </button>
+      )}
+    </div>
+
+    <!-- 故事视图 -->
+    <div id="view-story" class="view-content max-w-4xl mx-auto">
+      {故事视图.故事摘要 && (
+        <div class="card p-6 mb-6">
+          <h2 class="text-xl font-bold mb-3 text-primary-800">故事摘要</h2>
+          <p class="text-stone-700 leading-relaxed whitespace-pre-wrap">{故事视图.故事摘要}</p>
+        </div>
+      )}
+
+      {故事视图.完整故事 && (
+        <div class="card p-6 mb-6">
+          <h2 class="text-xl font-bold mb-3 text-primary-800">完整故事</h2>
+          <p class="text-stone-700 leading-relaxed whitespace-pre-wrap">{故事视图.完整故事}</p>
+        </div>
+      )}
+
+      {故事视图.人物关系 && (
+        <div class="card p-6 mb-6">
+          <h2 class="text-xl font-bold mb-3 text-primary-800">👥 人物关系</h2>
+          <p class="text-stone-700 leading-relaxed whitespace-pre-wrap">{故事视图.人物关系}</p>
+        </div>
+      )}
+
+      {故事视图.关键时间线 && (
+        <div class="card p-6 mb-6">
+          <h2 class="text-xl font-bold mb-3 text-primary-800">⏱️ 关键时间线</h2>
+          <p class="text-stone-700 leading-relaxed whitespace-pre-wrap">{故事视图.关键时间线}</p>
+        </div>
+      )}
+
+      {故事视图.结局 && (
+        <div class="card p-6 mb-6 border-l-4 border-accent-500">
+          <h2 class="text-xl font-bold mb-3 text-primary-800">🔍 结局/真相</h2>
+          <p class="text-stone-700 leading-relaxed whitespace-pre-wrap">{故事视图.结局}</p>
+        </div>
+      )}
+
+      <!-- 延伸阅读 -->
+      {hasReferenceLinks && (
+        <div class="card p-6 mt-8">
+          <h2 class="text-xl font-bold mb-4 text-primary-800">🔗 延伸阅读</h2>
+          <div class="grid gap-3">
+            {基本信息.参考链接.map((link) => (
+              <a
+                href={link.URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="flex items-center gap-3 p-3 rounded-lg border border-stone-200 hover:border-primary-400 hover:bg-primary-50 transition-colors"
+              >
+                <span class="text-2xl">{linkTypeIcon[link.类型] || '🔗'}</span>
+                <div class="flex-1">
+                  <div class="font-medium text-stone-800">{link.标题}</div>
+                  <div class="text-xs text-stone-500 truncate">{link.URL}</div>
+                </div>
+                {link.类型 && <span class="tag tag-primary text-xs">{link.类型}</span>}
+                <span class="text-stone-400">↗</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+
+    <!-- 设计视图 -->
+    <div id="view-design" class="view-content hidden max-w-4xl mx-auto">
+      {设计视图.核心诡计简述 && (
+        <div class="card p-6 mb-6">
+          <h2 class="text-xl font-bold mb-3 text-primary-800">核心诡计</h2>
+          <p class="text-stone-700 leading-relaxed">{设计视图.核心诡计简述}</p>
+        </div>
+      )}
+
+      {设计视图.难度评分 && (
+        <div class="card p-6 mb-6">
+          <h2 class="text-xl font-bold mb-4 text-primary-800">难度评分</h2>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {Object.entries(设计视图.难度评分).map(([key, value]) => (
+              <div class="text-center p-4 bg-stone-50 rounded-lg">
+                <div class="text-3xl font-bold text-primary-700">{value}</div>
+                <div class="text-sm text-stone-600 mt-1">{key}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {设计视图.诡计类型?.length > 0 && (
+        <div class="card p-6 mb-6">
+          <h2 class="text-xl font-bold mb-3 text-primary-800">诡计类型</h2>
+          <div class="flex flex-wrap gap-2">
+            {设计视图.诡计类型.map((t) => <span class="tag tag-primary">{t}</span>)}
+          </div>
+        </div>
+      )}
+
+      {设计视图.可复用机制?.length > 0 && (
+        <div class="card p-6 mb-6">
+          <h2 class="text-xl font-bold mb-3 text-primary-800">可复用机制</h2>
+          <div class="flex flex-wrap gap-2">
+            {设计视图.可复用机制.map((m) => <span class="tag tag-accent">{m}</span>)}
+          </div>
+        </div>
+      )}
+
+      {设计视图.信息差分析 && (
+        <div class="card p-6 mb-6">
+          <h2 class="text-xl font-bold mb-3 text-primary-800">信息差分析</h2>
+          <p class="text-stone-700 leading-relaxed whitespace-pre-wrap">{设计视图.信息差分析}</p>
+        </div>
+      )}
+
+      {设计视图.红鲱鱼 && (
+        <div class="card p-6 mb-6">
+          <h2 class="text-xl font-bold mb-3 text-primary-800">红鲱鱼/误导</h2>
+          <p class="text-stone-700 leading-relaxed whitespace-pre-wrap">{设计视图.红鲱鱼}</p>
+        </div>
+      )}
+
+      <!-- 线索推理链 -->
+      {hasClueChain && (
+        <div class="card p-6 mt-8">
+          <h2 class="text-xl font-bold mb-4 text-primary-800">🧩 线索推理链</h2>
+          <div class="relative">
+            <!-- 时间线 -->
+            <div class="absolute left-4 top-0 bottom-0 w-0.5 bg-stone-200"></div>
+            <div class="space-y-6">
+              {sortedClues.map((clue, idx) => (
+                <div class="relative pl-12">
+                  <!-- 时间点 -->
+                  <div class="absolute left-0 w-8 h-8 rounded-full bg-primary-600 text-white flex items-center justify-center text-xs font-bold">
+                    {idx + 1}
+                  </div>
+                  <div class="card p-4">
+                    <div class="flex items-center gap-2 mb-2">
+                      <span class={`tag text-xs ${clueTypeColor[clue.线索类型] || 'bg-stone-100 text-stone-700'}`}>
+                        {clue.线索类型}
+                      </span>
+                      {clue.出现时机 && <span class="text-xs text-stone-500">{clue.出现时机}</span>}
+                      {clue.线索编号 && <span class="text-xs text-stone-400 ml-auto">{clue.线索编号}</span>}
+                    </div>
+                    <p class="text-stone-800 font-medium mb-1">{clue.线索内容}</p>
+                    {clue.指向结论 && (
+                      <p class="text-sm text-stone-600">
+                        <span class="text-primary-600 font-medium">→ 指向：</span>{clue.指向结论}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+
+    <!-- 游戏设计视图 -->
+    {hasGameDesign && (
+      <div id="view-game" class="view-content hidden max-w-4xl mx-auto">
+        <div class="grid md:grid-cols-2 gap-6 mb-8">
+          {游戏设计.游戏平台?.length > 0 && (
+            <div class="card p-5">
+              <h3 class="font-bold mb-3 text-primary-800">🎮 游戏平台</h3>
+              <div class="flex flex-wrap gap-2">
+                {游戏设计.游戏平台.map((p) => <span class="tag tag-primary">{p}</span>)}
+              </div>
+            </div>
+          )}
+          {游戏设计.玩法类型?.length > 0 && (
+            <div class="card p-5">
+              <h3 class="font-bold mb-3 text-primary-800">🎯 玩法类型</h3>
+              <div class="flex flex-wrap gap-2">
+                {游戏设计.玩法类型.map((t) => <span class="tag tag-accent">{t}</span>)}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {游戏设计.核心玩法机制?.length > 0 && (
+          <div class="card p-5 mb-6">
+            <h3 class="font-bold mb-3 text-primary-800">⚙️ 核心玩法机制</h3>
+            <div class="flex flex-wrap gap-2">
+              {游戏设计.核心玩法机制.map((m) => <span class="tag">{m}</span>)}
+            </div>
+          </div>
+        )}
+
+        <div class="grid md:grid-cols-2 gap-6">
+          {游戏设计.关卡结构 && (
+            <div class="card p-5">
+              <h3 class="font-bold mb-2 text-primary-800">🗺️ 关卡结构</h3>
+              <p class="text-sm text-stone-700">{游戏设计.关卡结构}</p>
+            </div>
+          )}
+          {游戏设计.玩家引导方式 && (
+            <div class="card p-5">
+              <h3 class="font-bold mb-2 text-primary-800">🧭 玩家引导方式</h3>
+              <p class="text-sm text-stone-700">{游戏设计.玩家引导方式}</p>
+            </div>
+          )}
+        </div>
+
+        {游戏设计.可复用游戏模板?.length > 0 && (
+          <div class="card p-5 mt-6">
+            <h3 class="font-bold mb-3 text-primary-800">📋 可复用游戏模板</h3>
+            <div class="flex flex-wrap gap-2">
+              {游戏设计.可复用游戏模板.map((t) => <span class="tag tag-primary">{t}</span>)}
+            </div>
+          </div>
+        )}
+      </div>
+    )}
+  </div>
+
+  <script>
+    // 视图切换
+    const tabs = document.querySelectorAll('.view-tab');
+    const contents = document.querySelectorAll('.view-content');
+
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        const view = tab.dataset.view;
+
+        tabs.forEach((t) => {
+          t.classList.remove('active', 'border-primary-600', 'text-primary-700');
+          t.classList.add('border-transparent', 'text-stone-500');
+        });
+        tab.classList.add('active', 'border-primary-600', 'text-primary-700');
+        tab.classList.remove('border-transparent', 'text-stone-500');
+
+        contents.forEach((c) => c.classList.add('hidden'));
+        const target = document.getElementById(`view-${view}`);
+        if (target) target.classList.remove('hidden');
+
+        // 更新 URL hash
+        history.replaceState(null, '', `#${view}`);
+      });
+    });
+
+    // 从 URL hash 恢复视图
+    const hash = window.location.hash.replace('#', '');
+    if (hash && ['story', 'design', 'game'].includes(hash)) {
+      const tab = document.querySelector(`.view-tab[data-view="${hash}"]`);
+      if (tab) tab.click();
+    }
+  </script>
+</BaseLayout>
