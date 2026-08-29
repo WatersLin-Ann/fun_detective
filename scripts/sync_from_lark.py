@@ -163,7 +163,7 @@ def main():
                 stats["created_list"].append(f"{case['id']} {case['基本信息']['案件名称']}")
 
             git_ops.write_case_file(case)
-            written_files.add(rel_path.replace("\\", "/"))
+            written_files.add(f"cases/{rel_path.replace('\\', '/')}")
 
         deleted_files = existing_files - written_files
         for rel_path in deleted_files:
