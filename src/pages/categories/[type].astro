@@ -1,0 +1,55 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import CaseCard from '@components/CaseCard.astro';
+import { loadAllCases, getSourceTypes, getRegions } from '@lib/caseLoader';
+
+export async function getStaticPaths() {
+  const types = [...getSourceTypes(), ...getRegions()];
+  return types.map((type) => ({
+    params: { type },
+    props: { type },
+  }));
+}
+
+const { type } = Astro.params;
+const allCases = loadAllCases();
+
+// 判断是按来源类型还是地区筛选
+const isSourceType = getSourceTypes().includes(type);
+const isRegion = getRegions().includes(type);
+
+const filteredCases = allCases.filter((c) =>
+  isSourceType ? c.sourceType === type : c.region === type
+);
+
+const categoryTitle = isSourceType ? `来源：${type}` : `地区：${type}`;
+---
+
+<BaseLayout title={categoryTitle} description={`${categoryTitle}的案件列表`}>
+  <section class="py-10">
+    <div class="container-page">
+      <nav class="text-sm text-stone-500 mb-4">
+        <a href="/fun_detective/" class="hover:text-primary-600">首页</a>
+        <span class="mx-2">/</span>
+        <span class="text-stone-700">{categoryTitle}</span>
+      </nav>
+
+      <div class="flex items-center justify-between mb-8">
+        <h1 class="text-3xl font-bold">{categoryTitle}</h1>
+        <span class="text-stone-500">共 {filteredCases.length} 条案件</span>
+      </div>
+
+      {filteredCases.length > 0 ? (
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredCases.map((caseData) => (
+            <CaseCard caseData={caseData} />
+          ))}
+        </div>
+      ) : (
+        <div class="text-center py-16">
+          <p class="text-stone-500">该分类下暂无案件</p>
+        </div>
+      )}
+    </div>
+  </section>
+</BaseLayout>

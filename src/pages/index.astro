@@ -1,0 +1,187 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import CaseCard from '@components/CaseCard.astro';
+import { loadAllCases, getStats } from '@lib/caseLoader';
+
+const cases = loadAllCases();
+const stats = getStats();
+---
+
+<BaseLayout title="首页" description="全球虚拟真实案件案例库，为小说创作和游戏设计提供灵感">
+  <!-- Hero 区域 -->
+  <section class="bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 text-white py-16">
+    <div class="container-page">
+      <div class="max-w-3xl">
+        <h1 class="text-4xl md:text-5xl font-bold mb-4">
+          探索全球<span class="text-accent-400">案件</span>的奥秘
+        </h1>
+        <p class="text-lg text-primary-200 mb-8">
+          汇集推理小说、真实案件、影视游戏中的经典案例，为小说创作和游戏设计提供结构化的灵感与参考。
+        </p>
+        <div class="flex flex-wrap gap-8">
+          <div>
+            <div class="text-3xl font-bold text-accent-400">{stats.total}</div>
+            <div class="text-sm text-primary-300">案件总数</div>
+          </div>
+          <div>
+            <div class="text-3xl font-bold text-accent-400">{Object.keys(stats.bySourceType).length}</div>
+            <div class="text-sm text-primary-300">来源类型</div>
+          </div>
+          <div>
+            <div class="text-3xl font-bold text-accent-400">{Object.keys(stats.byRegion).length}</div>
+            <div class="text-sm text-primary-300">覆盖地区</div>
+          </div>
+          <div>
+            <div class="text-3xl font-bold text-accent-400">{stats.avgDifficulty}</div>
+            <div class="text-sm text-primary-300">平均难度</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 搜索和筛选 -->
+  <section class="py-8 bg-white border-b border-stone-200 sticky top-16 z-40">
+    <div class="container-page">
+      <div class="flex flex-col md:flex-row gap-4">
+        <!-- 搜索框 -->
+        <div class="flex-1 relative">
+          <input
+            type="text"
+            id="search-input"
+            placeholder="搜索案件名称、简介、诡计..."
+            class="input pl-10"
+          />
+          <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+        <!-- 筛选器 -->
+        <div class="flex gap-3">
+          <select id="filter-source" class="input w-auto">
+            <option value="">全部类型</option>
+            <option value="推理小说">推理小说</option>
+            <option value="真实案件">真实案件</option>
+            <option value="影视">影视</option>
+            <option value="游戏">游戏</option>
+          </select>
+          <select id="filter-region" class="input w-auto">
+            <option value="">全部地区</option>
+            <option value="日本">日本</option>
+            <option value="欧美">欧美</option>
+            <option value="中国">中国</option>
+          </select>
+          <select id="filter-sort" class="input w-auto">
+            <option value="date">最新录入</option>
+            <option value="name">名称排序</option>
+            <option value="difficulty-desc">难度从高到低</option>
+            <option value="difficulty-asc">难度从低到高</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 案件列表 -->
+  <section class="py-12">
+    <div class="container-page">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-bold">全部案件</h2>
+        <span id="result-count" class="text-stone-500">共 {cases.length} 条</span>
+      </div>
+      <div id="case-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {cases.map((caseData) => (
+          <CaseCard caseData={caseData} />
+        ))}
+      </div>
+      <div id="no-results" class="hidden text-center py-16">
+        <svg class="w-16 h-16 mx-auto text-stone-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <p class="text-stone-500">没有找到匹配的案件</p>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    // 客户端搜索和筛选
+    const searchInput = document.getElementById('search-input') as HTMLInputElement;
+    const filterSource = document.getElementById('filter-source') as HTMLSelectElement;
+    const filterRegion = document.getElementById('filter-region') as HTMLSelectElement;
+    const filterSort = document.getElementById('filter-sort') as HTMLSelectElement;
+    const caseGrid = document.getElementById('case-grid')!;
+    const noResults = document.getElementById('no-results')!;
+    const resultCount = document.getElementById('result-count')!;
+
+    // 从 DOM 中提取所有案件数据
+    interface CaseItem {
+      element: HTMLElement;
+      name: string;
+      source: string;
+      region: string;
+      difficulty: number;
+      date: string;
+      searchText: string;
+    }
+
+    const caseItems: CaseItem[] = Array.from(caseGrid.querySelectorAll('[data-case]')).map((el) => {
+      const element = el as HTMLElement;
+      return {
+        element,
+        name: element.dataset.name || '',
+        source: element.dataset.source || '',
+        region: element.dataset.region || '',
+        difficulty: parseFloat(element.dataset.difficulty || '0'),
+        date: element.dataset.date || '',
+        searchText: (element.dataset.searchtext || '').toLowerCase(),
+      };
+    });
+
+    function applyFilters() {
+      const query = searchInput.value.toLowerCase().trim();
+      const source = filterSource.value;
+      const region = filterRegion.value;
+      const sort = filterSort.value;
+
+      let filtered = caseItems.filter((item) => {
+        const matchQuery = !query || item.searchText.includes(query);
+        const matchSource = !source || item.source === source;
+        const matchRegion = !region || item.region === region;
+        return matchQuery && matchSource && matchRegion;
+      });
+
+      // 排序
+      filtered.sort((a, b) => {
+        switch (sort) {
+          case 'name':
+            return a.name.localeCompare(b.name, 'zh-CN');
+          case 'difficulty-desc':
+            return b.difficulty - a.difficulty;
+          case 'difficulty-asc':
+            return a.difficulty - b.difficulty;
+          case 'date':
+          default:
+            return b.date.localeCompare(a.date);
+        }
+      });
+
+      // 更新显示
+      caseItems.forEach((item) => {
+        item.element.style.display = 'none';
+      });
+      filtered.forEach((item) => {
+        caseGrid.appendChild(item.element);
+        item.element.style.display = '';
+      });
+
+      // 更新计数和空状态
+      resultCount.textContent = `共 ${filtered.length} 条`;
+      noResults.classList.toggle('hidden', filtered.length > 0);
+    }
+
+    searchInput.addEventListener('input', applyFilters);
+    filterSource.addEventListener('change', applyFilters);
+    filterRegion.addEventListener('change', applyFilters);
+    filterSort.addEventListener('change', applyFilters);
+  </script>
+</BaseLayout>

@@ -77,6 +77,23 @@ def _extract_date(field_value) -> Optional[str]:
     return None
 
 
+def _extract_reference_links(field_value) -> List[Dict]:
+    """提取参考链接字段（多行文本存 JSON 数组字符串）。"""
+    if field_value is None:
+        return []
+    text = _extract_text(field_value)
+    if not text or not text.strip():
+        return []
+    try:
+        import json
+        data = json.loads(text)
+        if isinstance(data, list):
+            return [item for item in data if isinstance(item, dict) and item.get("标题") and item.get("URL")]
+    except (json.JSONDecodeError, ValueError):
+        pass
+    return []
+
+
 def _sanitize_filename(name: str) -> str:
     """清理文件名中的非法字符。"""
     sanitized = re.sub(r'[<>:"/\\|?*]', '', name)
@@ -129,6 +146,7 @@ def transform_case_record(record: Dict, clues: List[Dict] = None,
             "年代": _extract_text(fields.get("年代")),
             "案件状态": _extract_select_value(fields.get("案件状态")),
             "一句话简介": _extract_text(fields.get("一句话简介")),
+            "参考链接": _extract_reference_links(fields.get("参考链接")),
         },
         "故事视图": {
             "故事摘要": _extract_text(fields.get("故事摘要")),

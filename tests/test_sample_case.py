@@ -1,4 +1,4 @@
-import json
+﻿import json
 import jsonschema
 
 def test_sample_case_passes_schema():
@@ -9,7 +9,7 @@ def test_sample_case_passes_schema():
         "id": "case-001",
         "基本信息": {
             "案件名称": "测试案件",
-            "来源类型": "虚构推理",
+            "来源类型": "推理小说",
             "来源作品/事件": "测试作品",
             "作者/创作者": "测试作者",
             "地区": "日本",

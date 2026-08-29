@@ -20,7 +20,19 @@
         "地区": {"type": "string", "enum": ["日本", "欧美", "中国", "其他"]},
         "年代": {"type": "string"},
         "案件状态": {"type": "string", "enum": ["已破案", "悬案", "虚构结局"]},
-        "一句话简介": {"type": "string", "minLength": 1, "maxLength": 200}
+        "一句话简介": {"type": "string", "minLength": 1, "maxLength": 200},
+        "参考链接": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["标题", "URL"],
+            "properties": {
+              "标题": {"type": "string"},
+              "URL": {"type": "string", "format": "uri"},
+              "类型": {"type": "string", "enum": ["维基百科", "百度百科", "豆瓣", "IMDb", "Steam", "B站", "官方网站", "其他"]}
+            }
+          }
+        }
       }
     },
     "故事视图": {
