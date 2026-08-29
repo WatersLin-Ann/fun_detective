@@ -199,7 +199,7 @@ def group_clues_by_case(clue_records: List[Dict]) -> Dict[str, List[Dict]]:
         linked_cases = fields.get("关联案件", [])
         if isinstance(linked_cases, list):
             for case_link in linked_cases:
-                case_id = case_link if isinstance(case_link, str) else case_link.get("record_id", "")
+                case_id = case_link if isinstance(case_link, str) else case_link.get("id", "") or case_link.get("record_id", "")
                 if case_id:
                     if case_id not in grouped:
                         grouped[case_id] = []
