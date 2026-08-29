@@ -32,7 +32,7 @@ def validate_case(case_data: Dict, schema: dict = None) -> Tuple[bool, List[str]
     if not basic.get("一句话简介"):
         errors.append("缺少必填字段：一句话简介")
 
-    valid_source_types = ["虚构推理", "真实案件", "游戏案例", "影视综艺"]
+    valid_source_types = ["推理小说", "真实案件", "影视", "游戏", "历史谜案", "其他"]
     if basic.get("来源类型") and basic["来源类型"] not in valid_source_types:
         errors.append(f"来源类型值非法: {basic['来源类型']}，有效值: {valid_source_types}")
 
@@ -52,7 +52,7 @@ def validate_case(case_data: Dict, schema: dict = None) -> Tuple[bool, List[str]
         if abs(difficulty["综合"] - expected_avg) > 0.1:
             errors.append(f"难度综合分计算错误: 期望{expected_avg}，实际{difficulty['综合']}")
 
-    if basic.get("来源类型") == "游戏案例":
+    if basic.get("来源类型") == "游戏":
         game_design = case_data.get("游戏设计", {})
         if not game_design.get("游戏平台"):
             errors.append("游戏案例必须填写：游戏平台")
