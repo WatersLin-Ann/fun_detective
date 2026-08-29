@@ -58,10 +58,10 @@ class GitOperator:
 
     def get_tracked_case_files(self) -> List[str]:
         """获取 Git 已跟踪的所有案件文件相对路径。"""
-        result = self._run_git(["ls-files", "cases/"], check=False)
+        result = self._run_git(["-c", "core.quotepath=false", "ls-files", "cases/"], check=False)
         if result.returncode != 0:
             return []
-        files = result.stdout.strip().split("\n")
+        files = result.stdout.strip().splitlines()
         return [f for f in files if f.endswith(".json")]
 
     def has_changes(self) -> bool:
