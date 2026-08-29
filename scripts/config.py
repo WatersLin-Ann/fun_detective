@@ -2,11 +2,29 @@
 import os
 from pathlib import Path
 
-try:
-    from dotenv import load_dotenv
-    load_dotenv()
-except ImportError:
-    pass  # python-dotenv 未安装时跳过，依赖系统环境变量
+
+def _load_dotenv(env_path: str = None):
+    """简单的 .env 文件解析（不依赖 python-dotenv）。"""
+    if env_path is None:
+        env_path = os.path.join(Path(__file__).parent.parent, ".env")
+
+    if not os.path.exists(env_path):
+        return
+
+    with open(env_path, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            if "=" in line:
+                key, value = line.split("=", 1)
+                key = key.strip()
+                value = value.strip().strip('"').strip("'")
+                if key and key not in os.environ:
+                    os.environ[key] = value
+
+
+_load_dotenv()
 
 
 def get_config() -> dict:
