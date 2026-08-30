@@ -1,0 +1,392 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import { loadAllCases, getGameTemplates } from '@lib/caseLoader';
+import { generateLevelStructure, exportToMarkdown, exportToJSON, recommendTemplate, downloadFile } from '@lib/generator';
+import type { CaseWithSlug } from '@lib/types';
+
+const allCases = loadAllCases();
+const templates = getGameTemplates();
+const templateNames = Object.keys(templates);
+
+// 为每个案例计算推荐模板
+const recommendations = allCases.map((c) => {
+  const recs = recommendTemplate(c, templates as any);
+  return { case: c, topRecommendation: recs[0]?.name || '' };
+});
+---
+
+<BaseLayout title="关卡生成器" description="选择案例和游戏模板，自动生成完整的关卡结构文档">
+  <div class="container-page py-8">
+    <!-- 面包屑 -->
+    <nav class="text-sm text-stone-500 mb-6">
+      <a href="/fun_detective/game-design" class="hover:text-primary-600">游戏设计</a>
+      <span class="mx-2">/</span>
+      <span class="text-stone-700">关卡生成器</span>
+    </nav>
+
+    <!-- 页面标题 -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold mb-3">🎮 游戏关卡生成器</h1>
+      <p class="text-lg text-stone-600">选择一个案例和一个游戏模板，自动生成完整的关卡结构文档，支持导出 Markdown 和 JSON</p>
+    </div>
+
+    <!-- 输入区域 -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <!-- 案例选择 -->
+      <div class="card p-6">
+        <h2 class="text-xl font-bold mb-4 text-primary-800">1. 选择案例</h2>
+        <input
+          id="case-search"
+          type="text"
+          placeholder="搜索案例名称..."
+          class="w-full px-4 py-2 border border-stone-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-primary-500"
+        />
+        <div id="case-list" class="max-h-80 overflow-y-auto space-y-2">
+          {recommendations.map(({ case: c, topRecommendation }) => (
+            <div
+              class="case-item p-3 rounded-lg border border-stone-200 hover:border-primary-400 hover:bg-primary-50 cursor-pointer transition-colors"
+              data-case-slug={c.slug}
+              data-case-name={c.基本信息.案件名称}
+              data-recommendation={topRecommendation}
+            >
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="font-medium text-stone-800">{c.基本信息.案件名称}</div>
+                  <div class="text-xs text-stone-500 mt-1">
+                    {c.sourceType} · {c.region} · 诡计：{(c.设计视图.诡计类型 || []).slice(0, 2).join('、')}
+                  </div>
+                </div>
+                {topRecommendation && (
+                  <span class="tag tag-accent text-xs whitespace-nowrap ml-2">推荐：{topRecommendation.replace('模板', '')}</span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div id="selected-case" class="mt-4 p-3 bg-primary-50 rounded-lg hidden">
+          <span class="text-sm text-primary-700">已选择：<strong id="selected-case-name"></strong></span>
+        </div>
+      </div>
+
+      <!-- 模板选择 -->
+      <div class="card p-6">
+        <h2 class="text-xl font-bold mb-4 text-primary-800">2. 选择模板</h2>
+        <div class="space-y-3 max-h-96 overflow-y-auto">
+          {templateNames.map((name) => {
+            const t = templates[name] as any;
+            return (
+              <div
+                class="template-item p-4 rounded-lg border-2 border-stone-200 hover:border-primary-400 cursor-pointer transition-colors"
+                data-template-name={name}
+              >
+                <h3 class="font-bold text-stone-800 mb-1">{name}</h3>
+                <p class="text-sm text-stone-600 mb-2">{t.描述}</p>
+                <div class="flex items-center justify-between text-xs">
+                  <span class="text-stone-500">核心循环：{t.核心循环}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <div id="selected-template" class="mt-4 p-3 bg-primary-50 rounded-lg hidden">
+          <span class="text-sm text-primary-700">已选择：<strong id="selected-template-name"></strong></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 生成按钮 -->
+    <div class="text-center mb-8">
+      <button
+        id="generate-btn"
+        class="px-8 py-3 bg-primary-600 text-white font-bold rounded-lg hover:bg-primary-700 disabled:bg-stone-400 disabled:cursor-not-allowed transition-colors"
+        disabled
+      >
+        生成关卡结构
+      </button>
+      <p id="generate-hint" class="text-sm text-stone-500 mt-2">请先选择案例和模板</p>
+    </div>
+
+    <!-- 输出区域 -->
+    <div id="output-section" class="hidden">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-2xl font-bold text-primary-800">📋 生成的关卡结构</h2>
+        <div class="flex gap-2">
+          <button id="export-md-btn" class="px-4 py-2 bg-stone-700 text-white text-sm rounded-lg hover:bg-stone-800 transition-colors">
+            导出 Markdown
+          </button>
+          <button id="export-json-btn" class="px-4 py-2 bg-stone-700 text-white text-sm rounded-lg hover:bg-stone-800 transition-colors">
+            导出 JSON
+          </button>
+        </div>
+      </div>
+
+      <!-- 基本信息 -->
+      <div class="card p-6 mb-6">
+        <h3 class="text-lg font-bold mb-4 text-primary-800">基本信息</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div>
+            <div class="text-xs text-stone-500">案例名称</div>
+            <div class="font-medium" id="out-case-name"></div>
+          </div>
+          <div>
+            <div class="text-xs text-stone-500">使用模板</div>
+            <div class="font-medium" id="out-template-name"></div>
+          </div>
+          <div>
+            <div class="text-xs text-stone-500">综合难度</div>
+            <div class="font-medium" id="out-difficulty"></div>
+          </div>
+          <div>
+            <div class="text-xs text-stone-500">适配诡计</div>
+            <div class="font-medium text-sm" id="out-tricks"></div>
+          </div>
+        </div>
+        <div class="mt-4">
+          <div class="text-xs text-stone-500 mb-1">核心诡计</div>
+          <div class="text-sm text-stone-700" id="out-core-trick"></div>
+        </div>
+      </div>
+
+      <!-- 阶段设计 -->
+      <div class="card p-6 mb-6">
+        <h3 class="text-lg font-bold mb-4 text-primary-800">阶段设计</h3>
+        <div id="out-stages" class="space-y-6"></div>
+      </div>
+
+      <!-- 机制配置 -->
+      <div class="card p-6 mb-6">
+        <h3 class="text-lg font-bold mb-4 text-primary-800">机制配置</h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-stone-200">
+                <th class="text-left py-2 px-3 font-medium text-stone-600">机制名称</th>
+                <th class="text-left py-2 px-3 font-medium text-stone-600">实现方式</th>
+                <th class="text-left py-2 px-3 font-medium text-stone-600">对应阶段</th>
+              </tr>
+            </thead>
+            <tbody id="out-mechanisms"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 改编建议 -->
+      <div id="out-adaptation" class="card p-6 hidden">
+        <h3 class="text-lg font-bold mb-4 text-primary-800">改编建议</h3>
+        <div id="out-adaptation-content"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 状态
+    let selectedCaseSlug = null;
+    let selectedTemplateName = null;
+    let generatedStructure = null;
+
+    // 案例数据（从页面数据注入）
+    const casesData = {JSON.stringify(recommendations.map(r => ({ slug: r.case.slug, name: r.case.基本信息.案件名称, recommendation: r.topRecommendation })))};
+    const templatesData = {JSON.stringify(templateNames)};
+
+    // DOM元素
+    const caseSearch = document.getElementById('case-search');
+    const caseList = document.getElementById('case-list');
+    const templateItems = document.querySelectorAll('.template-item');
+    const generateBtn = document.getElementById('generate-btn');
+    const generateHint = document.getElementById('generate-hint');
+    const outputSection = document.getElementById('output-section');
+
+    // 案例搜索
+    caseSearch?.addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase();
+      document.querySelectorAll('.case-item').forEach((item) => {
+        const name = item.dataset.caseName?.toLowerCase() || '';
+        item.style.display = name.includes(query) ? '' : 'none';
+      });
+    });
+
+    // 案例选择
+    document.querySelectorAll('.case-item').forEach((item) => {
+      item.addEventListener('click', () => {
+        document.querySelectorAll('.case-item').forEach((i) => {
+          i.classList.remove('border-primary-500', 'bg-primary-50');
+          i.classList.add('border-stone-200');
+        });
+        item.classList.remove('border-stone-200');
+        item.classList.add('border-primary-500', 'bg-primary-50');
+        
+        selectedCaseSlug = item.dataset.caseSlug;
+        const caseName = item.dataset.caseName;
+        const recommendation = item.dataset.recommendation;
+        
+        document.getElementById('selected-case').classList.remove('hidden');
+        document.getElementById('selected-case-name').textContent = caseName;
+        
+        // 自动高亮推荐模板
+        if (recommendation) {
+          templateItems.forEach((t) => {
+            if (t.dataset.templateName === recommendation) {
+              t.classList.add('border-accent-500', 'bg-accent-50');
+              t.classList.remove('border-stone-200');
+            }
+          });
+        }
+        
+        updateGenerateButton();
+      });
+    });
+
+    // 模板选择
+    templateItems.forEach((item) => {
+      item.addEventListener('click', () => {
+        templateItems.forEach((i) => {
+          i.classList.remove('border-primary-500', 'bg-primary-50', 'border-accent-500', 'bg-accent-50');
+          i.classList.add('border-stone-200');
+        });
+        item.classList.remove('border-stone-200');
+        item.classList.add('border-primary-500', 'bg-primary-50');
+        
+        selectedTemplateName = item.dataset.templateName;
+        
+        document.getElementById('selected-template').classList.remove('hidden');
+        document.getElementById('selected-template-name').textContent = selectedTemplateName;
+        
+        updateGenerateButton();
+      });
+    });
+
+    // 更新生成按钮状态
+    function updateGenerateButton() {
+      if (selectedCaseSlug && selectedTemplateName) {
+        generateBtn.disabled = false;
+        generateHint.textContent = '点击生成关卡结构';
+      } else {
+        generateBtn.disabled = true;
+        generateHint.textContent = '请先选择案例和模板';
+      }
+    }
+
+    // 生成关卡结构
+    generateBtn?.addEventListener('click', () => {
+      // 这里需要从完整案例数据中获取
+      // 由于Astro静态构建，我们通过API或重新加载数据
+      // 简化处理：使用页面上已有的数据结构
+      alert('生成功能需要完整案例数据支持，请确保已选择案例和模板');
+      
+      // 实际生成逻辑在客户端完成
+      // 由于数据量较大，这里通过fetch获取案例数据
+      generateLevel();
+    });
+
+    async function generateLevel() {
+      try {
+        generateBtn.textContent = '生成中...';
+        generateBtn.disabled = true;
+        
+        // 获取完整案例数据（通过API或本地数据）
+        // 这里简化为从页面数据中获取
+        const response = await fetch('/fun_detective/api/case-data.json');
+        if (!response.ok) throw new Error('数据加载失败');
+        const allCases = await response.json();
+        
+        const caseData = allCases.find(c => c.slug === selectedCaseSlug);
+        const templateData = templatesData[selectedTemplateName];
+        
+        if (!caseData || !templateData) {
+          alert('未找到案例或模板数据');
+          return;
+        }
+        
+        // 生成结构
+        generatedStructure = generateLevelStructure(caseData, selectedTemplateName, templateData);
+        
+        // 显示结果
+        displayResult(generatedStructure);
+        outputSection.classList.remove('hidden');
+        outputSection.scrollIntoView({ behavior: 'smooth' });
+        
+      } catch (error) {
+        console.error('生成失败:', error);
+        alert('生成失败：' + error.message);
+      } finally {
+        generateBtn.textContent = '生成关卡结构';
+        updateGenerateButton();
+      }
+    }
+
+    function displayResult(structure) {
+      // 基本信息
+      document.getElementById('out-case-name').textContent = structure.基本信息.案例名称;
+      document.getElementById('out-template-name').textContent = structure.基本信息.模板名称;
+      document.getElementById('out-difficulty').textContent = structure.基本信息.难度评分.综合;
+      document.getElementById('out-tricks').textContent = structure.基本信息.适配诡计.join('、') || '无';
+      document.getElementById('out-core-trick').textContent = structure.基本信息.核心诡计;
+      
+      // 阶段设计
+      const stagesContainer = document.getElementById('out-stages');
+      stagesContainer.innerHTML = structure.阶段设计.map((stage, i) => `
+        <div class="border-l-4 border-primary-400 pl-4">
+          <h4 class="font-bold text-lg mb-2">阶段${i + 1}：${stage.阶段名称}</h4>
+          <p class="text-sm text-stone-600 mb-2"><strong>玩家目标：</strong>${stage.玩家目标}</p>
+          <div class="mb-2">
+            <strong class="text-sm text-stone-600">关键机制：</strong>
+            <span class="text-sm">${stage.关键机制.join('、') || '无'}</span>
+          </div>
+          ${stage.线索分配.length > 0 ? `
+            <div class="mb-2">
+              <strong class="text-sm text-stone-600">线索分配（${stage.线索分配.length}条）：</strong>
+              <ul class="text-sm text-stone-600 mt-1 space-y-1">
+                ${stage.线索分配.map(c => `<li>• ${c.线索内容 || '未命名'}${c.指向结论 ? ` → ${c.指向结论}` : ''}</li>`).join('')}
+              </ul>
+            </div>
+          ` : ''}
+          ${stage.设计要点.length > 0 ? `
+            <div>
+              <strong class="text-sm text-stone-600">设计要点：</strong>
+              <ul class="text-sm text-stone-600 mt-1 space-y-1">
+                ${stage.设计要点.map(p => `<li>• ${p}</li>`).join('')}
+              </ul>
+            </div>
+          ` : ''}
+        </div>
+      `).join('');
+      
+      // 机制配置
+      const mechBody = document.getElementById('out-mechanisms');
+      mechBody.innerHTML = structure.机制配置.map(m => `
+        <tr class="border-b border-stone-100">
+          <td class="py-2 px-3 font-medium">${m.机制名称}</td>
+          <td class="py-2 px-3 text-stone-600">${m.实现方式}</td>
+          <td class="py-2 px-3">${m.对应阶段.map(i => `阶段${i + 1}`).join('、')}</td>
+        </tr>
+      `).join('');
+      
+      // 改编建议
+      if (structure.改编建议) {
+        document.getElementById('out-adaptation').classList.remove('hidden');
+        document.getElementById('out-adaptation-content').innerHTML = `
+          <p class="mb-2"><strong>改编方向：</strong>${structure.改编建议.改编方向}</p>
+          <p class="mb-2"><strong>核心玩法：</strong>${structure.改编建议.核心玩法}</p>
+          <p class="mb-2"><strong>关键机制：</strong>${structure.改编建议.关键机制.join('、')}</p>
+          <p class="mb-2"><strong>难度适配：</strong>${structure.改编建议.难度适配}</p>
+          <p class="text-sm text-stone-600">${structure.改编建议.改编说明}</p>
+        `;
+      }
+    }
+
+    // 导出功能
+    document.getElementById('export-md-btn')?.addEventListener('click', () => {
+      if (generatedStructure) {
+        const md = exportToMarkdown(generatedStructure);
+        downloadFile(md, `${generatedStructure.基本信息.案例名称}-关卡结构.md`, 'text/markdown');
+      }
+    });
+
+    document.getElementById('export-json-btn')?.addEventListener('click', () => {
+      if (generatedStructure) {
+        const json = exportToJSON(generatedStructure);
+        downloadFile(json, `${generatedStructure.基本信息.案例名称}-关卡结构.json`, 'application/json');
+      }
+    });
+  </script>
+</BaseLayout>

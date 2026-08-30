@@ -1,0 +1,74 @@
+---
+// 对话框组件
+interface Props {
+  show: boolean;
+  speaker?: string;
+  avatar?: string;
+  text: string;
+  options?: Array<{ label: string; value: string }>;
+  onContinue?: () => void;
+  onOption?: (value: string) => void;
+  showFollowUp?: boolean;
+  onFollowUp?: () => void;
+  showPresentEvidence?: boolean;
+  onPresentEvidence?: () => void;
+}
+
+const { show, speaker, avatar, text, options, showFollowUp, showPresentEvidence } = Astro.props;
+---
+
+{show && (
+  <div class="dialog-overlay fixed inset-0 bg-black/50 flex items-end justify-center z-40 p-4">
+    <div class="dialog-box bg-white rounded-t-2xl w-full max-w-2xl p-6 shadow-2xl">
+      {/* 说话人 */}
+      {speaker && (
+        <div class="flex items-center gap-3 mb-4">
+          {avatar && <span class="text-3xl">{avatar}</span>}
+          <h3 class="font-bold text-lg text-stone-800">{speaker}</h3>
+        </div>
+      )}
+
+      {/* 对话内容 */}
+      <p class="text-stone-700 leading-relaxed mb-6 min-h-16">{text}</p>
+
+      {/* 选项 */}
+      {options && options.length > 0 ? (
+        <div class="space-y-2">
+          {options.map((opt) => (
+            <button
+              class="w-full text-left px-4 py-3 bg-stone-100 hover:bg-primary-100 rounded-lg transition-colors"
+              onclick={`window.__dialogOption && window.__dialogOption('${opt.value}')`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div class="flex gap-3 justify-end">
+          {showPresentEvidence && (
+            <button
+              class="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
+              onclick="window.__presentEvidence && window.__presentEvidence()"
+            >
+              出示证据
+            </button>
+          )}
+          {showFollowUp && (
+            <button
+              class="px-4 py-2 bg-stone-600 text-white rounded-lg hover:bg-stone-700 transition-colors"
+              onclick="window.__followUp && window.__followUp()"
+            >
+              追问
+            </button>
+          )}
+          <button
+            class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+            onclick="window.__dialogContinue && window.__dialogContinue()"
+          >
+            继续
+          </button>
+        </div>
+      )}
+    </div>
+  </div>
+)}

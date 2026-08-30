@@ -1,0 +1,63 @@
+---
+// 证据栏组件
+interface Props {
+  evidence: Array<{
+    id: string;
+    name: string;
+    description: string;
+    keyInfo: string;
+  }>;
+  selectedEvidence: string | null;
+  onSelect: (id: string | null) => void;
+  show: boolean;
+  mode?: 'view' | 'select'; // view: 查看模式, select: 选择出示模式
+}
+
+const { evidence, selectedEvidence, onSelect, show, mode = 'view' } = Astro.props;
+---
+
+{show && (
+  <div class="evidence-bar fixed bottom-0 left-0 right-0 bg-stone-900 text-white p-4 z-50 border-t border-stone-700">
+    <div class="container-page">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="font-bold">
+          {mode === 'select' ? '选择要出示的证据' : `证据栏 (${evidence.length})`}
+        </h3>
+        {mode === 'select' && (
+          <button class="text-sm text-stone-400 hover:text-white" onclick="window.__cancelEvidence && window.__cancelEvidence()">
+            取消
+          </button>
+        )}
+      </div>
+      {evidence.length === 0 ? (
+        <p class="text-stone-400 text-sm">还没有收集到任何证据，去场景中探索吧！</p>
+      ) : (
+        <div class="flex gap-3 overflow-x-auto pb-2">
+          {evidence.map((e) => (
+            <button
+              class={`evidence-card flex-shrink-0 w-40 p-3 rounded-lg text-left transition-all
+                ${selectedEvidence === e.id ? 'bg-primary-600 ring-2 ring-primary-400' : 'bg-stone-800 hover:bg-stone-700'}
+              `}
+              onclick={`window.__selectEvidence && window.__selectEvidence('${e.id}')`}
+            >
+              <div class="font-bold text-sm mb-1">{e.name}</div>
+              <div class="text-xs text-stone-300 line-clamp-2">{e.description}</div>
+              {selectedEvidence === e.id && mode === 'select' && (
+                <div class="mt-2 text-xs text-primary-200">点击"出示证据"确认</div>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  </div>
+)}
+
+<style>
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+</style>

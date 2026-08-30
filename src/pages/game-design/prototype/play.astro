@@ -1,0 +1,523 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import GameScene from '@components/prototype/GameScene.astro';
+import EvidenceBar from '@components/prototype/EvidenceBar.astro';
+import DialogBox from '@components/prototype/DialogBox.astro';
+import TrialPanel from '@components/prototype/TrialPanel.astro';
+import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prototype-orient-express';
+---
+
+<BaseLayout title="东方快车：推理审判" description="可交互推理游戏原型">
+  <div class="min-h-screen bg-stone-900 text-white">
+    <!-- 游戏顶部栏 -->
+    <div class="bg-stone-800 p-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <a href="/fun_detective/game-design/prototype" class="text-stone-400 hover:text-white text-sm">← 返回</a>
+        <span class="font-bold">东方快车：推理审判</span>
+      </div>
+      <div class="flex items-center gap-4 text-sm">
+        <span id="phase-indicator" class="text-stone-300">开场</span>
+        <span id="confidence-display" class="text-stone-300">信心值: 100</span>
+        <button id="evidence-btn" class="px-3 py-1 bg-stone-700 rounded hover:bg-stone-600">
+          证据 (<span id="evidence-count">0</span>)
+        </button>
+        <button id="reset-btn" class="px-3 py-1 bg-red-800 rounded hover:bg-red-700 text-xs">重置</button>
+      </div>
+    </div>
+
+    <!-- 游戏主区域 -->
+    <div class="container-page py-6 pb-32">
+      <!-- 开场/对话阶段 -->
+      <div id="intro-section" class="max-w-2xl mx-auto">
+        <div class="bg-stone-800 rounded-xl p-8 min-h-64 flex flex-col justify-between">
+          <div id="intro-text" class="text-lg leading-relaxed text-stone-200"></div>
+          <button id="intro-continue" class="mt-6 self-end px-6 py-2 bg-primary-600 rounded-lg hover:bg-primary-700">
+            继续
+          </button>
+        </div>
+      </div>
+
+      <!-- 调查阶段 -->
+      <div id="investigation-section" class="hidden">
+        <div class="mb-4">
+          <h2 class="text-xl font-bold mb-2">🔍 调查阶段</h2>
+          <p class="text-sm text-stone-400">点击场景中的物品和人物进行互动。收集至少3件证据、询问至少3个证人后，可前往餐车进行审判。</p>
+          <div class="mt-2 flex gap-4 text-sm">
+            <span>已收集证据: <span id="inv-evidence-count" class="text-accent-400 font-bold">0</span>/3</span>
+            <span>已询问证人: <span id="inv-witness-count" class="text-accent-400 font-bold">0</span>/3</span>
+          </div>
+        </div>
+        <div id="game-scene-container"></div>
+      </div>
+
+      <!-- 审判阶段 -->
+      <div id="trial-section" class="hidden max-w-4xl mx-auto">
+        <div id="trial-panel-container"></div>
+        <div id="trial-dialog-container" class="mt-6"></div>
+      </div>
+
+      <!-- 结局阶段 -->
+      <div id="ending-section" class="hidden max-w-2xl mx-auto">
+        <div class="bg-stone-800 rounded-xl p-8">
+          <h2 id="ending-title" class="text-3xl font-bold mb-4 text-center"></h2>
+          <p id="ending-description" class="text-lg leading-relaxed text-stone-300 mb-6"></p>
+          <div id="ending-stats" class="bg-stone-700 rounded-lg p-4 mb-6">
+            <h3 class="font-bold mb-2">游戏统计</h3>
+            <div class="grid grid-cols-2 gap-2 text-sm">
+              <div>收集证据: <span id="stat-evidence"></span></div>
+              <div>询问证人: <span id="stat-witness"></span></div>
+              <div>揭露矛盾: <span id="stat-contradiction"></span></div>
+              <div>最终信心值: <span id="stat-confidence"></span></div>
+            </div>
+          </div>
+          <div class="flex gap-4 justify-center">
+            <button id="ending-restart" class="px-6 py-2 bg-primary-600 rounded-lg hover:bg-primary-700">重新开始</button>
+            <a href="/fun_detective/game-design" class="px-6 py-2 bg-stone-600 rounded-lg hover:bg-stone-500">返回游戏设计</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 证据栏 -->
+    <div id="evidence-bar-container"></div>
+
+    <!-- 对话框 -->
+    <div id="dialog-container"></div>
+  </div>
+
+  <script is:inline>
+    // 游戏数据
+    const gameScenes = [{"id": "intro", "name": "波洛的包厢", "description": "深夜，东方快车因大雪被困在南斯拉夫的荒野中。你是著名侦探赫尔克里·波洛，被一阵尖叫声惊醒...", "background": "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)", "interactables": [{"id": "door", "name": "包厢门", "description": "通往走廊的门，外面似乎很吵闹。", "type": "object", "position": {"x": 80, "y": 50}}], "exits": [{"to": "corridor", "label": "走出包厢"}]}, {"id": "corridor", "name": "列车走廊", "description": "昏暗的走廊里，列车员正焦急地敲着一间包厢的门。乘客们纷纷探出头查看情况。", "background": "linear-gradient(135deg, #2d2d44 0%, #1f1f33 50%, #1a1a2e 100%)", "interactables": [{"id": "victim-door", "name": "受害者包厢", "description": "门被锁住了，里面没有回应。", "type": "object", "position": {"x": 30, "y": 40}}, {"id": "conductor", "name": "列车员皮埃尔", "description": "穿着制服的列车员，神情紧张。", "type": "witness", "witnessId": "conductor", "position": {"x": 50, "y": 45}}, {"id": "mrs-hubbard", "name": "赫伯德夫人", "description": "一位美国妇人，看起来很激动。", "type": "witness", "witnessId": "mrs-hubbard", "position": {"x": 70, "y": 35}}], "exits": [{"to": "victim-room", "label": "进入受害者包厢"}, {"to": "dining-car", "label": "前往餐车"}]}, {"id": "victim-room", "name": "受害者包厢", "description": "包厢内，一个男人倒在床上，身上有多处刀伤。窗户开着，雪飘了进来。", "background": "linear-gradient(135deg, #3d1a1a 0%, #2d1414 50%, #1a0d0d 100%)", "interactables": [{"id": "body", "name": "尸体", "description": "受害者雷切特先生，身中12刀。", "type": "evidence", "evidenceId": "body", "position": {"x": 50, "y": 55}}, {"id": "window", "name": "敞开的窗户", "description": "窗户大开，窗台上有雪，但没有脚印。", "type": "evidence", "evidenceId": "window", "position": {"x": 80, "y": 30}}, {"id": "handkerchief", "name": "手帕", "description": "一块精致的手帕，上面绣着字母\"H\"。", "type": "evidence", "evidenceId": "handkerchief", "position": {"x": 25, "y": 60}}, {"id": "watch", "name": "怀表", "description": "一块摔坏的怀表，指针停在1:15。", "type": "evidence", "evidenceId": "watch", "position": {"x": 60, "y": 70}}, {"id": "ash", "name": "烟灰", "description": "烟灰缸里有两种不同的烟灰。", "type": "evidence", "evidenceId": "ash", "position": {"x": 35, "y": 40}}], "exits": [{"to": "corridor", "label": "返回走廊"}]}, {"id": "dining-car", "name": "餐车", "description": "所有乘客都聚集在餐车，气氛紧张。你将在这里进行\"审判\"。", "background": "linear-gradient(135deg, #2a2a3e 0%, #1e1e30 50%, #181828 100%)", "interactables": [{"id": "mary", "name": "玛丽·德本汉", "description": "一位冷静的英国女士，家庭教师。", "type": "witness", "witnessId": "mary", "position": {"x": 20, "y": 40}}, {"id": "colonel", "name": "阿巴斯诺特上校", "description": "一位英国军官，看起来很严肃。", "type": "witness", "witnessId": "colonel", "position": {"x": 40, "y": 50}}, {"id": "princess", "name": "德拉戈米罗夫公主", "description": "一位年迈的俄国贵族，神情威严。", "type": "witness", "witnessId": "princess", "position": {"x": 60, "y": 35}}, {"id": "countess", "name": "安德烈伯爵夫人", "description": "一位年轻的匈牙利女士，看起来很紧张。", "type": "witness", "witnessId": "countess", "position": {"x": 80, "y": 45}}], "exits": [{"to": "corridor", "label": "返回走廊"}]}, {"id": "ending", "name": "结局", "description": "所有真相都已揭开，现在是做出最终选择的时候...", "background": "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)", "interactables": [], "exits": []}];
+    const gameEvidence = [{"id": "body", "name": "尸体", "description": "受害者雷切特，身中12刀，伤口深浅不一。", "keyInfo": "12处刀伤，深浅不一，说明可能有多个凶手，且力度不同。", "scene": "victim-room", "foundIn": "受害者包厢的床上"}, {"id": "window", "name": "敞开的窗户", "description": "窗户大开，窗外是雪地，但窗台上没有脚印。", "keyInfo": "如果凶手从窗户逃走，雪地上应该有脚印，但实际上没有。这说明窗户是故意打开的，伪造逃走路线。", "scene": "victim-room", "foundIn": "受害者包厢"}, {"id": "handkerchief", "name": "手帕", "description": "一块精致的女士手帕，角落绣着字母\"H\"。", "keyInfo": "手帕上的\"H\"可能是凶手的名字首字母。乘客中，赫伯德夫人(Hubbard)和德拉戈米罗夫公主的教名都是H开头。", "scene": "victim-room", "foundIn": "受害者包厢地板上"}, {"id": "watch", "name": "怀表", "description": "一块金质怀表，表壳凹陷，指针停在1:15。", "keyInfo": "怀表停在1:15，这可能是案发时间。但怀表可能被故意调过，用来误导调查方向。", "scene": "victim-room", "foundIn": "受害者口袋"}, {"id": "ash", "name": "烟灰", "description": "烟灰缸里有两种不同的烟灰，一种是雪茄，一种是香烟。", "keyInfo": "受害者只抽雪茄，但现场有香烟灰，说明案发时有另一个人在场。", "scene": "victim-room", "foundIn": "受害者包厢烟灰缸"}];
+    const gameWitnesses = [{"id": "conductor", "name": "列车员皮埃尔", "description": "东方快车的列车员，在铁路公司工作多年。", "avatar": "🧑‍✈️", "initialTestimony": "我整晚都在座位上，大约12:37的时候听到雷切特先生按铃，我过去时他用法语说\"没事，我搞错了\"。之后我就没听到什么动静了。", "followUpTestimony": "呃...实际上，1:15左右我好像听到了什么声音，但我以为是赫伯德夫人在叫我。我过去的时候她说有个男人在她包厢里。", "contradiction": {"evidenceId": "watch", "description": "怀表停在1:15，与列车员听到动静的时间吻合，但他说以为是赫伯德夫人。", "revealedText": "怀表停在1:15，而你说1:15听到动静。这真的是巧合吗？还是你在隐瞒什么？"}}, {"id": "mrs-hubbard", "name": "赫伯德夫人", "description": "一位聒噪的美国妇人，声称自己包厢里有个男人。", "avatar": "👩", "initialTestimony": "我跟你说，昨晚有个男人在我包厢里！我按铃叫列车员，但他来的时候那人已经走了。我的包厢和雷切特的是通的，他肯定是从那边过来的！", "followUpTestimony": "对了，我还在我包厢的地板上发现了一颗列车员制服的纽扣。那肯定是那个男人掉的！", "contradiction": {"evidenceId": "handkerchief", "description": "赫伯德夫人的名字首字母是H，与现场手帕上的字母吻合。", "revealedText": "赫伯德夫人，您的姓氏是Hubbard，首字母正是H。这块手帕...是您的吧？"}}, {"id": "mary", "name": "玛丽·德本汉", "description": "冷静沉着的英国家庭教师，曾在阿姆斯特朗家工作。", "avatar": "👩‍💼", "initialTestimony": "我睡得很沉，什么都没听到。早上醒来才知道出了事。", "followUpTestimony": "我...我确实认识阿姆斯特朗一家。黛西·阿姆斯特朗是我的学生。但这和谋杀案有什么关系？", "contradiction": {"evidenceId": "ash", "description": "玛丽抽香烟，而现场有香烟灰，但她说自己睡得很沉。", "revealedText": "德本汉小姐，您抽香烟。而现场有香烟灰，受害者只抽雪茄。您说您睡得很沉，那香烟灰是怎么回事？"}}, {"id": "colonel", "name": "阿巴斯诺特上校", "description": "英国军官，阿姆斯特朗上校的好友。", "avatar": "🎖️", "initialTestimony": "我和玛丽·德本汉小姐在聊天，大约1点才回包厢。之后就没出来过。", "followUpTestimony": "是的，我认识阿姆斯特朗上校。他是我最好的朋友。他女儿被绑架杀害后，他伤心过度去世了。", "contradiction": null}, {"id": "princess", "name": "德拉戈米罗夫公主", "description": "俄国贵族，阿姆斯特朗夫人的教母。", "avatar": "👑", "initialTestimony": "我年纪大了，睡得早。什么都没听到，什么都不知道。", "followUpTestimony": "我是索尼娅·阿姆斯特朗的教母。她是个好女孩，她的遭遇太悲惨了。雷切特就是那个绑架犯卡塞蒂，他该死。", "contradiction": {"evidenceId": "handkerchief", "description": "公主的教名是娜塔莉亚(Natalia)，但俄文拼写的首字母看起来像H。", "revealedText": "公主殿下，您的教名娜塔莉亚，用俄文拼写时首字母看起来就像H。这块手帕，是您的吧？"}}, {"id": "countess", "name": "安德烈伯爵夫人", "description": "匈牙利外交官的妻子，护照上的名字似乎被涂改过。", "avatar": "💃", "initialTestimony": "我和丈夫一直待在包厢里，吃了安眠药就睡了。", "followUpTestimony": "我...我是海伦娜·戈登伯格，索尼娅·阿姆斯特朗的妹妹。我护照上的名字被我丈夫改了，他想保护我。", "contradiction": null}];
+    const gameDialogs = {"intro": ["深夜，东方快车因大雪被困在南斯拉夫的荒野中。", "你是赫尔克里·波洛，世界上最伟大的侦探。", "一阵尖叫声将你从睡梦中惊醒...", "你走出包厢，看到列车员正在焦急地敲一扇门。", "\"波洛先生！\"列车员看到你，如释重负，\"雷切特先生没有回应，门被锁住了！\"", "你意识到，这可能不是一起简单的意外..."], "investigationStart": ["你决定亲自调查这起案件。", "首先，你需要查看犯罪现场，收集证据。", "然后，你需要询问乘客，获取证词。", "最后，在餐车进行\"审判\"，找出真相。", "点击场景中的物品和人物进行互动。", "收集至少3件证据和询问3个证人后，可前往餐车进行审判。"]};
+    const gameContradictions = [{"id": "c1", "witnessId": "conductor", "evidenceId": "watch", "description": "怀表时间与列车员证词的矛盾", "revealed": false}, {"id": "c2", "witnessId": "mrs-hubbard", "evidenceId": "handkerchief", "description": "手帕与赫伯德夫人的关联", "revealed": false}, {"id": "c3", "witnessId": "mary", "evidenceId": "ash", "description": "香烟灰与玛丽证词的矛盾", "revealed": false}, {"id": "c4", "witnessId": "princess", "evidenceId": "handkerchief", "description": "手帕与公主的真实关联", "revealed": false}];
+
+    // 游戏状态
+    let state = {
+      currentScene: 'intro',
+      gamePhase: 'intro',
+      collectedEvidence: [],
+      interviewedWitnesses: [],
+      contradictionsFound: [],
+      confidence: 100,
+      choices: {},
+      dialogIndex: 0,
+      currentWitness: null,
+      showEvidenceBar: false,
+      selectedEvidence: null,
+      evidenceMode: 'view',
+    };
+
+    // 初始化
+    function init() {
+      // 检查是否继续游戏
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('continue') === '1') {
+        const saved = localStorage.getItem('fun-detective-prototype-save');
+        if (saved) {
+          state = JSON.parse(saved);
+        }
+      } else {
+        localStorage.removeItem('fun-detective-prototype-save');
+      }
+      render();
+    }
+
+    // 保存
+    function save() {
+      localStorage.setItem('fun-detective-prototype-save', JSON.stringify(state));
+    }
+
+    // 渲染
+    function render() {
+      updateTopBar();
+      
+      // 隐藏所有阶段
+      document.getElementById('intro-section').classList.add('hidden');
+      document.getElementById('investigation-section').classList.add('hidden');
+      document.getElementById('trial-section').classList.add('hidden');
+      document.getElementById('ending-section').classList.add('hidden');
+
+      if (state.gamePhase === 'intro') {
+        renderIntro();
+      } else if (state.gamePhase === 'investigation') {
+        renderInvestigation();
+      } else if (state.gamePhase === 'trial') {
+        renderTrial();
+      } else if (state.gamePhase === 'ending') {
+        renderEnding();
+      }
+
+      renderEvidenceBar();
+      save();
+    }
+
+    function updateTopBar() {
+      const phaseNames = { intro: '开场', investigation: '调查', trial: '审判', ending: '结局' };
+      document.getElementById('phase-indicator').textContent = phaseNames[state.gamePhase] || '';
+      document.getElementById('confidence-display').textContent = `信心值: ${state.confidence}`;
+      document.getElementById('evidence-count').textContent = state.collectedEvidence.length;
+    }
+
+    // 开场渲染
+    function renderIntro() {
+      document.getElementById('intro-section').classList.remove('hidden');
+      const texts = state.dialogIndex < 6 ? gameDialogs.intro : gameDialogs.investigationStart;
+      const idx = state.dialogIndex < 6 ? state.dialogIndex : state.dialogIndex - 6;
+      document.getElementById('intro-text').textContent = texts[idx] || '';
+      
+      const btn = document.getElementById('intro-continue');
+      if (state.dialogIndex >= 11) {
+        btn.textContent = '开始调查';
+      } else {
+        btn.textContent = '继续';
+      }
+    }
+
+    // 调查阶段渲染
+    function renderInvestigation() {
+      document.getElementById('investigation-section').classList.remove('hidden');
+      document.getElementById('inv-evidence-count').textContent = state.collectedEvidence.length;
+      document.getElementById('inv-witness-count').textContent = state.interviewedWitnesses.length;
+
+      const scene = gameScenes.find(s => s.id === state.currentScene);
+      if (!scene) return;
+
+      const container = document.getElementById('game-scene-container');
+      container.innerHTML = `
+        <div class="game-scene relative w-full h-96 rounded-xl overflow-hidden" style="background: ${scene.background}">
+          <div class="absolute top-4 left-4 bg-black/50 text-white px-4 py-2 rounded-lg">
+            <h3 class="font-bold">${scene.name}</h3>
+          </div>
+          <div class="absolute bottom-4 left-4 right-4 bg-black/60 text-white p-4 rounded-lg">
+            <p class="text-sm">${scene.description}</p>
+          </div>
+          ${scene.interactables.map(item => {
+            const isCollected = item.evidenceId && state.collectedEvidence.includes(item.evidenceId);
+            const isInterviewed = item.witnessId && state.interviewedWitnesses.includes(item.witnessId);
+            const icon = item.type === 'witness' ? '👤' : item.type === 'evidence' ? (isCollected ? '✅' : '🔍') : '🚪';
+            const bgColor = item.type === 'witness' ? 'bg-blue-500/80' : item.type === 'evidence' ? 'bg-yellow-500/80' : 'bg-stone-500/80';
+            return `
+              <button class="absolute interactable group" style="left: ${item.position.x}%; top: ${item.position.y}%; transform: translate(-50%, -50%)" onclick="window.__interact('${item.id}')">
+                <div class="w-12 h-12 rounded-full flex items-center justify-center text-2xl ${bgColor} ${isCollected ? 'opacity-40' : ''} ${isInterviewed ? 'ring-2 ring-green-400' : ''} hover:scale-110 transition-transform">
+                  ${icon}
+                </div>
+                <div class="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap bg-black/80 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100">
+                  ${item.name}${isCollected ? ' (已收集)' : ''}${isInterviewed ? ' (已询问)' : ''}
+                </div>
+              </button>
+            `;
+          }).join('')}
+          <div class="absolute top-4 right-4 flex flex-col gap-2">
+            ${scene.exits.map(exit => `
+              <button class="bg-white/90 hover:bg-white text-stone-800 px-4 py-2 rounded-lg text-sm font-medium shadow-lg" onclick="window.__exit('${exit.to}')">
+                ${exit.label} →
+              </button>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    // 审判阶段渲染
+    function renderTrial() {
+      document.getElementById('trial-section').classList.remove('hidden');
+      
+      const panelContainer = document.getElementById('trial-panel-container');
+      panelContainer.innerHTML = `
+        <div class="bg-stone-800 rounded-xl p-6">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-bold">⚖️ 审判阶段</h2>
+            <div class="flex items-center gap-4 text-sm">
+              <span>矛盾点: <span class="text-accent-400 font-bold">${state.contradictionsFound.length}/4</span></span>
+              <span>信心值: <span class="${state.confidence >= 60 ? 'text-green-400' : state.confidence >= 30 ? 'text-yellow-400' : 'text-red-400'} font-bold">${state.confidence}</span></span>
+            </div>
+          </div>
+          <div class="w-full bg-stone-700 rounded-full h-2 mb-6">
+            <div class="h-2 rounded-full ${state.confidence >= 60 ? 'bg-green-500' : state.confidence >= 30 ? 'bg-yellow-500' : 'bg-red-500'}" style="width: ${state.confidence}%"></div>
+          </div>
+          <h3 class="font-bold mb-3">选择要询问的证人：</h3>
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+            ${gameWitnesses.map(w => `
+              <button class="p-4 rounded-lg text-left transition-all ${state.currentWitness === w.id ? 'bg-primary-600 ring-2 ring-primary-400' : 'bg-stone-700 hover:bg-stone-600'}" onclick="window.__selectWitness('${w.id}')">
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="text-2xl">${w.avatar}</span>
+                  <span class="font-bold text-sm">${w.name}</span>
+                </div>
+                <p class="text-xs text-stone-400">${w.description}</p>
+              </button>
+            `).join('')}
+          </div>
+          ${state.contradictionsFound.length >= 3 ? `
+            <button class="mt-6 w-full py-3 bg-accent-600 rounded-lg font-bold hover:bg-accent-700" onclick="window.__goToEnding()">
+              进入最终选择 →
+            </button>
+          ` : `
+            <div class="mt-6 p-4 bg-blue-900/50 rounded-lg text-sm text-blue-200">
+              <strong>提示：</strong>选择证人查看证词，点击"追问"获取更多信息，发现矛盾时点击"出示证据"并选择对应证据。正确+20信心值，错误-10。
+            </div>
+          `}
+        </div>
+      `;
+
+      // 证人对话
+      if (state.currentWitness) {
+        const witness = gameWitnesses.find(w => w.id === state.currentWitness);
+        if (witness) {
+          const dialogContainer = document.getElementById('trial-dialog-container');
+          const isFollowedUp = state.interviewedWitnesses.includes(witness.id);
+          const testimony = isFollowedUp ? witness.followUpTestimony : witness.initialTestimony;
+          const hasContradiction = witness.contradiction && !state.contradictionsFound.find(c => {
+            const cont = gameContradictions.find(gc => gc.id === c);
+            return cont && cont.witnessId === witness.id;
+          });
+          
+          dialogContainer.innerHTML = `
+            <div class="bg-stone-800 rounded-xl p-6">
+              <div class="flex items-center gap-3 mb-4">
+                <span class="text-3xl">${witness.avatar}</span>
+                <h3 class="font-bold text-lg">${witness.name}</h3>
+              </div>
+              <p class="text-stone-300 leading-relaxed mb-6">${testimony}</p>
+              <div class="flex gap-3 justify-end">
+                ${!isFollowedUp ? `<button class="px-4 py-2 bg-stone-600 rounded-lg hover:bg-stone-500" onclick="window.__followUp()">追问</button>` : ''}
+                ${hasContradiction ? `<button class="px-4 py-2 bg-yellow-600 rounded-lg hover:bg-yellow-500 font-bold" onclick="window.__presentEvidence()">出示证据</button>` : ''}
+                <button class="px-4 py-2 bg-stone-700 rounded-lg hover:bg-stone-600" onclick="window.__closeWitnessDialog()">关闭</button>
+              </div>
+            </div>
+          `;
+        }
+      } else {
+        document.getElementById('trial-dialog-container').innerHTML = '';
+      }
+    }
+
+    // 结局渲染
+    function renderEnding() {
+      document.getElementById('ending-section').classList.remove('hidden');
+      const choice = state.choices['final-choice'];
+      let ending;
+      if (choice === 'reveal') {
+        ending = { name: '真相大白', description: '你揭露了真相：12名乘客都是凶手，他们为了给阿姆斯特朗一家复仇，每人刺了一刀。你选择将真相告诉警方。正义得到了伸张，但法外之情也令人唏嘘。' };
+      } else {
+        ending = { name: '法外容情', description: '你揭露了真相，但理解了12人的动机。你选择向警方隐瞒真相，说凶手已经逃走。正义，有时在法律之外。波洛的内心，或许永远不会平静。' };
+      }
+      
+      document.getElementById('ending-title').textContent = ending.name;
+      document.getElementById('ending-description').textContent = ending.description;
+      document.getElementById('stat-evidence').textContent = state.collectedEvidence.length;
+      document.getElementById('stat-witness').textContent = state.interviewedWitnesses.length;
+      document.getElementById('stat-contradiction').textContent = state.contradictionsFound.length;
+      document.getElementById('stat-confidence').textContent = state.confidence;
+    }
+
+    // 证据栏渲染
+    function renderEvidenceBar() {
+      const container = document.getElementById('evidence-bar-container');
+      if (!state.showEvidenceBar) {
+        container.innerHTML = '';
+        return;
+      }
+      
+      const evidence = state.collectedEvidence.map(id => gameEvidence.find(e => e.id === id)).filter(Boolean);
+      container.innerHTML = `
+        <div class="fixed bottom-0 left-0 right-0 bg-stone-900 p-4 z-50 border-t border-stone-700">
+          <div class="container-page">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="font-bold">${state.evidenceMode === 'select' ? '选择要出示的证据' : `证据栏 (${evidence.length})`}</h3>
+              ${state.evidenceMode === 'select' ? `<button class="text-sm text-stone-400 hover:text-white" onclick="window.__cancelEvidence()">取消</button>` : ''}
+            </div>
+            ${evidence.length === 0 ? '<p class="text-stone-400 text-sm">还没有收集到任何证据</p>' : `
+              <div class="flex gap-3 overflow-x-auto pb-2">
+                ${evidence.map(e => `
+                  <button class="flex-shrink-0 w-40 p-3 rounded-lg text-left transition-all ${state.selectedEvidence === e.id ? 'bg-primary-600 ring-2 ring-primary-400' : 'bg-stone-800 hover:bg-stone-700'}" onclick="window.__selectEvidence('${e.id}')">
+                    <div class="font-bold text-sm mb-1">${e.name}</div>
+                    <div class="text-xs text-stone-300">${e.description}</div>
+                    ${state.selectedEvidence === e.id && state.evidenceMode === 'select' ? '<div class="mt-2 text-xs text-primary-200">点击确认出示</div>' : ''}
+                  </button>
+                `).join('')}
+              </div>
+            `}
+            ${state.evidenceMode === 'select' && state.selectedEvidence ? `
+              <button class="mt-3 w-full py-2 bg-yellow-600 rounded-lg font-bold hover:bg-yellow-500" onclick="window.__confirmPresentEvidence()">
+                确认出示「${gameEvidence.find(e => e.id === state.selectedEvidence)?.name}」
+              </button>
+            ` : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    // 游戏交互函数
+    window.__introContinue = function() {
+      state.dialogIndex++;
+      if (state.dialogIndex >= 12) {
+        state.gamePhase = 'investigation';
+        state.currentScene = 'corridor';
+        state.dialogIndex = 0;
+      }
+      render();
+    };
+
+    window.__interact = function(itemId) {
+      const scene = gameScenes.find(s => s.id === state.currentScene);
+      const item = scene?.interactables.find(i => i.id === itemId);
+      if (!item) return;
+
+      if (item.type === 'evidence' && item.evidenceId) {
+        if (!state.collectedEvidence.includes(item.evidenceId)) {
+          state.collectedEvidence.push(item.evidenceId);
+          const evidence = gameEvidence.find(e => e.id === item.evidenceId);
+          alert(`收集到证据：${evidence?.name}\n\n${evidence?.keyInfo}`);
+        }
+      } else if (item.type === 'witness' && item.witnessId) {
+        if (!state.interviewedWitnesses.includes(item.witnessId)) {
+          state.interviewedWitnesses.push(item.witnessId);
+        }
+        const witness = gameWitnesses.find(w => w.id === item.witnessId);
+        alert(`${witness?.name}：\n\n${witness?.initialTestimony}`);
+      } else if (item.type === 'object') {
+        alert(item.description);
+      }
+      render();
+    };
+
+    window.__exit = function(sceneId) {
+      if (sceneId === 'dining-car' && state.gamePhase === 'investigation') {
+        if (state.collectedEvidence.length >= 3 && state.interviewedWitnesses.length >= 3) {
+          if (confirm('是否进入审判阶段？调查阶段将结束。')) {
+            state.gamePhase = 'trial';
+            state.currentScene = 'dining-car';
+          }
+        } else {
+          alert('还需要收集至少3件证据和询问3个证人才能进入审判。\n当前：证据' + state.collectedEvidence.length + '/3，证人' + state.interviewedWitnesses.length + '/3');
+          return;
+        }
+      }
+      state.currentScene = sceneId;
+      render();
+    };
+
+    window.__selectWitness = function(witnessId) {
+      state.currentWitness = witnessId;
+      if (!state.interviewedWitnesses.includes(witnessId)) {
+        state.interviewedWitnesses.push(witnessId);
+      }
+      render();
+    };
+
+    window.__followUp = function() {
+      const witness = gameWitnesses.find(w => w.id === state.currentWitness);
+      if (witness) {
+        alert(`追问 ${witness.name}：\n\n${witness.followUpTestimony}`);
+      }
+      render();
+    };
+
+    window.__presentEvidence = function() {
+      state.evidenceMode = 'select';
+      state.showEvidenceBar = true;
+      render();
+    };
+
+    window.__selectEvidence = function(evidenceId) {
+      if (state.evidenceMode === 'select') {
+        state.selectedEvidence = evidenceId;
+        render();
+      } else {
+        const evidence = gameEvidence.find(e => e.id === evidenceId);
+        alert(`${evidence?.name}\n\n${evidence?.keyInfo}`);
+      }
+    };
+
+    window.__cancelEvidence = function() {
+      state.evidenceMode = 'view';
+      state.selectedEvidence = null;
+      state.showEvidenceBar = false;
+      render();
+    };
+
+    window.__confirmPresentEvidence = function() {
+      const witness = gameWitnesses.find(w => w.id === state.currentWitness);
+      const evidence = gameEvidence.find(e => e.id === state.selectedEvidence);
+      
+      if (witness?.contradiction && witness.contradiction.evidenceId === state.selectedEvidence) {
+        // 正确指出矛盾
+        const cont = gameContradictions.find(c => c.witnessId === witness.id && c.evidenceId === state.selectedEvidence);
+        if (cont && !state.contradictionsFound.includes(cont.id)) {
+          state.contradictionsFound.push(cont.id);
+          state.confidence = Math.min(100, state.confidence + 20);
+          alert(`正确！发现矛盾！\n\n${witness.contradiction.revealedText}\n\n信心值 +20`);
+        }
+      } else {
+        // 错误
+        state.confidence = Math.max(0, state.confidence - 10);
+        alert(`这个证据与证词没有直接矛盾...\n\n信心值 -10`);
+      }
+      
+      state.evidenceMode = 'view';
+      state.selectedEvidence = null;
+      state.showEvidenceBar = false;
+      render();
+    };
+
+    window.__closeWitnessDialog = function() {
+      state.currentWitness = null;
+      render();
+    };
+
+    window.__goToEnding = function() {
+      state.gamePhase = 'ending';
+      render();
+    };
+
+    window.__makeFinalChoice = function(choice) {
+      state.choices['final-choice'] = choice;
+      render();
+    };
+
+    // 证据栏按钮
+    document.getElementById('evidence-btn')?.addEventListener('click', () => {
+      state.showEvidenceBar = !state.showEvidenceBar;
+      state.evidenceMode = 'view';
+      render();
+    });
+
+    // 重置按钮
+    document.getElementById('reset-btn')?.addEventListener('click', () => {
+      if (confirm('确定要重置游戏吗？所有进度将丢失。')) {
+        localStorage.removeItem('fun-detective-prototype-save');
+        state = {
+          currentScene: 'intro',
+          gamePhase: 'intro',
+          collectedEvidence: [],
+          interviewedWitnesses: [],
+          contradictionsFound: [],
+          confidence: 100,
+          choices: {},
+          dialogIndex: 0,
+          currentWitness: null,
+          showEvidenceBar: false,
+          selectedEvidence: null,
+          evidenceMode: 'view',
+        };
+        render();
+      }
+    });
+
+    // 开场继续按钮
+    document.getElementById('intro-continue')?.addEventListener('click', () => {
+      window.__introContinue();
+    });
+
+    // 结局重新开始
+    document.getElementById('ending-restart')?.addEventListener('click', () => {
+      localStorage.removeItem('fun-detective-prototype-save');
+      window.location.reload();
+    });
+
+    // 启动
+    init();
+  </script>
+</BaseLayout>

@@ -1,0 +1,90 @@
+---
+// 游戏场景组件
+interface Props {
+  scene: {
+    id: string;
+    name: string;
+    description: string;
+    background: string;
+    interactables: Array<{
+      id: string;
+      name: string;
+      description: string;
+      type: string;
+      evidenceId?: string;
+      witnessId?: string;
+      position: { x: number; y: number };
+    }>;
+    exits: Array<{ to: string; label: string }>;
+  };
+  collectedEvidence: string[];
+  interviewedWitnesses: string[];
+  onInteract: (interactable: any) => void;
+  onExit: (exit: any) => void;
+}
+
+const { scene, collectedEvidence, interviewedWitnesses, onInteract, onExit } = Astro.props;
+---
+
+<div class="game-scene relative w-full h-96 rounded-xl overflow-hidden" style={`background: ${scene.background}`}>
+  <!-- 场景名称 -->
+  <div class="absolute top-4 left-4 bg-black/50 text-white px-4 py-2 rounded-lg">
+    <h3 class="font-bold">{scene.name}</h3>
+  </div>
+
+  <!-- 场景描述 -->
+  <div class="absolute bottom-4 left-4 right-4 bg-black/60 text-white p-4 rounded-lg">
+    <p class="text-sm">{scene.description}</p>
+  </div>
+
+  <!-- 可交互物品 -->
+  {scene.interactables.map((item) => {
+    const isCollected = item.evidenceId && collectedEvidence.includes(item.evidenceId);
+    const isInterviewed = item.witnessId && interviewedWitnesses.includes(item.witnessId);
+    return (
+      <button
+        class="absolute interactable group"
+        style={`left: ${item.position.x}%; top: ${item.position.y}%; transform: translate(-50%, -50%)`}
+        onclick={`window.__gameInteract && window.__gameInteract(${JSON.stringify(item)})`}
+      >
+        <div class={`w-12 h-12 rounded-full flex items-center justify-center text-2xl transition-all
+          ${item.type === 'witness' ? 'bg-blue-500/80 hover:bg-blue-400' : ''}
+          ${item.type === 'evidence' ? 'bg-yellow-500/80 hover:bg-yellow-400' : ''}
+          ${item.type === 'object' ? 'bg-stone-500/80 hover:bg-stone-400' : ''}
+          ${isCollected ? 'opacity-40' : ''}
+          ${isInterviewed ? 'ring-2 ring-green-400' : ''}
+        `}>
+          {item.type === 'witness' && '👤'}
+          {item.type === 'evidence' && (isCollected ? '✅' : '🔍')}
+          {item.type === 'object' && '🚪'}
+        </div>
+        <div class="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap bg-black/80 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+          {item.name}
+          {isCollected && ' (已收集)'}
+          {isInterviewed && ' (已询问)'}
+        </div>
+      </button>
+    );
+  })}
+
+  <!-- 出口 -->
+  <div class="absolute top-4 right-4 flex flex-col gap-2">
+    {scene.exits.map((exit) => (
+      <button
+        class="bg-white/90 hover:bg-white text-stone-800 px-4 py-2 rounded-lg text-sm font-medium shadow-lg transition-colors"
+        onclick={`window.__gameExit && window.__gameExit(${JSON.stringify(exit)})`}
+      >
+        {exit.label} →
+      </button>
+    ))}
+  </div>
+</div>
+
+<style>
+  .interactable {
+    cursor: pointer;
+  }
+  .interactable:hover > div {
+    transform: scale(1.1);
+  }
+</style>

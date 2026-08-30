@@ -1,0 +1,72 @@
+---
+// 审判面板组件
+interface Props {
+  witnesses: Array<{
+    id: string;
+    name: string;
+    avatar: string;
+    description: string;
+  }>;
+  currentWitness: string | null;
+  contradictionsFound: string[];
+  confidence: number;
+  onSelectWitness: (id: string) => void;
+}
+
+const { witnesses, currentWitness, contradictionsFound, confidence, onSelectWitness } = Astro.props;
+const totalContradictions = 4;
+---
+
+<div class="trial-panel bg-stone-100 rounded-xl p-6">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-xl font-bold text-stone-800">⚖️ 审判阶段</h2>
+    <div class="flex items-center gap-4">
+      <div class="text-sm">
+        <span class="text-stone-500">矛盾点：</span>
+        <span class="font-bold text-primary-700">{contradictionsFound.length}/{totalContradictions}</span>
+      </div>
+      <div class="text-sm">
+        <span class="text-stone-500">信心值：</span>
+        <span class={`font-bold ${confidence >= 60 ? 'text-green-600' : confidence >= 30 ? 'text-yellow-600' : 'text-red-600'}`}>
+          {confidence}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 信心值进度条 -->
+  <div class="w-full bg-stone-300 rounded-full h-2 mb-6">
+    <div
+      class={`h-2 rounded-full transition-all ${confidence >= 60 ? 'bg-green-500' : confidence >= 30 ? 'bg-yellow-500' : 'bg-red-500'}`}
+      style={`width: ${confidence}%`}
+    ></div>
+  </div>
+
+  <!-- 证人列表 -->
+  <h3 class="font-bold text-stone-700 mb-3">选择要询问的证人：</h3>
+  <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+    {witnesses.map((w) => (
+      <button
+        class={`witness-card p-4 rounded-lg text-left transition-all
+          ${currentWitness === w.id ? 'bg-primary-600 text-white ring-2 ring-primary-400' : 'bg-white hover:bg-primary-50 border border-stone-200'}
+        `}
+        onclick={`window.__selectWitness && window.__selectWitness('${w.id}')`}
+      >
+        <div class="flex items-center gap-2 mb-1">
+          <span class="text-2xl">{w.avatar}</span>
+          <span class="font-bold text-sm">{w.name}</span>
+        </div>
+        <p class={`text-xs ${currentWitness === w.id ? 'text-primary-100' : 'text-stone-500'}`}>
+          {w.description}
+        </p>
+      </button>
+    ))}
+  </div>
+
+  <!-- 提示 -->
+  <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+    <p class="text-sm text-blue-800">
+      <strong>提示：</strong>选择证人查看证词，点击"追问"获取更多信息，发现矛盾时点击"出示证据"并选择对应的证据。正确指出矛盾+20信心值，错误-10。
+    </p>
+  </div>
+</div>
