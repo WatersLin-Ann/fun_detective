@@ -1,14 +1,17 @@
-﻿---
+---
 import BaseLayout from '@layouts/BaseLayout.astro';
 import CaseCard from '@components/CaseCard.astro';
-import { loadAllCases, getStats } from '@lib/caseLoader';
+import { loadAllCases, getStats, getSourceTypes, getRegions } from '@lib/caseLoader';
 
 const cases = loadAllCases();
 const stats = getStats();
 
-// 从实际数据动态提取筛选选项
-const sourceTypes = [...new Set(cases.map((c) => c.基本信息.来源类型))].sort((a, b) => a.localeCompare(b, 'zh-CN'));
-const regions = [...new Set(cases.map((c) => c.基本信息.地区))].sort((a, b) => a.localeCompare(b, 'zh-CN'));
+// 从实际数据动态提取筛选选项（使用从路径提取的字符串字段）
+const sourceTypes = getSourceTypes();
+const regions = getRegions();
+
+// 每页显示数量
+const PAGE_SIZE = 12;
 ---
 
 <BaseLayout title="首页" description="全球虚拟真实案件案例库，为小说创作和游戏设计提供灵感">
@@ -53,7 +56,7 @@ const regions = [...new Set(cases.map((c) => c.基本信息.地区))].sort((a, b
           <input
             type="text"
             id="search-input"
-            placeholder="搜索案件名称、简介、诡计..."
+            placeholder="搜索案件名称、简介、诡计...（支持模糊匹配）"
             class="input pl-10"
           />
           <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -62,8 +65,14 @@ const regions = [...new Set(cases.map((c) => c.基本信息.地区))].sort((a, b
         </div>
         <!-- 筛选器 -->
         <div class="flex gap-3">
-          <select id="filter-source" class="input w-auto">`n            <option value="">全部类型</option>`n            {sourceTypes.map((type) => <option value={type}>{type}</option>)}`n          </select>
-          <select id="filter-region" class="input w-auto">`n            <option value="">全部地区</option>`n            {regions.map((region) => <option value={region}>{region}</option>)}`n          </select>
+          <select id="filter-source" class="input w-auto">
+            <option value="">全部类型</option>
+            {sourceTypes.map((type) => <option value={type}>{type}</option>)}
+          </select>
+          <select id="filter-region" class="input w-auto">
+            <option value="">全部地区</option>
+            {regions.map((region) => <option value={region}>{region}</option>)}
+          </select>
           <select id="filter-sort" class="input w-auto">
             <option value="date">最新录入</option>
             <option value="name">名称排序</option>
@@ -93,10 +102,19 @@ const regions = [...new Set(cases.map((c) => c.基本信息.地区))].sort((a, b
         </svg>
         <p class="text-stone-500">没有找到匹配的案件</p>
       </div>
+      <!-- 加载更多按钮 -->
+      <div id="load-more-container" class="text-center mt-8">
+        <button id="load-more-btn" class="btn btn-primary">
+          加载更多
+        </button>
+      </div>
     </div>
   </section>
 
   <script>
+    // 导入 fuse.js 模糊搜索
+    import Fuse from 'fuse.js';
+
     // 客户端搜索和筛选
     const searchInput = document.getElementById('search-input') as HTMLInputElement;
     const filterSource = document.getElementById('filter-source') as HTMLSelectElement;
@@ -105,6 +123,13 @@ const regions = [...new Set(cases.map((c) => c.基本信息.地区))].sort((a, b
     const caseGrid = document.getElementById('case-grid')!;
     const noResults = document.getElementById('no-results')!;
     const resultCount = document.getElementById('result-count')!;
+    const loadMoreBtn = document.getElementById('load-more-btn')!;
+    const loadMoreContainer = document.getElementById('load-more-container')!;
+
+    // 分页配置
+    const PAGE_SIZE = 12;
+    let currentPage = 1;
+    let currentFiltered: CaseItem[] = [];
 
     // 从 DOM 中提取所有案件数据
     interface CaseItem {
@@ -130,51 +155,103 @@ const regions = [...new Set(cases.map((c) => c.基本信息.地区))].sort((a, b
       };
     });
 
+    // 初始化 fuse.js 模糊搜索
+    const fuse = new Fuse(caseItems, {
+      keys: [
+        { name: 'name', weight: 0.5 },
+        { name: 'searchText', weight: 0.3 },
+        { name: 'source', weight: 0.1 },
+        { name: 'region', weight: 0.1 },
+      ],
+      threshold: 0.4,
+      includeScore: true,
+      minMatchCharLength: 1,
+    });
+
+    // 更新显示（支持分页）
+    function updateDisplay() {
+      // 隐藏所有
+      caseItems.forEach((item) => {
+        item.element.style.display = 'none';
+      });
+
+      // 显示当前页的案件
+      const endIndex = currentPage * PAGE_SIZE;
+      const toShow = currentFiltered.slice(0, endIndex);
+      toShow.forEach((item) => {
+        caseGrid.appendChild(item.element);
+        item.element.style.display = '';
+      });
+
+      // 更新加载更多按钮
+      if (endIndex >= currentFiltered.length) {
+        loadMoreContainer.classList.add('hidden');
+      } else {
+        loadMoreContainer.classList.remove('hidden');
+        loadMoreBtn.textContent = `加载更多（已显示 ${toShow.length}/${currentFiltered.length}）`;
+      }
+
+      // 更新计数和空状态
+      resultCount.textContent = `共 ${currentFiltered.length} 条`;
+      noResults.classList.toggle('hidden', currentFiltered.length > 0);
+    }
+
     function applyFilters() {
       const query = searchInput.value.trim();
       const source = filterSource.value;
       const region = filterRegion.value;
       const sort = filterSort.value;
 
-      let filtered = caseItems.filter((item) => {
-        const matchQuery = !query || item.searchText.includes(query);
+      // 先用 fuse.js 进行模糊搜索
+      let filtered: CaseItem[];
+      if (query) {
+        const results = fuse.search(query);
+        filtered = results.map((r) => r.item);
+      } else {
+        filtered = [...caseItems];
+      }
+
+      // 再应用类型和地区筛选
+      filtered = filtered.filter((item) => {
         const matchSource = !source || item.source === source;
         const matchRegion = !region || item.region === region;
-        return matchQuery && matchSource && matchRegion;
+        return matchSource && matchRegion;
       });
 
-      // 排序
-      filtered.sort((a, b) => {
-        switch (sort) {
-          case 'name':
-            return a.name.localeCompare(b.name, 'zh-CN');
-          case 'difficulty-desc':
-            return b.difficulty - a.difficulty;
-          case 'difficulty-asc':
-            return a.difficulty - b.difficulty;
-          case 'date':
-          default:
-            return b.date.localeCompare(a.date);
-        }
-      });
+      // 排序（搜索时默认按匹配度，否则按用户选择）
+      if (!query || sort !== 'date') {
+        filtered.sort((a, b) => {
+          switch (sort) {
+            case 'name':
+              return a.name.localeCompare(b.name, 'zh-CN');
+            case 'difficulty-desc':
+              return b.difficulty - a.difficulty;
+            case 'difficulty-asc':
+              return a.difficulty - b.difficulty;
+            case 'date':
+            default:
+              return b.date.localeCompare(a.date);
+          }
+        });
+      }
 
-      // 更新显示
-      caseItems.forEach((item) => {
-        item.element.style.display = 'none';
-      });
-      filtered.forEach((item) => {
-        caseGrid.appendChild(item.element);
-        item.element.style.display = '';
-      });
-
-      // 更新计数和空状态
-      resultCount.textContent = `共 ${filtered.length} 条`;
-      noResults.classList.toggle('hidden', filtered.length > 0);
+      currentFiltered = filtered;
+      currentPage = 1; // 筛选时重置分页
+      updateDisplay();
     }
+
+    // 加载更多
+    loadMoreBtn.addEventListener('click', () => {
+      currentPage++;
+      updateDisplay();
+    });
 
     searchInput.addEventListener('input', applyFilters);
     filterSource.addEventListener('change', applyFilters);
     filterRegion.addEventListener('change', applyFilters);
     filterSort.addEventListener('change', applyFilters);
+
+    // 初始化显示
+    applyFilters();
   </script>
 </BaseLayout>

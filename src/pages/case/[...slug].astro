@@ -1,4 +1,4 @@
-﻿---
+---
 import BaseLayout from '@layouts/BaseLayout.astro';
 import CaseCard from '@components/CaseCard.astro';
 import { getCaseBySlug, loadAllCases } from '@lib/caseLoader';
@@ -15,7 +15,8 @@ const { slug } = Astro.params;
 const caseData = Astro.props.caseData;
 
 if (!caseData) {
-  return Astro.redirect('/fun_detective/404');
+  Astro.response.status = 404;
+  return;
 }
 
 const { 基本信息, 故事视图, 设计视图, 游戏设计, 元数据 } = caseData;
@@ -34,23 +35,23 @@ const sortedClues = hasClueChain ? [...设计视图.线索链].sort((a, b) => {
 // 相关案例推荐
 const allCases = loadAllCases();
 const currentTrickTypes = new Set(设计视图.诡计类型 || []);
-const currentRegion = 基本信息.地区;
+const currentRegion = caseData.region;
 const currentDifficulty = 设计视图.难度评分?.综合 || 3;
 
 const relatedCases = allCases
-  .filter((c) => c.id !== caseData.id)
+  .filter((c) => c.slug !== caseData.slug)
   .map((c) => {
     let score = 0;
     // 诡计类型匹配（权重最高）
     const trickMatch = (c.设计视图.诡计类型 || []).filter((t) => currentTrickTypes.has(t)).length;
     score += trickMatch * 3;
     // 地区匹配
-    if (c.基本信息.地区 === currentRegion) score += 2;
+    if (c.region === currentRegion) score += 2;
     // 难度相近（差值越小分越高）
     const diff = Math.abs((c.设计视图.难度评分?.综合 || 3) - currentDifficulty);
     score += Math.max(0, 2 - diff);
     // 来源类型匹配
-    if (c.基本信息.来源类型 === 基本信息.来源类型) score += 1;
+    if (c.sourceType === caseData.sourceType) score += 1;
     return { case: c, score };
   })
   .sort((a, b) => b.score - a.score)
@@ -86,7 +87,7 @@ const linkTypeIcon: Record<string, string> = {
       <nav class="text-sm text-primary-200 mb-4">
         <a href="/fun_detective/" class="hover:text-white">首页</a>
         <span class="mx-2">/</span>
-        <a href={`/fun_detective/categories/${encodeURIComponent(基本信息.来源类型)}`} class="hover:text-white">{基本信息.来源类型}</a>
+        <a href={`/fun_detective/categories/${encodeURIComponent(caseData.sourceType)}`} class="hover:text-white">{caseData.sourceType}</a>
         <span class="mx-2">/</span>
         <span class="text-white">{基本信息.案件名称}</span>
       </nav>
@@ -95,8 +96,8 @@ const linkTypeIcon: Record<string, string> = {
       <p class="text-lg text-primary-100 mb-6 max-w-2xl">{基本信息.一句话简介}</p>
 
       <div class="flex flex-wrap gap-2 mb-6">
-        <span class="tag tag-primary bg-white/20 text-white">{基本信息.来源类型}</span>
-        <span class="tag bg-white/20 text-white">{基本信息.地区}</span>
+        <span class="tag tag-primary bg-white/20 text-white">{caseData.sourceType}</span>
+        <span class="tag bg-white/20 text-white">{caseData.region}</span>
         {基本信息.年代 && <span class="tag bg-white/20 text-white">{基本信息.年代}</span>}
         <span class="tag bg-white/20 text-white">{基本信息.案件状态}</span>
         <span class="tag tag-accent">难度 {设计视图.难度评分?.综合 || '-'}</span>
@@ -360,6 +361,18 @@ const linkTypeIcon: Record<string, string> = {
             </div>
           </div>
         )}
+      </div>
+    )}
+
+    <!-- 相关案例推荐 -->
+    {hasRelatedCases && (
+      <div class="mt-12 pt-8 border-t border-stone-200">
+        <h2 class="text-2xl font-bold mb-6 text-primary-800">🔍 相关案例推荐</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {relatedCases.map((related) => (
+            <CaseCard caseData={related} />
+          ))}
+        </div>
       </div>
     )}
   </div>
