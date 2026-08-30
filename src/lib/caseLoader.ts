@@ -106,3 +106,40 @@ export function getStats() {
       : '0',
   };
 }
+
+// 加载诡计类型→游戏机制映射表
+export function getTrickMechanismMap(): Record<string, any> {
+  try {
+    const data = import.meta.glob('../data/trick-to-mechanism.json', {
+      eager: true,
+      query: '?raw',
+      import: 'default',
+    }) as Record<string, string>;
+    const firstKey = Object.keys(data)[0];
+    return firstKey ? JSON.parse(data[firstKey]) : {};
+  } catch (e) {
+    console.error('加载诡计映射表失败', e);
+    return {};
+  }
+}
+
+// 加载游戏模板库
+export function getGameTemplates(): Record<string, any> {
+  try {
+    const data = import.meta.glob('../data/game-templates.json', {
+      eager: true,
+      query: '?raw',
+      import: 'default',
+    }) as Record<string, string>;
+    const firstKey = Object.keys(data)[0];
+    return firstKey ? JSON.parse(data[firstKey]) : {};
+  } catch (e) {
+    console.error('加载游戏模板库失败', e);
+    return {};
+  }
+}
+
+// 获取所有游戏案例
+export function getGameCases(): CaseWithSlug[] {
+  return loadAllCases().filter((c) => c.sourceType === '游戏');
+}
