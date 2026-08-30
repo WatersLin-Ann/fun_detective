@@ -107,6 +107,10 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
       showEvidenceBar: false,
       selectedEvidence: null,
       evidenceMode: 'view',
+      dialogueHistory: [],
+      witnessReaction: 'normal',
+      showHistory: false,
+      isTransitioning: false,
     };
 
     // 初始化
@@ -180,6 +184,20 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
       document.getElementById('investigation-section').classList.remove('hidden');
       document.getElementById('inv-evidence-count').textContent = state.collectedEvidence.length;
       document.getElementById('inv-witness-count').textContent = state.interviewedWitnesses.length;
+      
+      // 场景切换动画
+      const sceneContainer = document.getElementById('game-scene-container');
+      if (sceneContainer && !state.isTransitioning) {
+        state.isTransitioning = true;
+        sceneContainer.style.opacity = '0';
+        sceneContainer.style.transform = 'translateY(10px)';
+        sceneContainer.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+        setTimeout(() => {
+          sceneContainer.style.opacity = '1';
+          sceneContainer.style.transform = 'translateY(0)';
+          state.isTransitioning = false;
+        }, 50);
+      }
 
       const scene = gameScenes.find(s => s.id === state.currentScene);
       if (!scene) return;
@@ -283,7 +301,7 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
         </div>
       `;
 
-      // 证人对话
+      // 证人对话（火柴人角色 + 对话历史）
       if (state.currentWitness) {
         const witness = gameWitnesses.find(w => w.id === state.currentWitness);
         if (witness) {
@@ -295,17 +313,68 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
             return cont && cont.witnessId === witness.id;
           });
           
+          // 证人颜色映射
+          const witnessColors = {
+            conductor: '#3b82f6',
+            'mrs-hubbard': '#ec4899',
+            mary: '#8b5cf6',
+            colonel: '#22c55e',
+            princess: '#eab308',
+            countess: '#06b6d4',
+          };
+          const witnessColor = witnessColors[witness.id] || '#94a3b8';
+          
+          // 根据状态决定表情
+          let expression = 'normal';
+          if (state.witnessReaction === 'contradiction') expression = 'angry';
+          else if (state.witnessReaction === 'followup') expression = 'thinking';
+          else if (state.witnessReaction === 'shocked') expression = 'surprised';
+          
+          // 火柴人SVG（支持表情）
+          function stickFigureWithExpr(color, expr, size = 56) {
+            const eyes = { normal: '● ●', happy: '◠ ◠', sad: '◡ ◡', angry: '> <', surprised: '○ ○', thinking: '● -' };
+            const mouth = { normal: '—', happy: '◡', sad: '◠', angry: '︵', surprised: '○', thinking: '~' };
+            return `<svg width="${size}" height="${size * 1.4}" viewBox="0 0 100 140" class="drop-shadow-lg"><circle cx="50" cy="25" r="18" fill="none" stroke="${color}" stroke-width="3"/><text x="50" y="28" text-anchor="middle" font-size="10" fill="${color}">${eyes[expr] || eyes.normal}</text><text x="50" y="38" text-anchor="middle" font-size="8" fill="${color}">${mouth[expr] || mouth.normal}</text><line x1="50" y1="43" x2="50" y2="90" stroke="${color}" stroke-width="3"/><line x1="50" y1="55" x2="25" y2="75" stroke="${color}" stroke-width="3"/><line x1="50" y1="55" x2="75" y2="75" stroke="${color}" stroke-width="3"/><line x1="50" y1="90" x2="35" y2="125" stroke="${color}" stroke-width="3"/><line x1="50" y1="90" x2="65" y2="125" stroke="${color}" stroke-width="3"/></svg>`;
+          }
+          
+          // 对话历史HTML
+          const historyHtml = state.dialogueHistory && state.dialogueHistory.length > 0 
+            ? state.dialogueHistory.slice(-8).map(h => `
+                <div class="flex gap-2 text-sm py-1 border-b border-stone-700/50">
+                  <span class="font-medium flex-shrink-0" style="color: ${h.color}">${h.speaker}：</span>
+                  <span class="text-stone-400">${h.text.substring(0, 60)}${h.text.length > 60 ? '...' : ''}</span>
+                </div>
+              `).join('')
+            : '<p class="text-stone-500 text-sm text-center py-2">暂无对话历史</p>';
+          
           dialogContainer.innerHTML = `
-            <div class="bg-stone-800 rounded-xl p-6">
-              <div class="flex items-center gap-3 mb-4">
-                <span class="text-3xl">${witness.avatar}</span>
-                <h3 class="font-bold text-lg">${witness.name}</h3>
+            <div class="bg-stone-800 rounded-xl overflow-hidden">
+              <!-- 对话历史栏 -->
+              <div class="bg-stone-900/50 px-4 py-2 flex items-center justify-between border-b border-stone-700">
+                <span class="text-xs text-stone-400">对话记录 (${state.dialogueHistory?.length || 0})</span>
+                <button class="text-xs text-primary-400 hover:text-primary-300" onclick="window.__toggleTrialHistory()">${state.showHistory ? '收起' : '查看历史'}</button>
               </div>
-              <p class="text-stone-300 leading-relaxed mb-6">${testimony}</p>
-              <div class="flex gap-3 justify-end">
-                ${!isFollowedUp ? `<button class="px-4 py-2 bg-stone-600 rounded-lg hover:bg-stone-500" onclick="window.__followUp()">追问</button>` : ''}
-                ${hasContradiction ? `<button class="px-4 py-2 bg-yellow-600 rounded-lg hover:bg-yellow-500 font-bold" onclick="window.__presentEvidence()">出示证据</button>` : ''}
-                <button class="px-4 py-2 bg-stone-700 rounded-lg hover:bg-stone-600" onclick="window.__closeWitnessDialog()">关闭</button>
+              <!-- 历史面板 -->
+              <div id="trial-history-panel" class="${state.showHistory ? '' : 'hidden'} max-h-32 overflow-y-auto bg-stone-900/30 px-4 py-2">
+                ${historyHtml}
+              </div>
+              <!-- 对话内容 -->
+              <div class="p-6">
+                <div class="flex items-start gap-4 mb-4">
+                  <div class="flex-shrink-0">
+                    ${stickFigureWithExpr(witnessColor, expression)}
+                  </div>
+                  <div class="pt-2">
+                    <h3 class="font-bold text-lg" style="color: ${witnessColor}">${witness.name}</h3>
+                    <p class="text-xs text-stone-500">${expression === 'angry' ? '情绪：激动' : expression === 'thinking' ? '情绪：思考' : expression === 'surprised' ? '情绪：惊讶' : '情绪：平静'}</p>
+                  </div>
+                </div>
+                <p class="text-stone-300 leading-relaxed mb-6 min-h-20">${testimony}</p>
+                <div class="flex gap-3 justify-end">
+                  ${!isFollowedUp ? `<button class="px-4 py-2 bg-stone-600 rounded-lg hover:bg-stone-500 transition-colors" onclick="window.__followUp()">追问</button>` : ''}
+                  ${hasContradiction ? `<button class="px-4 py-2 bg-yellow-600 rounded-lg hover:bg-yellow-500 font-bold transition-all hover:scale-105" onclick="window.__presentEvidence()">出示证据</button>` : ''}
+                  <button class="px-4 py-2 bg-stone-700 rounded-lg hover:bg-stone-600 transition-colors" onclick="window.__closeWitnessDialog()">关闭</button>
+                </div>
               </div>
             </div>
           `;
@@ -369,6 +438,34 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
           </div>
         </div>
       `;
+    }
+
+
+    // 记录对话历史
+    function addDialogueHistory(speaker, text, color) {
+      if (!state.dialogueHistory) state.dialogueHistory = [];
+      state.dialogueHistory.push({ speaker, text, color, time: Date.now() });
+      // 最多保留50条
+      if (state.dialogueHistory.length > 50) {
+        state.dialogueHistory = state.dialogueHistory.slice(-50);
+      }
+    }
+    
+    // 切换对话历史显示
+    window.__toggleTrialHistory = function() {
+      state.showHistory = !state.showHistory;
+      const panel = document.getElementById('trial-history-panel');
+      if (panel) panel.classList.toggle('hidden');
+      renderTrial();
+    };
+    
+    // 设置证人表情
+    function setWitnessReaction(reaction) {
+      state.witnessReaction = reaction;
+      setTimeout(() => {
+        state.witnessReaction = 'normal';
+        if (state.currentWitness) renderTrial();
+      }, 2000);
     }
 
     // 游戏交互函数

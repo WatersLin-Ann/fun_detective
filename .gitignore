@@ -24,11 +24,15 @@ ENV/
 .DS_Store
 Thumbs.db
 
-# 临时文件
+# 临时文件（命名以 temp_ 开头的均不提交）
+temp_*
 *.tmp
 *.bak
+
+# 日志文件（不提交任何日志，包括 errors/ 下的）
 *.log
-!errors/*.log
+
+# 报告（Markdown 格式的同步报告可以提交）
 !reports/*.md
 
 # lark-cli 临时配置
@@ -43,3 +47,17 @@ node_modules/
 # 构建产物（由 GitHub Actions 自动构建）
 dist/
 .astro/
+
+# 本地服务器日志和运行时文件
+server.log
+astro-dev.log
+astro-dev-err.log
+dev_server.log
+dev_server_error.log
+
+# 本地批处理脚本和中间产物（以 temp_ 开头，已在上方规则覆盖）
+# 如需保留特定脚本，请重命名为非 temp_ 前缀
+
+# 本地截图和测试图片
+temp_*.png
+temp_*.jpg
