@@ -36,3 +36,10 @@ Thumbs.db
 
 # SDD 工作区（本地执行记录，不提交）
 .superpowers/
+
+# Node.js 依赖（不应提交）
+node_modules/
+
+# 构建产物（由 GitHub Actions 自动构建）
+dist/
+.astro/

@@ -58,6 +58,6 @@ jobs:
       - name: Commit and push
         if: steps.git-check.outputs.changes == 'true'
         run: |
-          git add -A
+          git add cases/
           git commit -m "sync: 自动同步 $(date '+%Y-%m-%d %H:%M') [skip ci]"
           git push origin main
