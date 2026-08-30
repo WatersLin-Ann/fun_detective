@@ -1,0 +1,164 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import CaseCard from '@components/CaseCard.astro';
+import { getGameTemplates, getTrickMechanismMap, getGameCases } from '@lib/caseLoader';
+
+const templates = getGameTemplates();
+const trickMap = getTrickMechanismMap();
+const gameCases = getGameCases();
+
+const templateNames = Object.keys(templates);
+const trickNames = Object.keys(trickMap);
+
+// 统计数据
+const stats = {
+  templates: templateNames.length,
+  tricks: trickNames.length,
+  gameCases: gameCases.length,
+};
+
+// 游戏案例精选（取前6个）
+const featuredGames = gameCases.slice(0, 6);
+---
+
+<BaseLayout title="游戏设计参考库" description="推理游戏设计参考：游戏模板、诡计机制映射、经典游戏案例分析">
+  <!-- Hero区域 -->
+  <section class="bg-gradient-to-br from-primary-900 to-primary-950 text-white py-16">
+    <div class="container-page">
+      <div class="max-w-3xl">
+        <h1 class="text-4xl md:text-5xl font-bold mb-4">推理游戏设计参考库</h1>
+        <p class="text-xl text-primary-100 mb-8">从经典案例到可复用的游戏机制，为你的推理游戏设计提供灵感与框架</p>
+        <div class="flex flex-wrap gap-6">
+          <div class="flex items-center gap-2">
+            <span class="text-3xl font-bold text-accent-400">{stats.templates}</span>
+            <span class="text-primary-200">游戏模板</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-3xl font-bold text-accent-400">{stats.tricks}</span>
+            <span class="text-primary-200">诡计类型</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-3xl font-bold text-accent-400">{stats.gameCases}</span>
+            <span class="text-primary-200">游戏案例</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 使用指南 -->
+  <section class="py-12 bg-stone-50">
+    <div class="container-page">
+      <h2 class="text-2xl font-bold mb-8 text-center">如何使用</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="card p-6 text-center">
+          <div class="w-12 h-12 bg-primary-100 text-primary-700 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">1</div>
+          <h3 class="font-bold mb-2">选择诡计类型</h3>
+          <p class="text-sm text-stone-600">从10种经典诡计类型中找到你想要的核心谜题</p>
+        </div>
+        <div class="card p-6 text-center">
+          <div class="w-12 h-12 bg-primary-100 text-primary-700 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">2</div>
+          <h3 class="font-bold mb-2">查看适配机制</h3>
+          <p class="text-sm text-stone-600">了解该诡计对应的游戏机制和关卡设计要点</p>
+        </div>
+        <div class="card p-6 text-center">
+          <div class="w-12 h-12 bg-primary-100 text-primary-700 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">3</div>
+          <h3 class="font-bold mb-2">套用游戏模板</h3>
+          <p class="text-sm text-stone-600">选择合适的游戏模板，快速搭建关卡结构</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 游戏模板库 -->
+  <section class="py-16">
+    <div class="container-page">
+      <div class="flex items-center justify-between mb-8">
+        <div>
+          <h2 class="text-2xl font-bold mb-2">游戏模板库</h2>
+          <p class="text-stone-600">5个可复用的推理游戏设计模板，每个包含完整的阶段设计</p>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {templateNames.map((name) => {
+          const t = templates[name];
+          return (
+            <a href={`/fun_detective/game-design/templates/${encodeURIComponent(name)}`} class="card p-6 hover:shadow-lg transition-shadow group">
+              <h3 class="text-lg font-bold mb-2 group-hover:text-primary-700 transition-colors">{name}</h3>
+              <p class="text-sm text-stone-600 mb-4 line-clamp-2">{t.描述}</p>
+              <div class="mb-4">
+                <span class="text-xs text-stone-500 mb-1 block">核心循环</span>
+                <p class="text-sm font-medium text-primary-700">{t.核心循环}</p>
+              </div>
+              <div class="flex flex-wrap gap-1.5 mb-4">
+                {(t.适配诡计类型 || []).slice(0, 3).map((trick) => (
+                  <span class="tag tag-accent">{trick}</span>
+                ))}
+              </div>
+              <div class="flex items-center justify-between text-xs text-stone-500 pt-3 border-t border-stone-100">
+                <span>{(t.参考案例 || []).length} 个参考案例</span>
+                <span class="text-primary-600 group-hover:underline">查看详情 →</span>
+              </div>
+            </a>
+          );
+        })}
+      </div>
+    </div>
+  </section>
+
+  <!-- 诡计类型映射 -->
+  <section class="py-16 bg-stone-50">
+    <div class="container-page">
+      <div class="flex items-center justify-between mb-8">
+        <div>
+          <h2 class="text-2xl font-bold mb-2">诡计类型 → 游戏机制</h2>
+          <p class="text-stone-600">10种经典诡计类型对应的游戏机制和关卡设计要点</p>
+        </div>
+        <a href="/fun_detective/game-design/tricks" class="text-primary-600 hover:underline text-sm">查看完整映射 →</a>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        {trickNames.map((name) => {
+          const t = trickMap[name];
+          return (
+            <a href={`/fun_detective/game-design/tricks#${encodeURIComponent(name)}`} class="card p-4 hover:shadow-md transition-shadow group">
+              <h3 class="font-bold mb-2 group-hover:text-primary-700 transition-colors text-sm">{name}</h3>
+              <div class="flex flex-wrap gap-1 mb-2">
+                {(t.适配游戏类型 || []).slice(0, 2).map((type) => (
+                  <span class="tag tag-primary text-xs">{type}</span>
+                ))}
+              </div>
+              <p class="text-xs text-stone-500">{(t.核心机制 || []).length} 个核心机制</p>
+            </a>
+          );
+        })}
+      </div>
+    </div>
+  </section>
+
+  <!-- 游戏案例精选 -->
+  <section class="py-16">
+    <div class="container-page">
+      <div class="flex items-center justify-between mb-8">
+        <div>
+          <h2 class="text-2xl font-bold mb-2">经典游戏案例</h2>
+          <p class="text-stone-600">12个推理游戏案例深度分析，学习优秀的设计实践</p>
+        </div>
+        <a href="/fun_detective/categories/游戏" class="text-primary-600 hover:underline text-sm">查看全部 →</a>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {featuredGames.map((c) => (
+          <CaseCard caseData={c} />
+        ))}
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+</style>

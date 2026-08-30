@@ -1,0 +1,281 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import CaseCard from '@components/CaseCard.astro';
+import { getGameTemplates, getTrickMechanismMap, getGameCases } from '@lib/caseLoader';
+
+export function getStaticPaths() {
+  const templates = getGameTemplates();
+  return Object.keys(templates).map((name) => ({
+    params: { name },
+  }));
+}
+
+const { name } = Astro.params;
+const templates = getGameTemplates();
+const trickMap = getTrickMechanismMap();
+const gameCases = getGameCases();
+
+const template = templates[name];
+const templateNames = Object.keys(templates);
+const currentIndex = templateNames.indexOf(name);
+const prevTemplate = currentIndex > 0 ? templateNames[currentIndex - 1] : null;
+const nextTemplate = currentIndex < templateNames.length - 1 ? templateNames[currentIndex + 1] : null;
+
+// 找到使用该模板的游戏案例
+const relatedGames = gameCases.filter((c) => {
+  const gameTemplates = c.设计视图?.可复用游戏模板 || [];
+  return gameTemplates.some((t) => name.includes(t) || t.includes(name.replace('模板', '')));
+});
+
+// 适配的诡计详情
+const relatedTricks = (template.适配诡计类型 || []).map((trickName) => trickMap[trickName]).filter(Boolean);
+---
+
+<BaseLayout title={`${name} - 游戏模板`} description={template.描述}>
+  <div class="container-page py-8">
+    <!-- 面包屑 -->
+    <nav class="text-sm text-stone-500 mb-6">
+      <a href="/fun_detective/game-design" class="hover:text-primary-600">游戏设计</a>
+      <span class="mx-2">/</span>
+      <a href="/fun_detective/game-design#模板" class="hover:text-primary-600">模板库</a>
+      <span class="mx-2">/</span>
+      <span class="text-stone-700">{name}</span>
+    </nav>
+
+    <!-- 页面头部 -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold mb-3">{name}</h1>
+      <p class="text-lg text-stone-600 mb-6">{template.描述}</p>
+      
+      <!-- 核心循环可视化 -->
+      <div class="bg-primary-50 rounded-xl p-6 mb-6">
+        <h3 class="text-sm font-bold text-primary-700 mb-4">核心循环</h3>
+        <div class="flex flex-wrap items-center gap-2">
+          {(template.核心循环 || '').split('→').map((step, i, arr) => (
+            <>
+              <span class="bg-white px-4 py-2 rounded-lg shadow-sm text-sm font-medium">{step.trim()}</span>
+              {i < arr.length - 1 && (
+                <svg class="w-5 h-5 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              )}
+            </>
+          ))}
+        </div>
+      </div>
+
+      <!-- 快速信息 -->
+      <div class="flex flex-wrap gap-4 text-sm">
+        <div class="flex items-center gap-2">
+          <span class="text-stone-500">难度曲线：</span>
+          <span class="font-medium">{template.难度曲线 || '未指定'}</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-stone-500">适合时长：</span>
+          <span class="font-medium">{template.适合时长 || '未指定'}</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-stone-500">适配诡计：</span>
+          <div class="flex flex-wrap gap-1">
+            {(template.适配诡计类型 || []).map((t) => (
+              <span class="tag tag-accent">{t}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab切换 -->
+    <div class="border-b border-stone-200 mb-8">
+      <div class="flex gap-6">
+        <button class="tab-btn active pb-3 font-medium" data-tab="stages">阶段设计</button>
+        <button class="tab-btn pb-3 font-medium text-stone-500" data-tab="tricks">适配诡计</button>
+        <button class="tab-btn pb-3 font-medium text-stone-500" data-tab="cases">参考案例</button>
+        <button class="tab-btn pb-3 font-medium text-stone-500" data-tab="tips">设计要点</button>
+      </div>
+    </div>
+
+    <!-- Tab内容 -->
+    <!-- 阶段设计 -->
+    <div id="tab-stages" class="tab-content">
+      <div class="space-y-6">
+        {(template.阶段设计 || []).map((stage, i) => (
+          <div class="card p-6">
+            <div class="flex items-start gap-4">
+              <div class="w-10 h-10 bg-primary-100 text-primary-700 rounded-full flex items-center justify-center font-bold flex-shrink-0">
+                {i + 1}
+              </div>
+              <div class="flex-1">
+                <h3 class="text-lg font-bold mb-2">{stage.阶段}</h3>
+                <p class="text-stone-600 mb-4"><span class="font-medium">玩家目标：</span>{stage.玩家目标}</p>
+                <div class="mb-3">
+                  <span class="text-sm text-stone-500 mb-1 block">关键机制</span>
+                  <div class="flex flex-wrap gap-1.5">
+                    {(stage.关键机制 || []).map((m) => (
+                      <span class="tag tag-primary">{m}</span>
+                    ))}
+                  </div>
+                </div>
+                {stage.设计要点 && (
+                  <div class="mt-3 pt-3 border-t border-stone-100">
+                    <span class="text-sm text-stone-500 mb-1 block">设计要点</span>
+                    <p class="text-sm text-stone-600">{stage.设计要点}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <!-- 适配诡计 -->
+    <div id="tab-tricks" class="tab-content hidden">
+      {relatedTricks.length > 0 ? (
+        <div class="space-y-4">
+          {relatedTricks.map((trick) => (
+            <div class="card p-6">
+              <h3 class="text-lg font-bold mb-2">{trick.描述 ? Object.keys(trickMap).find(k => trickMap[k] === trick) : '未知诡计'}</h3>
+              <p class="text-stone-600 mb-3">{trick.描述}</p>
+              <div class="mb-3">
+                <span class="text-sm text-stone-500 mb-1 block">核心机制</span>
+                <div class="flex flex-wrap gap-1.5">
+                  {(trick.核心机制 || []).map((m) => (
+                    <span class="tag tag-accent">{m}</span>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <span class="text-sm text-stone-500 mb-1 block">关卡设计要点</span>
+                <ul class="text-sm text-stone-600 space-y-1">
+                  {(trick.关卡设计要点 || []).map((tip, i) => (
+                    <li>• {tip}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p class="text-stone-500">暂无适配的诡计类型详情</p>
+      )}
+    </div>
+
+    <!-- 参考案例 -->
+    <div id="tab-cases" class="tab-content hidden">
+      {relatedGames.length > 0 ? (
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {relatedGames.map((c) => (
+            <CaseCard caseData={c} />
+          ))}
+        </div>
+      ) : (
+        <div class="card p-6">
+          <p class="text-stone-500 mb-4">暂无直接使用该模板的游戏案例，但以下案例包含相似机制：</p>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {gameCases.slice(0, 3).map((c) => (
+              <CaseCard caseData={c} />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+
+    <!-- 设计要点 -->
+    <div id="tab-tips" class="tab-content hidden">
+      <div class="card p-6">
+        <h3 class="text-lg font-bold mb-4">通用设计建议</h3>
+        <div class="space-y-4 text-stone-600">
+          <div>
+            <h4 class="font-medium text-stone-800 mb-1">难度控制</h4>
+            <p class="text-sm">前期提供明确的引导和提示，中期逐步增加复杂度，后期要求玩家综合运用所有机制。避免难度曲线过于陡峭。</p>
+          </div>
+          <div>
+            <h4 class="font-medium text-stone-800 mb-1">信息节奏</h4>
+            <p class="text-sm">关键线索的暴露时机要精心设计，既不能太早（失去推理乐趣），也不能太晚（玩家卡关）。建议每个阶段提供2-3条关键线索。</p>
+          </div>
+          <div>
+            <h4 class="font-medium text-stone-800 mb-1">反馈机制</h4>
+            <p class="text-sm">玩家的每个推理尝试都应有明确的反馈，正确的推理推动剧情，错误的推理给出提示而不是直接惩罚。</p>
+          </div>
+          <div>
+            <h4 class="font-medium text-stone-800 mb-1">复用性</h4>
+            <p class="text-sm">该模板可以适配多种诡计类型，建议在实际使用时根据具体诡计调整阶段设计中的关键机制和谜题类型。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 上一个/下一个导航 -->
+    <div class="flex justify-between mt-12 pt-8 border-t border-stone-200">
+      {prevTemplate ? (
+        <a href={`/fun_detective/game-design/templates/${encodeURIComponent(prevTemplate)}`} class="group flex items-center gap-2 text-stone-600 hover:text-primary-600">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+          <div>
+            <div class="text-xs text-stone-400">上一个模板</div>
+            <div class="font-medium group-hover:underline">{prevTemplate}</div>
+          </div>
+        </a>
+      ) : <div></div>}
+      {nextTemplate ? (
+        <a href={`/fun_detective/game-design/templates/${encodeURIComponent(nextTemplate)}`} class="group flex items-center gap-2 text-stone-600 hover:text-primary-600 text-right">
+          <div>
+            <div class="text-xs text-stone-400">下一个模板</div>
+            <div class="font-medium group-hover:underline">{nextTemplate}</div>
+          </div>
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </a>
+      ) : <div></div>}
+    </div>
+  </div>
+
+  <script>
+    // Tab切换
+    const tabs = document.querySelectorAll('.tab-btn');
+    const contents = document.querySelectorAll('.tab-content');
+    
+    function switchTab(tabName) {
+      tabs.forEach((tab) => {
+        if (tab.dataset.tab === tabName) {
+          tab.classList.add('active', 'text-primary-700', 'border-b-2', 'border-primary-600');
+          tab.classList.remove('text-stone-500');
+        } else {
+          tab.classList.remove('active', 'text-primary-700', 'border-b-2', 'border-primary-600');
+          tab.classList.add('text-stone-500');
+        }
+      });
+      contents.forEach((content) => {
+        if (content.id === `tab-${tabName}`) {
+          content.classList.remove('hidden');
+        } else {
+          content.classList.add('hidden');
+        }
+      });
+      // 更新URL hash
+      if (history.replaceState) {
+        history.replaceState(null, '', `#${tabName}`);
+      }
+    }
+    
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+    });
+    
+    // 页面加载时读取hash
+    const hash = window.location.hash.replace('#', '');
+    if (hash && ['stages', 'tricks', 'cases', 'tips'].includes(hash)) {
+      switchTab(hash);
+    }
+  </script>
+</BaseLayout>
+
+<style>
+  .tab-btn.active {
+    color: #1d4ed8;
+    border-bottom: 2px solid #1d4ed8;
+  }
+</style>

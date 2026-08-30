@@ -21,6 +21,8 @@ if (!caseData) {
 
 const { 基本信息, 故事视图, 设计视图, 游戏设计, 元数据 } = caseData;
 const hasGameDesign = Boolean(caseData.sourceType === '游戏' || (游戏设计 && (游戏设计.游戏平台?.length || 游戏设计.玩法类型?.length)));
+const hasAdaptationSuggestions = Boolean(设计视图.游戏化改编建议 && 设计视图.游戏化改编建议.length > 0);
+const hasGameTab = hasGameDesign || hasAdaptationSuggestions;
 const hasReferenceLinks = Boolean(基本信息.参考链接 && 基本信息.参考链接.length > 0);
 const hasClueChain = Boolean(设计视图.线索链 && 设计视图.线索链.length > 0);
 
@@ -59,6 +61,17 @@ const relatedCases = allCases
   .map((item) => item.case);
 
 const hasRelatedCases = relatedCases.length > 0;
+
+// 相似游戏案例推荐（基于诡计类型）
+const gameCases = allCases.filter((c) => c.sourceType === '游戏');
+const similarGames = gameCases
+  .map((c) => {
+    const trickMatch = (c.设计视图.诡计类型 || []).filter((t) => currentTrickTypes.has(t)).length;
+    return { case: c, score: trickMatch };
+  })
+  .sort((a, b) => b.score - a.score)
+  .slice(0, 3)
+  .map((item) => item.case);
 
 // 线索类型颜色
 const clueTypeColor: Record<string, string> = {
@@ -125,9 +138,9 @@ const linkTypeIcon: Record<string, string> = {
       <button class="view-tab px-4 py-3 font-medium text-sm border-b-2 border-transparent text-stone-500 hover:text-stone-700" data-view="design">
         🎯 设计视图
       </button>
-      {hasGameDesign && (
+      {hasGameTab && (
         <button class="view-tab px-4 py-3 font-medium text-sm border-b-2 border-transparent text-stone-500 hover:text-stone-700" data-view="game">
-          🎮 游戏设计
+          🎮 {hasGameDesign ? '游戏设计' : '游戏化改编'}
         </button>
       )}
     </div>
@@ -308,7 +321,7 @@ const linkTypeIcon: Record<string, string> = {
     </div>
 
     <!-- 游戏设计视图 -->
-    {hasGameDesign && (
+    {hasGameTab && (
       <div id="view-game" class="view-content hidden max-w-4xl mx-auto">
         <div class="grid md:grid-cols-2 gap-6 mb-8">
           {游戏设计.游戏平台?.length > 0 && (
@@ -358,6 +371,60 @@ const linkTypeIcon: Record<string, string> = {
             <h3 class="font-bold mb-3 text-primary-800">📋 可复用游戏模板</h3>
             <div class="flex flex-wrap gap-2">
               {游戏设计.可复用游戏模板.map((t) => <span class="tag tag-primary">{t}</span>)}
+            </div>
+          </div>
+        )}
+
+        <!-- 游戏化改编建议 -->
+        {hasAdaptationSuggestions && (
+          <div class="mt-8">
+            <h2 class="text-xl font-bold mb-4 text-primary-800">🎮 游戏化改编建议</h2>
+            <div class="space-y-4">
+              {设计视图.游戏化改编建议.map((adv, idx) => (
+                <div class="card p-5 border-l-4 border-accent-500">
+                  <div class="flex items-center justify-between mb-3">
+                    <h3 class="font-bold text-lg text-primary-800">方向{idx + 1}：{adv.改编方向}</h3>
+                    {adv.难度适配 && <span class="tag tag-accent">{adv.难度适配}</span>}
+                  </div>
+                  {adv.核心玩法 && (
+                    <div class="mb-3">
+                      <span class="text-sm text-stone-500">核心玩法：</span>
+                      <span class="text-sm font-medium text-stone-700">{adv.核心玩法}</span>
+                    </div>
+                  )}
+                  {adv.关键机制?.length > 0 && (
+                    <div class="mb-3">
+                      <span class="text-sm text-stone-500 block mb-1">关键机制：</span>
+                      <div class="flex flex-wrap gap-1.5">
+                        {adv.关键机制.map((m) => <span class="tag tag-primary text-xs">{m}</span>)}
+                      </div>
+                    </div>
+                  )}
+                  {adv.改编说明 && (
+                    <p class="text-sm text-stone-600 leading-relaxed">{adv.改编说明}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <!-- 相似游戏案例推荐 -->
+        {hasAdaptationSuggestions && (
+          <div class="mt-8">
+            <h2 class="text-xl font-bold mb-4 text-primary-800">🎯 相似游戏案例参考</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {similarGames.map((g) => (
+                <a href={`/fun_detective/case/${g.slug}`} class="card p-4 hover:shadow-md transition-shadow group">
+                  <h3 class="font-bold mb-1 group-hover:text-primary-700 transition-colors">{g.基本信息.案件名称}</h3>
+                  <div class="flex flex-wrap gap-1 mb-2">
+                    {(g.游戏设计?.玩法类型 || []).slice(0, 2).map((t) => (
+                      <span class="tag tag-accent text-xs">{t}</span>
+                    ))}
+                  </div>
+                  <p class="text-xs text-stone-500 line-clamp-2">{g.基本信息.一句话简介}</p>
+                </a>
+              ))}
             </div>
           </div>
         )}
