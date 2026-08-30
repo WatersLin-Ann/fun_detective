@@ -19,13 +19,13 @@ const PAGE_SIZE = 12;
   <section class="bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 text-white py-16">
     <div class="container-page">
       <div class="max-w-3xl">
-        <h1 class="text-4xl md:text-5xl font-bold mb-4">
+        <h1 class="text-4xl md:text-5xl font-bold mb-4 animate-fade-in">
           探索全球<span class="text-accent-400">案件</span>的奥秘
         </h1>
-        <p class="text-lg text-primary-200 mb-8">
+        <p class="text-lg text-primary-200 mb-8 animate-fade-in-delay-1">
           汇集推理小说、真实案件、影视游戏中的经典案例，为小说创作和游戏设计提供结构化的灵感与参考。
         </p>
-        <div class="flex flex-wrap gap-8">
+        <div class="flex flex-wrap gap-8 animate-fade-in-delay-2">
           <div>
             <div class="text-3xl font-bold text-accent-400">{stats.total}</div>
             <div class="text-sm text-primary-300">案件总数</div>
@@ -92,8 +92,10 @@ const PAGE_SIZE = 12;
         <span id="result-count" class="text-stone-500">共 {cases.length} 条</span>
       </div>
       <div id="case-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {cases.map((caseData) => (
-          <CaseCard caseData={caseData} />
+        {cases.map((caseData, index) => (
+          <div class="stagger-item" style={`animation-delay: ${Math.min(index * 0.05, 0.6)}s`}>
+            <CaseCard caseData={caseData} />
+          </div>
         ))}
       </div>
       <div id="no-results" class="hidden text-center py-16">

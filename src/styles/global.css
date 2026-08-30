@@ -19,28 +19,40 @@
     @apply max-w-6xl mx-auto px-4 sm:px-6 lg:px-8;
   }
   .card {
-    @apply bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden transition-all duration-200 hover:shadow-md hover:-translate-y-0.5;
+    @apply bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-primary-300;
+  }
+  .card:active {
+    @apply translate-y-0 shadow-md;
   }
   .tag {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-stone-100 text-stone-700;
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-stone-100 text-stone-700 transition-all duration-200;
+  }
+  .tag:hover {
+    @apply bg-stone-200;
   }
   .tag-primary {
     @apply bg-primary-100 text-primary-800;
   }
+  .tag-primary:hover {
+    @apply bg-primary-200;
+  }
   .tag-accent {
     @apply bg-accent-100 text-accent-800;
   }
+  .tag-accent:hover {
+    @apply bg-accent-200;
+  }
   .btn {
-    @apply inline-flex items-center px-4 py-2 rounded-lg font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
+    @apply inline-flex items-center px-4 py-2 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-95;
   }
   .btn-primary {
-    @apply bg-primary-900 text-white hover:bg-primary-800 focus:ring-primary-500;
+    @apply bg-primary-900 text-white hover:bg-primary-800 hover:shadow-lg focus:ring-primary-500;
   }
   .btn-outline {
-    @apply border border-stone-300 text-stone-700 hover:bg-stone-50 focus:ring-stone-400;
+    @apply border border-stone-300 text-stone-700 hover:bg-stone-50 hover:border-stone-400 focus:ring-stone-400;
   }
   .input {
-    @apply w-full px-4 py-2 rounded-lg border border-stone-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent;
+    @apply w-full px-4 py-2 rounded-lg border border-stone-300 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent focus:shadow-md;
   }
 }
 
@@ -55,4 +67,110 @@
 }
 .story-content p {
   @apply mb-4;
+}
+
+/* ===== 动画效果 ===== */
+
+/* 页面淡入 */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.6s ease-out forwards;
+}
+
+.animate-fade-in-delay-1 {
+  animation: fadeIn 0.6s ease-out 0.1s forwards;
+  opacity: 0;
+}
+
+.animate-fade-in-delay-2 {
+  animation: fadeIn 0.6s ease-out 0.2s forwards;
+  opacity: 0;
+}
+
+.animate-fade-in-delay-3 {
+  animation: fadeIn 0.6s ease-out 0.3s forwards;
+  opacity: 0;
+}
+
+/* 卡片依次进入 */
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.stagger-item {
+  opacity: 0;
+  animation: slideUp 0.5s ease-out forwards;
+}
+
+/* 脉冲效果 */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.animate-pulse-slow {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* 渐变文字 */
+.gradient-text {
+  @apply bg-gradient-to-r from-primary-700 to-accent-600 bg-clip-text text-transparent;
+}
+
+/* 悬停缩放 */
+.hover-scale {
+  @apply transition-transform duration-300 hover:scale-105;
+}
+
+/* 滚动条美化 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-stone-100;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-stone-300 rounded-full;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-stone-400;
+}
+
+/* 选中文字颜色 */
+::selection {
+  @apply bg-primary-200 text-primary-900;
+}
+
+/* ===== 移动端优化 ===== */
+@media (max-width: 640px) {
+  .container-page {
+    @apply px-3;
+  }
+  h1 {
+    @apply text-2xl;
+  }
+  h2 {
+    @apply text-xl;
+  }
+  .card {
+    @apply rounded-lg;
+  }
+  .btn {
+    @apply px-3 py-1.5 text-sm;
+  }
+}
+
+/* 减少动画（无障碍） */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
