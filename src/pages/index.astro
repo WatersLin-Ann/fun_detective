@@ -92,10 +92,8 @@ const PAGE_SIZE = 12;
         <span id="result-count" class="text-stone-500">共 {cases.length} 条</span>
       </div>
       <div id="case-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {cases.map((caseData, index) => (
-          <div class="stagger-item" style={`animation-delay: ${Math.min(index * 0.05, 0.6)}s`}>
-            <CaseCard caseData={caseData} />
-          </div>
+        {cases.map((caseData) => (
+          <CaseCard caseData={caseData} />
         ))}
       </div>
       <div id="no-results" class="hidden text-center py-16">

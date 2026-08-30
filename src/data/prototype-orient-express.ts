@@ -89,6 +89,7 @@ export const gameScenes: GameScene[] = [
     name: '列车走廊',
     description: '昏暗的走廊里，列车员正焦急地敲着一间包厢的门。乘客们纷纷探出头查看情况。',
     background: 'linear-gradient(135deg, #2d2d44 0%, #1f1f33 50%, #1a1a2e 100%)',
+    sceneType: 'corridor',
     interactables: [
       {
         id: 'victim-door',
@@ -104,6 +105,7 @@ export const gameScenes: GameScene[] = [
         type: 'witness',
         witnessId: 'conductor',
         position: { x: 50, y: 45 },
+        color: '#3b82f6',
       },
       {
         id: 'mrs-hubbard',
@@ -112,6 +114,7 @@ export const gameScenes: GameScene[] = [
         type: 'witness',
         witnessId: 'mrs-hubbard',
         position: { x: 70, y: 35 },
+        color: '#ec4899',
       },
     ],
     exits: [
@@ -124,6 +127,7 @@ export const gameScenes: GameScene[] = [
     name: '受害者包厢',
     description: '包厢内，一个男人倒在床上，身上有多处刀伤。窗户开着，雪飘了进来。',
     background: 'linear-gradient(135deg, #3d1a1a 0%, #2d1414 50%, #1a0d0d 100%)',
+    sceneType: 'room',
     interactables: [
       {
         id: 'body',
@@ -173,6 +177,7 @@ export const gameScenes: GameScene[] = [
     name: '餐车',
     description: '所有乘客都聚集在餐车，气氛紧张。你将在这里进行"审判"。',
     background: 'linear-gradient(135deg, #2a2a3e 0%, #1e1e30 50%, #181828 100%)',
+    sceneType: 'dining',
     interactables: [
       {
         id: 'mary',
@@ -181,6 +186,7 @@ export const gameScenes: GameScene[] = [
         type: 'witness',
         witnessId: 'mary',
         position: { x: 20, y: 40 },
+        color: '#8b5cf6',
       },
       {
         id: 'colonel',
@@ -189,6 +195,7 @@ export const gameScenes: GameScene[] = [
         type: 'witness',
         witnessId: 'colonel',
         position: { x: 40, y: 50 },
+        color: '#22c55e',
       },
       {
         id: 'princess',
@@ -197,6 +204,7 @@ export const gameScenes: GameScene[] = [
         type: 'witness',
         witnessId: 'princess',
         position: { x: 60, y: 35 },
+        color: '#eab308',
       },
       {
         id: 'countess',
@@ -205,6 +213,7 @@ export const gameScenes: GameScene[] = [
         type: 'witness',
         witnessId: 'countess',
         position: { x: 80, y: 45 },
+        color: '#06b6d4',
       },
     ],
     exits: [{ to: 'corridor', label: '返回走廊' }],
@@ -214,6 +223,7 @@ export const gameScenes: GameScene[] = [
     name: '结局',
     description: '所有真相都已揭开，现在是做出最终选择的时候...',
     background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
+    sceneType: 'train',
     interactables: [],
     exits: [],
   },
