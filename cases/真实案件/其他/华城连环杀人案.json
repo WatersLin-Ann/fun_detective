@@ -19,11 +19,6 @@
         "标题": "Wikipedia - Hwaseong serial murders",
         "URL": "https://en.wikipedia.org/wiki/Hwaseong_serial_murders",
         "类型": "维基百科"
-      },
-      {
-        "标题": "B站视频解说",
-        "URL": "https://www.bilibili.com/video/BV1hoL36ZEWe/",
-        "类型": "B站"
       }
     ]
   },
@@ -81,7 +76,7 @@
     "难度评分": {
       "线索密度": 3.5,
       "误导数量": 4.5,
-      "诡计隐蔽度": 5,
+      "诡计隐蔽度": 5.0,
       "综合": 4.3
     },
     "线索链": [
