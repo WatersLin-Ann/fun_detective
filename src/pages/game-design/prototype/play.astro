@@ -486,18 +486,57 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
 
       if (item.type === 'evidence' && item.evidenceId) {
         if (!state.collectedEvidence.includes(item.evidenceId)) {
-          state.collectedEvidence.push(item.evidenceId);
           const evidence = gameEvidence.find(e => e.id === item.evidenceId);
-          alert(`收集到证据：${evidence?.name}\n\n${evidence?.keyInfo}`);
+          // 使用证据卡片替代alert
+          GameUI.showEvidenceCard(evidence, (ev) => {
+            state.collectedEvidence.push(ev.id);
+            GameUI.showToast(`收集到证据：${ev.name}`, 'success');
+            // 播放收集动画
+            const rect = event.target.getBoundingClientRect();
+            GameUI.playCollectAnimation(rect.left, rect.top, ev.name);
+            render();
+          });
+        } else {
+          const evidence = gameEvidence.find(e => e.id === item.evidenceId);
+          GameUI.showEvidenceCard(evidence, null);
         }
       } else if (item.type === 'witness' && item.witnessId) {
         if (!state.interviewedWitnesses.includes(item.witnessId)) {
           state.interviewedWitnesses.push(item.witnessId);
+          GameUI.showToast(`询问了${gameWitnesses.find(w => w.id === item.witnessId)?.name}`, 'info');
         }
         const witness = gameWitnesses.find(w => w.id === item.witnessId);
-        alert(`${witness?.name}：\n\n${witness?.initialTestimony}`);
+        const witnessColors = {
+          conductor: '#3b82f6',
+          'mrs-hubbard': '#ec4899',
+          mary: '#8b5cf6',
+          colonel: '#22c55e',
+          princess: '#eab308',
+          countess: '#06b6d4',
+        };
+        const color = witnessColors[witness.id] || '#94a3b8';
+        // 使用对话框替代alert
+        GameUI.showDialog({
+          speaker: witness.name,
+          color: color,
+          text: witness.initialTestimony,
+          options: witness.followUpTestimony ? [{
+            text: '追问更多细节',
+            action: () => {
+              GameUI.showDialog({
+                speaker: witness.name,
+                color: color,
+                text: witness.followUpTestimony,
+              });
+            }
+          }] : [],
+        });
       } else if (item.type === 'object') {
-        alert(item.description);
+        GameUI.showDialog({
+          speaker: '',
+          color: '#94a3b8',
+          text: item.description,
+        });
       }
       render();
     };
@@ -505,12 +544,28 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
     window.__exit = function(sceneId) {
       if (sceneId === 'dining-car' && state.gamePhase === 'investigation') {
         if (state.collectedEvidence.length >= 3 && state.interviewedWitnesses.length >= 3) {
-          if (confirm('是否进入审判阶段？调查阶段将结束。')) {
-            state.gamePhase = 'trial';
-            state.currentScene = 'dining-car';
-          }
+          GameUI.showModal({
+            title: '进入审判阶段？',
+            message: '调查阶段将结束，未收集的证据将无法获取。确定要前往餐车进行审判吗？',
+            confirmText: '进入审判',
+            cancelText: '继续调查',
+            type: 'warning',
+            onConfirm: () => {
+              state.gamePhase = 'trial';
+              state.currentScene = 'dining-car';
+              render();
+            }
+          });
         } else {
-          alert('还需要收集至少3件证据和询问3个证人才能进入审判。\n当前：证据' + state.collectedEvidence.length + '/3，证人' + state.interviewedWitnesses.length + '/3');
+          GameUI.showModal({
+            title: '还不能进入审判',
+            message: `还需要收集至少3件证据和询问3个证人。\n当前：证据${state.collectedEvidence.length}/3，证人${state.interviewedWitnesses.length}/3`,
+            confirmText: '我知道了',
+            cancelText: '关闭',
+            type: 'info',
+            onConfirm: () => {},
+            onCancel: () => {}
+          });
           return;
         }
       }
@@ -529,7 +584,20 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
     window.__followUp = function() {
       const witness = gameWitnesses.find(w => w.id === state.currentWitness);
       if (witness) {
-        alert(`追问 ${witness.name}：\n\n${witness.followUpTestimony}`);
+        const witnessColors = {
+          conductor: '#3b82f6',
+          'mrs-hubbard': '#ec4899',
+          mary: '#8b5cf6',
+          colonel: '#22c55e',
+          princess: '#eab308',
+          countess: '#06b6d4',
+        };
+        const color = witnessColors[witness.id] || '#94a3b8';
+        GameUI.showDialog({
+          speaker: witness.name,
+          color: color,
+          text: witness.followUpTestimony,
+        });
       }
       render();
     };
@@ -546,7 +614,7 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
         render();
       } else {
         const evidence = gameEvidence.find(e => e.id === evidenceId);
-        alert(`${evidence?.name}\n\n${evidence?.keyInfo}`);
+        GameUI.showEvidenceCard(evidence, null);
       }
     };
 
@@ -567,12 +635,16 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
         if (cont && !state.contradictionsFound.includes(cont.id)) {
           state.contradictionsFound.push(cont.id);
           state.confidence = Math.min(100, state.confidence + 20);
-          alert(`正确！发现矛盾！\n\n${witness.contradiction.revealedText}\n\n信心值 +20`);
+          GameUI.showDialog({
+            speaker: '波洛',
+            color: '#fbbf24',
+            text: `正确！发现矛盾！\n\n${witness.contradiction.revealedText}\n\n信心值 +20`,
+          });
         }
       } else {
         // 错误
         state.confidence = Math.max(0, state.confidence - 10);
-        alert(`这个证据与证词没有直接矛盾...\n\n信心值 -10`);
+        GameUI.showToast('这个证据与证词没有直接矛盾... 信心值 -10', 'warning', 3000);
       }
       
       state.evidenceMode = 'view';
@@ -592,8 +664,17 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
     };
 
     window.__makeFinalChoice = function(choice) {
-      state.choices['final-choice'] = choice;
-      render();
+      GameUI.showModal({
+        title: '做出最终选择？',
+        message: '这将决定游戏结局，无法更改。确定要做出这个选择吗？',
+        confirmText: '确定',
+        cancelText: '再想想',
+        type: 'danger',
+        onConfirm: () => {
+          state.choices['final-choice'] = choice;
+          render();
+        }
+      });
     };
 
     // 证据栏按钮
@@ -605,7 +686,13 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
 
     // 重置按钮
     document.getElementById('reset-btn')?.addEventListener('click', () => {
-      if (confirm('确定要重置游戏吗？所有进度将丢失。')) {
+      GameUI.showModal({
+        title: '重置游戏？',
+        message: '所有进度将丢失，确定要重置吗？',
+        confirmText: '重置',
+        cancelText: '取消',
+        type: 'danger',
+        onConfirm: () => {
         localStorage.removeItem('fun-detective-prototype-save');
         state = {
           currentScene: 'intro',
@@ -622,7 +709,8 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
           evidenceMode: 'view',
         };
         render();
-      }
+        }
+      });
     });
 
     // 开场继续按钮
@@ -638,5 +726,7 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
 
     // 启动
     init();
+  <!-- 引入游戏UI工具模块 -->
+  <script src="/fun_detective/game/ui.js"></script>
   </script>
 </BaseLayout>

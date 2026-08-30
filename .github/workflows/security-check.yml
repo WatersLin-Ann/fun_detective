@@ -97,8 +97,7 @@ jobs:
       - name: Validate case JSON files
         run: |
           echo "=== 验证案件数据 JSON 格式 ==="
-          pip install jsonschema -q
-          python -c "
+          python << 'PYEOF'
           import json, os, sys
           errors = []
           for root, dirs, files in os.walk('cases'):
@@ -117,7 +116,7 @@ jobs:
               sys.exit(1)
           else:
               print('✓ 所有案件数据 JSON 格式正确')
-          "
+          PYEOF
 
       - name: Check large files
         run: |
