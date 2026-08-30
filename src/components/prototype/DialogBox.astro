@@ -1,74 +1,164 @@
 ---
-// 对话框组件
+// 对话框组件（支持火柴人角色 + 对话历史回滚）
 interface Props {
   show: boolean;
   speaker?: string;
-  avatar?: string;
+  speakerColor?: string;
+  speakerExpression?: 'normal' | 'happy' | 'sad' | 'angry' | 'surprised' | 'thinking';
   text: string;
   options?: Array<{ label: string; value: string }>;
-  onContinue?: () => void;
-  onOption?: (value: string) => void;
   showFollowUp?: boolean;
-  onFollowUp?: () => void;
   showPresentEvidence?: boolean;
-  onPresentEvidence?: () => void;
+  dialogueHistory?: Array<{ speaker: string; text: string; color: string }>;
 }
 
-const { show, speaker, avatar, text, options, showFollowUp, showPresentEvidence } = Astro.props;
+const { 
+  show, 
+  speaker, 
+  speakerColor = '#4a5568', 
+  speakerExpression = 'normal',
+  text, 
+  options, 
+  showFollowUp, 
+  showPresentEvidence,
+  dialogueHistory = []
+} = Astro.props;
 ---
 
 {show && (
   <div class="dialog-overlay fixed inset-0 bg-black/50 flex items-end justify-center z-40 p-4">
-    <div class="dialog-box bg-white rounded-t-2xl w-full max-w-2xl p-6 shadow-2xl">
-      {/* 说话人 */}
-      {speaker && (
-        <div class="flex items-center gap-3 mb-4">
-          {avatar && <span class="text-3xl">{avatar}</span>}
-          <h3 class="font-bold text-lg text-stone-800">{speaker}</h3>
-        </div>
-      )}
+    <div class="dialog-box bg-white rounded-t-2xl w-full max-w-3xl shadow-2xl overflow-hidden">
+      {/* 对话历史栏 */}
+      <div class="history-bar bg-stone-100 px-4 py-2 flex items-center justify-between border-b border-stone-200">
+        <span class="text-xs text-stone-500">对话记录</span>
+        <button 
+          id="toggle-history-btn"
+          class="text-xs text-primary-600 hover:text-primary-800 font-medium"
+          onclick="window.__toggleHistory && window.__toggleHistory()"
+        >
+          查看历史 ({dialogueHistory.length})
+        </button>
+      </div>
 
-      {/* 对话内容 */}
-      <p class="text-stone-700 leading-relaxed mb-6 min-h-16">{text}</p>
+      {/* 对话历史面板（可展开） */}
+      <div id="dialogue-history-panel" class="hidden max-h-48 overflow-y-auto bg-stone-50 px-4 py-3 border-b border-stone-200">
+        {dialogueHistory.length === 0 ? (
+          <p class="text-sm text-stone-400 text-center py-4">暂无对话历史</p>
+        ) : (
+          <div class="space-y-2">
+            {dialogueHistory.map((item, i) => (
+              <div class="flex gap-2 text-sm">
+                <span class="font-medium flex-shrink-0" style={`color: ${item.color}`}>{item.speaker}：</span>
+                <span class="text-stone-600">{item.text}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
-      {/* 选项 */}
-      {options && options.length > 0 ? (
-        <div class="space-y-2">
-          {options.map((opt) => (
+      <div class="p-6">
+        {/* 说话人 + 火柴人 */}
+        {speaker && (
+          <div class="flex items-start gap-4 mb-4">
+            <!-- 火柴人角色 -->
+            <div class="flex-shrink-0">
+              <svg width="50" height="70" viewBox="0 0 100 140" class="stick-figure-mini">
+                <circle cx="50" cy="25" r="18" fill="none" stroke={speakerColor} stroke-width="3" />
+                <text x="50" y="28" text-anchor="middle" font-size="10" fill={speakerColor}>
+                  {speakerExpression === 'happy' ? '◠ ◠' : speakerExpression === 'angry' ? '> <' : speakerExpression === 'surprised' ? '○ ○' : speakerExpression === 'sad' ? '◡ ◡' : speakerExpression === 'thinking' ? '● -' : '● ●'}
+                </text>
+                <text x="50" y="38" text-anchor="middle" font-size="8" fill={speakerColor}>
+                  {speakerExpression === 'happy' ? '◡' : speakerExpression === 'angry' ? '︵' : speakerExpression === 'surprised' ? '○' : speakerExpression === 'sad' ? '◠' : '—'}
+                </text>
+                <line x1="50" y1="43" x2="50" y2="90" stroke={speakerColor} stroke-width="3" />
+                <line x1="50" y1="55" x2="25" y2="75" stroke={speakerColor} stroke-width="3" />
+                <line x1="50" y1="55" x2="75" y2="75" stroke={speakerColor} stroke-width="3" />
+                <line x1="50" y1="90" x2="35" y2="125" stroke={speakerColor} stroke-width="3" />
+                <line x1="50" y1="90" x2="65" y2="125" stroke={speakerColor} stroke-width="3" />
+              </svg>
+            </div>
+            <!-- 说话人名称 -->
+            <div class="pt-2">
+              <h3 class="font-bold text-lg" style={`color: ${speakerColor}`}>{speaker}</h3>
+            </div>
+          </div>
+        )}
+
+        {/* 对话内容 */}
+        <p class="text-stone-700 leading-relaxed mb-6 min-h-16 text-base">{text}</p>
+
+        {/* 选项 */}
+        {options && options.length > 0 ? (
+          <div class="space-y-2">
+            {options.map((opt) => (
+              <button
+                class="w-full text-left px-4 py-3 bg-stone-100 hover:bg-primary-100 rounded-lg transition-colors"
+                onclick={`window.__dialogOption && window.__dialogOption('${opt.value}')`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div class="flex gap-3 justify-end">
+            {showPresentEvidence && (
+              <button
+                class="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
+                onclick="window.__presentEvidence && window.__presentEvidence()"
+              >
+                出示证据
+              </button>
+            )}
+            {showFollowUp && (
+              <button
+                class="px-4 py-2 bg-stone-600 text-white rounded-lg hover:bg-stone-700 transition-colors"
+                onclick="window.__followUp && window.__followUp()"
+              >
+                追问
+              </button>
+            )}
             <button
-              class="w-full text-left px-4 py-3 bg-stone-100 hover:bg-primary-100 rounded-lg transition-colors"
-              onclick={`window.__dialogOption && window.__dialogOption('${opt.value}')`}
+              class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+              onclick="window.__dialogContinue && window.__dialogContinue()"
             >
-              {opt.label}
+              继续
             </button>
-          ))}
-        </div>
-      ) : (
-        <div class="flex gap-3 justify-end">
-          {showPresentEvidence && (
-            <button
-              class="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
-              onclick="window.__presentEvidence && window.__presentEvidence()"
-            >
-              出示证据
-            </button>
-          )}
-          {showFollowUp && (
-            <button
-              class="px-4 py-2 bg-stone-600 text-white rounded-lg hover:bg-stone-700 transition-colors"
-              onclick="window.__followUp && window.__followUp()"
-            >
-              追问
-            </button>
-          )}
-          <button
-            class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
-            onclick="window.__dialogContinue && window.__dialogContinue()"
-          >
-            继续
-          </button>
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </div>
   </div>
 )}
+
+<script>
+  // 对话历史切换
+  window.__toggleHistory = function() {
+    const panel = document.getElementById('dialogue-history-panel');
+    const btn = document.getElementById('toggle-history-btn');
+    if (panel) {
+      panel.classList.toggle('hidden');
+      if (btn) {
+        btn.textContent = panel.classList.contains('hidden') 
+          ? `查看历史 (${window.__dialogueHistory?.length || 0})`
+          : '收起历史';
+      }
+      // 滚动到底部
+      if (!panel.classList.contains('hidden')) {
+        panel.scrollTop = panel.scrollHeight;
+      }
+    }
+  };
+</script>
+
+<style>
+  .stick-figure-mini {
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1));
+  }
+  .dialog-box {
+    animation: slideUp 0.3s ease-out;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+</style>

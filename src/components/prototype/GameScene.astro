@@ -1,11 +1,12 @@
 ---
-// 游戏场景组件
+// 游戏场景组件（支持场景背景适配 + 火柴人角色）
 interface Props {
   scene: {
     id: string;
     name: string;
     description: string;
     background: string;
+    sceneType?: 'train' | 'room' | 'corridor' | 'dining' | 'outdoor' | 'office';
     interactables: Array<{
       id: string;
       name: string;
@@ -14,6 +15,7 @@ interface Props {
       evidenceId?: string;
       witnessId?: string;
       position: { x: number; y: number };
+      color?: string;
     }>;
     exits: Array<{ to: string; label: string }>;
   };
@@ -23,41 +25,119 @@ interface Props {
   onExit: (exit: any) => void;
 }
 
-const { scene, collectedEvidence, interviewedWitnesses, onInteract, onExit } = Astro.props;
+const { scene, collectedEvidence, interviewedWitnesses } = Astro.props;
+
+// 场景背景配置
+const sceneBackgrounds = {
+  train: 'linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
+  room: 'linear-gradient(180deg, #2d2d2d 0%, #3d3d3d 50%, #4a4a4a 100%)',
+  corridor: 'linear-gradient(180deg, #1a1a1a 0%, #2a2a2a 50%, #333 100%)',
+  dining: 'linear-gradient(180deg, #3d2914 0%, #5c3d1e 50%, #7a5230 100%)',
+  outdoor: 'linear-gradient(180deg, #87ceeb 0%, #98d8c8 50%, #f7dc6f 100%)',
+  office: 'linear-gradient(180deg, #4a5568 0%, #2d3748 50%, #1a202c 100%)',
+};
+
+const bgGradient = scene.sceneType ? sceneBackgrounds[scene.sceneType] : scene.background;
 ---
 
-<div class="game-scene relative w-full h-96 rounded-xl overflow-hidden" style={`background: ${scene.background}`}>
+<div class="game-scene relative w-full h-[420px] rounded-xl overflow-hidden shadow-inner" style={`background: ${bgGradient}`}>
+  <!-- 场景装饰层（根据类型） -->
+  {scene.sceneType === 'train' && (
+    <div class="absolute inset-0 pointer-events-none">
+      <!-- 车窗 -->
+      <div class="absolute top-8 left-1/4 w-24 h-32 bg-gradient-to-b from-blue-900/50 to-blue-950/70 rounded-lg border-4 border-stone-700"></div>
+      <div class="absolute top-8 right-1/4 w-24 h-32 bg-gradient-to-b from-blue-900/50 to-blue-950/70 rounded-lg border-4 border-stone-700"></div>
+      <!-- 地板 -->
+      <div class="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-stone-800 to-transparent"></div>
+      <!-- 座位轮廓 -->
+      <div class="absolute bottom-16 left-8 w-20 h-24 bg-stone-700/40 rounded-t-lg"></div>
+      <div class="absolute bottom-16 right-8 w-20 h-24 bg-stone-700/40 rounded-t-lg"></div>
+    </div>
+  )}
+  
+  {scene.sceneType === 'room' && (
+    <div class="absolute inset-0 pointer-events-none">
+      <!-- 墙壁纹理 -->
+      <div class="absolute inset-0 opacity-20" style="background-image: repeating-linear-gradient(90deg, transparent, transparent 50px, rgba(255,255,255,0.05) 50px, rgba(255,255,255,0.05) 51px);"></div>
+      <!-- 地板 -->
+      <div class="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-amber-900/60 to-transparent"></div>
+      <!-- 门框 -->
+      <div class="absolute bottom-20 left-1/2 -translate-x-1/2 w-20 h-40 border-4 border-stone-600 rounded-t-lg bg-stone-800/30"></div>
+    </div>
+  )}
+  
+  {scene.sceneType === 'corridor' && (
+    <div class="absolute inset-0 pointer-events-none">
+      <!-- 透视走廊 -->
+      <div class="absolute inset-0" style="background: linear-gradient(90deg, transparent 0%, rgba(0,0,0,0.3) 50%, transparent 100%);"></div>
+      <!-- 两侧门 -->
+      <div class="absolute top-1/4 left-4 w-12 h-32 bg-stone-700/50 rounded border-2 border-stone-600"></div>
+      <div class="absolute top-1/4 right-4 w-12 h-32 bg-stone-700/50 rounded border-2 border-stone-600"></div>
+      <!-- 地板线 -->
+      <div class="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-stone-900 to-transparent"></div>
+    </div>
+  )}
+  
+  {scene.sceneType === 'dining' && (
+    <div class="absolute inset-0 pointer-events-none">
+      <!-- 餐桌 -->
+      <div class="absolute bottom-20 left-1/2 -translate-x-1/2 w-3/4 h-8 bg-amber-800/60 rounded-lg"></div>
+      <div class="absolute bottom-12 left-1/4 w-4 h-12 bg-amber-900/60"></div>
+      <div class="absolute bottom-12 right-1/4 w-4 h-12 bg-amber-900/60"></div>
+      <!-- 吊灯 -->
+      <div class="absolute top-0 left-1/2 -translate-x-1/2 w-1 h-16 bg-stone-600"></div>
+      <div class="absolute top-14 left-1/2 -translate-x-1/2 w-20 h-8 bg-yellow-600/40 rounded-full blur-sm"></div>
+    </div>
+  )}
+
   <!-- 场景名称 -->
-  <div class="absolute top-4 left-4 bg-black/50 text-white px-4 py-2 rounded-lg">
-    <h3 class="font-bold">{scene.name}</h3>
+  <div class="absolute top-4 left-4 bg-black/60 text-white px-4 py-2 rounded-lg backdrop-blur-sm">
+    <h3 class="font-bold text-sm">{scene.name}</h3>
   </div>
 
   <!-- 场景描述 -->
-  <div class="absolute bottom-4 left-4 right-4 bg-black/60 text-white p-4 rounded-lg">
-    <p class="text-sm">{scene.description}</p>
+  <div class="absolute bottom-4 left-4 right-4 bg-black/70 text-white p-4 rounded-lg backdrop-blur-sm">
+    <p class="text-sm leading-relaxed">{scene.description}</p>
   </div>
 
-  <!-- 可交互物品 -->
+  <!-- 可交互物品/人物 -->
   {scene.interactables.map((item) => {
     const isCollected = item.evidenceId && collectedEvidence.includes(item.evidenceId);
     const isInterviewed = item.witnessId && interviewedWitnesses.includes(item.witnessId);
+    const itemColor = item.color || (item.type === 'witness' ? '#3b82f6' : item.type === 'evidence' ? '#eab308' : '#78716c');
     return (
       <button
         class="absolute interactable group"
         style={`left: ${item.position.x}%; top: ${item.position.y}%; transform: translate(-50%, -50%)`}
         onclick={`window.__gameInteract && window.__gameInteract(${JSON.stringify(item)})`}
       >
-        <div class={`w-12 h-12 rounded-full flex items-center justify-center text-2xl transition-all
-          ${item.type === 'witness' ? 'bg-blue-500/80 hover:bg-blue-400' : ''}
-          ${item.type === 'evidence' ? 'bg-yellow-500/80 hover:bg-yellow-400' : ''}
-          ${item.type === 'object' ? 'bg-stone-500/80 hover:bg-stone-400' : ''}
-          ${isCollected ? 'opacity-40' : ''}
-          ${isInterviewed ? 'ring-2 ring-green-400' : ''}
-        `}>
-          {item.type === 'witness' && '👤'}
-          {item.type === 'evidence' && (isCollected ? '✅' : '🔍')}
-          {item.type === 'object' && '🚪'}
-        </div>
+        {item.type === 'witness' ? (
+          <!-- 证人用火柴人展示 -->
+          <div class={`transition-all duration-300 ${isInterviewed ? 'opacity-60' : 'hover:scale-110'}`}>
+            <svg width="48" height="68" viewBox="0 0 100 140" class="drop-shadow-lg">
+              <circle cx="50" cy="25" r="18" fill="none" stroke={itemColor} stroke-width="3" />
+              <text x="50" y="28" text-anchor="middle" font-size="10" fill={itemColor}>● ●</text>
+              <text x="50" y="38" text-anchor="middle" font-size="8" fill={itemColor}>—</text>
+              <line x1="50" y1="43" x2="50" y2="90" stroke={itemColor} stroke-width="3" />
+              <line x1="50" y1="55" x2="25" y2="75" stroke={itemColor} stroke-width="3" />
+              <line x1="50" y1="55" x2="75" y2="75" stroke={itemColor} stroke-width="3" />
+              <line x1="50" y1="90" x2="35" y2="125" stroke={itemColor} stroke-width="3" />
+              <line x1="50" y1="90" x2="65" y2="125" stroke={itemColor} stroke-width="3" />
+            </svg>
+            {isInterviewed && (
+              <div class="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-white text-xs">✓</div>
+            )}
+          </div>
+        ) : (
+          <!-- 证据/物品用圆形图标 -->
+          <div class={`w-12 h-12 rounded-full flex items-center justify-center text-2xl transition-all duration-300
+            ${item.type === 'evidence' ? 'bg-yellow-500/80 hover:bg-yellow-400 hover:scale-110' : 'bg-stone-500/80 hover:bg-stone-400 hover:scale-110'}
+            ${isCollected ? 'opacity-40 scale-90' : ''}
+          `}>
+            {item.type === 'evidence' && (isCollected ? '✅' : '🔍')}
+            {item.type === 'object' && '🚪'}
+          </div>
+        )}
         <div class="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap bg-black/80 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
           {item.name}
           {isCollected && ' (已收集)'}
@@ -71,7 +151,7 @@ const { scene, collectedEvidence, interviewedWitnesses, onInteract, onExit } = A
   <div class="absolute top-4 right-4 flex flex-col gap-2">
     {scene.exits.map((exit) => (
       <button
-        class="bg-white/90 hover:bg-white text-stone-800 px-4 py-2 rounded-lg text-sm font-medium shadow-lg transition-colors"
+        class="bg-white/90 hover:bg-white text-stone-800 px-4 py-2 rounded-lg text-sm font-medium shadow-lg transition-all hover:scale-105"
         onclick={`window.__gameExit && window.__gameExit(${JSON.stringify(exit)})`}
       >
         {exit.label} →
@@ -81,10 +161,10 @@ const { scene, collectedEvidence, interviewedWitnesses, onInteract, onExit } = A
 </div>
 
 <style>
+  .game-scene {
+    transition: background 0.5s ease;
+  }
   .interactable {
     cursor: pointer;
-  }
-  .interactable:hover > div {
-    transform: scale(1.1);
   }
 </style>

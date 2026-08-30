@@ -1,0 +1,114 @@
+---
+// 火柴人角色组件
+interface Props {
+  name: string;
+  color?: string;
+  size?: number;
+  expression?: 'normal' | 'happy' | 'sad' | 'angry' | 'surprised' | 'thinking';
+  showLabel?: boolean;
+  pose?: 'stand' | 'point' | 'cross' | 'sit';
+}
+
+const { 
+  name, 
+  color = '#4a5568', 
+  size = 80, 
+  expression = 'normal', 
+  showLabel = true,
+  pose = 'stand'
+} = Astro.props;
+
+// 表情对应的眼睛和嘴巴
+const expressions = {
+  normal: { eyes: '● ●', mouth: '—' },
+  happy: { eyes: '◠ ◠', mouth: '◡' },
+  sad: { eyes: '◡ ◡', mouth: '◠' },
+  angry: { eyes: '> <', mouth: '︵' },
+  surprised: { eyes: '○ ○', mouth: '○' },
+  thinking: { eyes: '● -', mouth: '~' },
+};
+
+const expr = expressions[expression] || expressions.normal;
+---
+
+<div class="stick-figure-container flex flex-col items-center">
+  <svg 
+    width={size} 
+    height={size * 1.4} 
+    viewBox="0 0 100 140" 
+    class="stick-figure"
+  >
+    <!-- 头部 -->
+    <circle cx="50" cy="25" r="18" fill="none" stroke={color} stroke-width="3" />
+    
+    <!-- 眼睛 -->
+    <text x="50" y="28" text-anchor="middle" font-size="10" fill={color}>{expr.eyes}</text>
+    
+    <!-- 嘴巴 -->
+    <text x="50" y="38" text-anchor="middle" font-size="8" fill={color}>{expr.mouth}</text>
+    
+    <!-- 身体 -->
+    <line x1="50" y1="43" x2="50" y2="90" stroke={color} stroke-width="3" />
+    
+    <!-- 手臂（根据姿势） -->
+    {pose === 'stand' && (
+      <>
+        <line x1="50" y1="55" x2="25" y2="75" stroke={color} stroke-width="3" />
+        <line x1="50" y1="55" x2="75" y2="75" stroke={color} stroke-width="3" />
+      </>
+    )}
+    {pose === 'point' && (
+      <>
+        <line x1="50" y1="55" x2="20" y2="60" stroke={color} stroke-width="3" />
+        <line x1="50" y1="55" x2="80" y2="50" stroke={color} stroke-width="3" />
+        <!-- 指向的手指 -->
+        <circle cx="82" cy="49" r="3" fill={color} />
+      </>
+    )}
+    {pose === 'cross' && (
+      <>
+        <line x1="50" y1="55" x2="30" y2="80" stroke={color} stroke-width="3" />
+        <line x1="50" y1="55" x2="70" y2="80" stroke={color} stroke-width="3" />
+        <line x1="30" y1="80" x2="70" y2="70" stroke={color} stroke-width="2" />
+      </>
+    )}
+    {pose === 'sit' && (
+      <>
+        <line x1="50" y1="55" x2="30" y2="70" stroke={color} stroke-width="3" />
+        <line x1="50" y1="55" x2="70" y2="70" stroke={color} stroke-width="3" />
+      </>
+    )}
+    
+    <!-- 腿 -->
+    {pose === 'sit' ? (
+      <>
+        <line x1="50" y1="90" x2="35" y2="110" stroke={color} stroke-width="3" />
+        <line x1="50" y1="90" x2="65" y2="110" stroke={color} stroke-width="3" />
+        <line x1="35" y1="110" x2="25" y2="110" stroke={color} stroke-width="3" />
+        <line x1="65" y1="110" x2="75" y2="110" stroke={color} stroke-width="3" />
+      </>
+    ) : (
+      <>
+        <line x1="50" y1="90" x2="35" y2="125" stroke={color} stroke-width="3" />
+        <line x1="50" y1="90" x2="65" y2="125" stroke={color} stroke-width="3" />
+      </>
+    )}
+  </svg>
+  
+  <!-- 角色标签 -->
+  {showLabel && (
+    <div class="character-label mt-1 px-3 py-1 rounded-full text-xs font-medium text-white whitespace-nowrap" style={`background-color: ${color}`}>
+      {name}
+    </div>
+  )}
+</div>
+
+<style>
+  .stick-figure {
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+    transition: transform 0.3s ease;
+  }
+  .stick-figure-container:hover .stick-figure {
+    transform: translateY(-4px);
+  }
+</style>

@@ -6,6 +6,7 @@ export interface GameScene {
   name: string;
   description: string;
   background: string; // CSS渐变背景
+  sceneType?: 'train' | 'room' | 'corridor' | 'dining' | 'outdoor' | 'office'; // 场景类型，用于背景适配
   interactables: Interactable[];
   exits: { to: string; label: string }[];
 }
@@ -18,6 +19,7 @@ export interface Interactable {
   evidenceId?: string;
   witnessId?: string;
   position: { x: number; y: number }; // 百分比位置
+  color?: string; // 角色颜色（用于火柴人）
 }
 
 // 证据定义
@@ -70,6 +72,7 @@ export const gameScenes: GameScene[] = [
     name: '波洛的包厢',
     description: '深夜，东方快车因大雪被困在南斯拉夫的荒野中。你是著名侦探赫尔克里·波洛，被一阵尖叫声惊醒...',
     background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
+    sceneType: 'train',
     interactables: [
       {
         id: 'door',
