@@ -1,7 +1,7 @@
 ---
 import BaseLayout from '@layouts/BaseLayout.astro';
 import CaseCard from '@components/CaseCard.astro';
-import { loadAllCases, getStats, getSourceTypes, getContinents, getRegionsByContinent } from '@lib/caseLoader';
+import { loadAllCases, getStats, getSourceTypes, getContinents } from '@lib/caseLoader';
 
 const cases = loadAllCases();
 const stats = getStats();
@@ -9,12 +9,6 @@ const stats = getStats();
 // 从实际数据动态提取筛选选项
 const sourceTypes = getSourceTypes();
 const continents = getContinents();
-
-// 预先生成大洲→国家映射，用于客户端动态更新国家下拉
-const continentCountries: Record<string, string[]> = {};
-for (const continent of continents) {
-  continentCountries[continent] = getRegionsByContinent(continent);
-}
 
 // 每页显示数量
 const PAGE_SIZE = 12;
@@ -80,11 +74,8 @@ const PAGE_SIZE = 12;
             {sourceTypes.map((type) => <option value={type}>{type}</option>)}
           </select>
           <select id="filter-continent" class="input w-auto">
-            <option value="">全部大洲</option>
+            <option value="">全部地区</option>
             {continents.map((c) => <option value={c}>{c}</option>)}
-          </select>
-          <select id="filter-region" class="input w-auto">
-            <option value="">全部国家</option>
           </select>
           <select id="filter-sort" class="input w-auto">
             <option value="date">最新录入</option>
@@ -124,11 +115,6 @@ const PAGE_SIZE = 12;
     </div>
   </section>
 
-  <script is:inline>
-    // 大洲→国家映射（由服务端注入）
-    const CONTINENT_COUNTRIES = JSON.parse('{JSON.stringify(continentCountries)}');
-  </script>
-
   <script>
     // 导入 fuse.js 模糊搜索
     import Fuse from 'fuse.js';
@@ -137,7 +123,6 @@ const PAGE_SIZE = 12;
     const searchInput = document.getElementById('search-input') as HTMLInputElement;
     const filterSource = document.getElementById('filter-source') as HTMLSelectElement;
     const filterContinent = document.getElementById('filter-continent') as HTMLSelectElement;
-    const filterRegion = document.getElementById('filter-region') as HTMLSelectElement;
     const filterSort = document.getElementById('filter-sort') as HTMLSelectElement;
     const caseGrid = document.getElementById('case-grid')!;
     const noResults = document.getElementById('no-results')!;
@@ -189,33 +174,6 @@ const PAGE_SIZE = 12;
       minMatchCharLength: 1,
     });
 
-    // 更新国家下拉选项（根据选中的大洲）
-    function updateRegionOptions() {
-      const selectedContinent = filterContinent.value;
-      // 清空当前选项
-      filterRegion.innerHTML = '<option value="">全部国家</option>';
-
-      let countries: string[] = [];
-      if (selectedContinent) {
-        // 只显示该大洲下的国家
-        countries = (window as any).CONTINENT_COUNTRIES?.[selectedContinent] || [];
-      } else {
-        // 显示所有国家（去重）
-        const allCountries = new Set<string>();
-        Object.values((window as any).CONTINENT_COUNTRIES || {}).forEach((list: any) => {
-          (list as string[]).forEach((c) => allCountries.add(c));
-        });
-        countries = Array.from(allCountries).sort();
-      }
-
-      for (const country of countries) {
-        const option = document.createElement('option');
-        option.value = country;
-        option.textContent = country;
-        filterRegion.appendChild(option);
-      }
-    }
-
     // 更新显示（支持分页）
     function updateDisplay() {
       // 隐藏所有
@@ -248,7 +206,6 @@ const PAGE_SIZE = 12;
       const query = searchInput.value.trim();
       const source = filterSource.value;
       const continent = filterContinent.value;
-      const region = filterRegion.value;
       const sort = filterSort.value;
 
       // 先用 fuse.js 进行模糊搜索
@@ -260,12 +217,11 @@ const PAGE_SIZE = 12;
         filtered = [...caseItems];
       }
 
-      // 再应用类型、大洲、国家筛选
+      // 再应用类型、地区筛选
       filtered = filtered.filter((item) => {
         const matchSource = !source || item.source === source;
         const matchContinent = !continent || item.continent === continent;
-        const matchRegion = !region || item.region === region;
-        return matchSource && matchContinent && matchRegion;
+        return matchSource && matchContinent;
       });
 
       // 排序（搜索时默认按匹配度，否则按用户选择）
@@ -290,12 +246,6 @@ const PAGE_SIZE = 12;
       updateDisplay();
     }
 
-    // 大洲变化时更新国家下拉，并重新筛选
-    filterContinent.addEventListener('change', () => {
-      updateRegionOptions();
-      applyFilters();
-    });
-
     // 加载更多
     loadMoreBtn.addEventListener('click', () => {
       currentPage++;
@@ -304,11 +254,9 @@ const PAGE_SIZE = 12;
 
     searchInput.addEventListener('input', applyFilters);
     filterSource.addEventListener('change', applyFilters);
-    filterRegion.addEventListener('change', applyFilters);
+    filterContinent.addEventListener('change', applyFilters);
     filterSort.addEventListener('change', applyFilters);
 
-    // 初始化国家下拉
-    updateRegionOptions();
     // 初始化显示
     applyFilters();
   </script>

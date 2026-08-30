@@ -57,13 +57,11 @@ export function loadAllCases(): CaseWithSlug[] {
 
 // 兼容旧数据：根据地区推断大洲
 function inferContinent(region: string): string {
-  const asia = ['中国', '日本', '韩国'];
-  const europe = ['英国', '法国', '德国', '芬兰', '爱沙尼亚', '葡萄牙', '俄罗斯', '苏联'];
+  const eurasia = ['中国', '日本', '韩国', '英国', '法国', '德国', '芬兰', '爱沙尼亚', '葡萄牙', '俄罗斯', '苏联'];
   const northAmerica = ['美国', '加拿大'];
   const oceania = ['澳大利亚', '新西兰'];
 
-  if (asia.includes(region)) return '亚洲';
-  if (europe.includes(region)) return '欧洲';
+  if (eurasia.includes(region)) return '欧亚大陆';
   if (northAmerica.includes(region)) return '北美';
   if (oceania.includes(region)) return '大洋洲';
   return '其他';
@@ -84,8 +82,8 @@ export function getSourceTypes(): string[] {
 // 获取所有大洲
 export function getContinents(): string[] {
   const cases = loadAllCases();
-  // 按固定顺序排序：亚洲、欧洲、北美、大洋洲、其他
-  const order = ['亚洲', '欧洲', '北美', '大洋洲', '其他'];
+  // 按固定顺序排序：欧亚大陆、北美、大洋洲、其他
+  const order = ['欧亚大陆', '北美', '大洋洲', '其他'];
   const continents = [...new Set(cases.map((c) => c.continent))];
   return continents.sort((a, b) => {
     const ia = order.indexOf(a);
