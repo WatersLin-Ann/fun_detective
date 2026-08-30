@@ -42,7 +42,21 @@
         "完整故事": {"type": "string"},
         "人物关系": {"type": "string"},
         "关键时间线": {"type": "string"},
-        "结局/真相": {"type": "string"}
+        "结局/真相": {"type": "string"},
+        "角色档案": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["姓名"],
+            "properties": {
+              "姓名": {"type": "string"},
+              "身份": {"type": "string"},
+              "与案件关系": {"type": "string"},
+              "动机": {"type": "string"},
+              "关键行为": {"type": "string"}
+            }
+          }
+        }
       }
     },
     "设计视图": {

@@ -94,6 +94,23 @@ def _extract_reference_links(field_value) -> List[Dict]:
     return []
 
 
+def _extract_character_profiles(field_value) -> List[Dict]:
+    """提取角色档案字段（多行文本存 JSON 数组字符串）。"""
+    if field_value is None:
+        return []
+    text = _extract_text(field_value)
+    if not text or not text.strip():
+        return []
+    try:
+        import json
+        data = json.loads(text)
+        if isinstance(data, list):
+            return [item for item in data if isinstance(item, dict) and item.get("姓名")]
+    except (json.JSONDecodeError, ValueError):
+        pass
+    return []
+
+
 def _sanitize_filename(name: str) -> str:
     """清理文件名中的非法字符。"""
     sanitized = re.sub(r'[<>:"/\\|?*]', '', name)
@@ -154,6 +171,7 @@ def transform_case_record(record: Dict, clues: List[Dict] = None,
             "人物关系": _extract_text(fields.get("人物关系")),
             "关键时间线": _extract_text(fields.get("关键时间线")),
             "结局/真相": _extract_text(fields.get("结局/真相")),
+            "角色档案": _extract_character_profiles(fields.get("角色档案")),
         },
         "设计视图": {
             "核心诡计简述": _extract_text(fields.get("核心诡计简述")),

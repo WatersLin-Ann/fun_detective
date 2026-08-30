@@ -1,10 +1,14 @@
----
+﻿---
 import BaseLayout from '@layouts/BaseLayout.astro';
 import CaseCard from '@components/CaseCard.astro';
 import { loadAllCases, getStats } from '@lib/caseLoader';
 
 const cases = loadAllCases();
 const stats = getStats();
+
+// 从实际数据动态提取筛选选项
+const sourceTypes = [...new Set(cases.map((c) => c.基本信息.来源类型))].sort((a, b) => a.localeCompare(b, 'zh-CN'));
+const regions = [...new Set(cases.map((c) => c.基本信息.地区))].sort((a, b) => a.localeCompare(b, 'zh-CN'));
 ---
 
 <BaseLayout title="首页" description="全球虚拟真实案件案例库，为小说创作和游戏设计提供灵感">
@@ -58,19 +62,8 @@ const stats = getStats();
         </div>
         <!-- 筛选器 -->
         <div class="flex gap-3">
-          <select id="filter-source" class="input w-auto">
-            <option value="">全部类型</option>
-            <option value="推理小说">推理小说</option>
-            <option value="真实案件">真实案件</option>
-            <option value="影视">影视</option>
-            <option value="游戏">游戏</option>
-          </select>
-          <select id="filter-region" class="input w-auto">
-            <option value="">全部地区</option>
-            <option value="日本">日本</option>
-            <option value="欧美">欧美</option>
-            <option value="中国">中国</option>
-          </select>
+          <select id="filter-source" class="input w-auto">`n            <option value="">全部类型</option>`n            {sourceTypes.map((type) => <option value={type}>{type}</option>)}`n          </select>
+          <select id="filter-region" class="input w-auto">`n            <option value="">全部地区</option>`n            {regions.map((region) => <option value={region}>{region}</option>)}`n          </select>
           <select id="filter-sort" class="input w-auto">
             <option value="date">最新录入</option>
             <option value="name">名称排序</option>
@@ -138,7 +131,7 @@ const stats = getStats();
     });
 
     function applyFilters() {
-      const query = searchInput.value.toLowerCase().trim();
+      const query = searchInput.value.trim();
       const source = filterSource.value;
       const region = filterRegion.value;
       const sort = filterSort.value;

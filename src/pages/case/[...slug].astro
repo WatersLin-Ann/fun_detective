@@ -1,5 +1,6 @@
----
+﻿---
 import BaseLayout from '@layouts/BaseLayout.astro';
+import CaseCard from '@components/CaseCard.astro';
 import { getCaseBySlug, loadAllCases } from '@lib/caseLoader';
 
 export async function getStaticPaths() {
@@ -29,6 +30,34 @@ const sortedClues = hasClueChain ? [...设计视图.线索链].sort((a, b) => {
   const bi = timingOrder.indexOf(b.出现时机);
   return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
 }) : [];
+
+// 相关案例推荐
+const allCases = loadAllCases();
+const currentTrickTypes = new Set(设计视图.诡计类型 || []);
+const currentRegion = 基本信息.地区;
+const currentDifficulty = 设计视图.难度评分?.综合 || 3;
+
+const relatedCases = allCases
+  .filter((c) => c.id !== caseData.id)
+  .map((c) => {
+    let score = 0;
+    // 诡计类型匹配（权重最高）
+    const trickMatch = (c.设计视图.诡计类型 || []).filter((t) => currentTrickTypes.has(t)).length;
+    score += trickMatch * 3;
+    // 地区匹配
+    if (c.基本信息.地区 === currentRegion) score += 2;
+    // 难度相近（差值越小分越高）
+    const diff = Math.abs((c.设计视图.难度评分?.综合 || 3) - currentDifficulty);
+    score += Math.max(0, 2 - diff);
+    // 来源类型匹配
+    if (c.基本信息.来源类型 === 基本信息.来源类型) score += 1;
+    return { case: c, score };
+  })
+  .sort((a, b) => b.score - a.score)
+  .slice(0, 3)
+  .map((item) => item.case);
+
+const hasRelatedCases = relatedCases.length > 0;
 
 // 线索类型颜色
 const clueTypeColor: Record<string, string> = {
@@ -122,6 +151,26 @@ const linkTypeIcon: Record<string, string> = {
         <div class="card p-6 mb-6">
           <h2 class="text-xl font-bold mb-3 text-primary-800">👥 人物关系</h2>
           <p class="text-stone-700 leading-relaxed whitespace-pre-wrap">{故事视图.人物关系}</p>
+        </div>
+      )}
+
+      {故事视图.角色档案?.length > 0 && (
+        <div class="card p-6 mb-6">
+          <h2 class="text-xl font-bold mb-4 text-primary-800">🎭 角色档案</h2>
+          <div class="grid md:grid-cols-2 gap-4">
+            {故事视图.角色档案.map((char) => (
+              <div class="border border-stone-200 rounded-lg p-4 hover:border-primary-300 transition-colors">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="text-2xl">👤</span>
+                  <h3 class="font-bold text-lg text-primary-800">{char.姓名}</h3>
+                </div>
+                {char.身份 && <div class="text-sm text-stone-600 mb-2"><span class="font-medium">身份：</span>{char.身份}</div>}
+                {char.与案件关系 && <div class="text-sm text-stone-600 mb-2"><span class="font-medium">与案件关系：</span>{char.与案件关系}</div>}
+                {char.动机 && <div class="text-sm text-stone-600 mb-2"><span class="font-medium">动机：</span>{char.动机}</div>}
+                {char.关键行为 && <div class="text-sm text-stone-600"><span class="font-medium">关键行为：</span>{char.关键行为}</div>}
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

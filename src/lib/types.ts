@@ -1,4 +1,4 @@
-// 案件数据类型定义
+﻿// 案件数据类型定义
 
 export interface ReferenceLink {
   标题: string;
@@ -82,4 +82,12 @@ export interface CaseWithSlug extends CaseData {
   slug: string;
   sourceType: string;
   region: string;
+}
+
+export interface CharacterProfile {
+  姓名: string;
+  身份?: string;
+  与案件关系?: string;
+  动机?: string;
+  关键行为?: string;
 }
