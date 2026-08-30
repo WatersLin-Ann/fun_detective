@@ -2,6 +2,8 @@
 chcp 65001 >nul
 cd /d "E:\Work\AIProjects\fun_detective"
 
+set "NODE_EXE=D:\Program Files\nodejs\node.exe"
+
 echo ========================================
 echo   fun_detective 服务启动
 echo ========================================
@@ -18,7 +20,7 @@ if %errorlevel%==0 (
 )
 
 :: 隐藏窗口后台启动 node server.js
-powershell -NoProfile -Command "Start-Process -FilePath 'node' -ArgumentList 'server.js' -WorkingDirectory '%CD%' -WindowStyle Hidden"
+powershell -NoProfile -Command "Start-Process -FilePath '%NODE_EXE%' -ArgumentList 'server.js' -WorkingDirectory '%CD%' -WindowStyle Hidden"
 
 :: 等待一下让服务启动
 timeout /t 2 >nul
