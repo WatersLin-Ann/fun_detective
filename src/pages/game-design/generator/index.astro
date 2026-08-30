@@ -178,15 +178,19 @@ const recommendations = allCases.map((c) => {
     </div>
   </div>
 
+  <!-- 模板数据（供script使用） -->
+  <script type="application/json" id="templates-data">
+  {JSON.stringify(templates)}
+  </script>
+
   <script>
     // 状态
     let selectedCaseSlug = null;
     let selectedTemplateName = null;
     let generatedStructure = null;
 
-    // 案例数据（从页面数据注入）
-    const casesData = {JSON.stringify(recommendations.map(r => ({ slug: r.case.slug, name: r.case.基本信息.案件名称, recommendation: r.topRecommendation })))};
-    const templatesData = {JSON.stringify(templateNames)};
+    // 从页面注入的模板数据
+    const templatesData = JSON.parse(document.getElementById('templates-data').textContent);
 
     // DOM元素
     const caseSearch = document.getElementById('case-search');
