@@ -48,7 +48,7 @@ def generate_report(stats: Dict, errors: List[Dict], report_path: str):
         f"- 新增：{stats.get('created', 0)}",
         f"- 更新：{stats.get('updated', 0)}",
         f"- 删除（归档）：{stats.get('archived', 0)}",
-        f"- 校验失败：{stats.get('invalid', 0)}",
+        f"- 校验失败（保留待完善）：{stats.get('invalid', 0)}",
         "",
     ]
 
@@ -65,7 +65,7 @@ def generate_report(stats: Dict, errors: List[Dict], report_path: str):
         lines.append("")
 
     if errors:
-        lines.append("## 校验失败")
+        lines.append("## 校验失败（已保留并标记为待完善）")
         for err in errors:
             lines.append(f"- **{err['name']}**（{err['id']}）：")
             for e in err["errors"]:
@@ -125,7 +125,7 @@ def main():
 
     logger.info("校验数据...")
     valid_cases, invalid_cases = validate_all_cases(cases, schema)
-    logger.info(f"校验通过：{len(valid_cases)}，失败：{len(invalid_cases)}")
+    logger.info(f"校验通过：{len(valid_cases)}，失败：{len(invalid_cases)}（失败案例将保留并标记为待完善）")
 
     if invalid_cases:
         error_log_path = os.path.join(config["errors_dir"], f"{datetime.now().strftime('%Y-%m-%d')}.log")
@@ -151,6 +151,7 @@ def main():
         existing_files = set(git_ops.get_tracked_case_files())
         written_files = set()
 
+        # 写入校验通过的案例
         for case in valid_cases:
             rel_path = get_file_path(case)
             abs_path = os.path.join(config["cases_dir"], rel_path)
@@ -165,6 +166,27 @@ def main():
             git_ops.write_case_file(case)
             written_files.add(f"cases/{rel_path.replace('\\', '/')}")
 
+        # 写入校验失败的案例（标记为待完善，保留在cases目录，避免误归档）
+        for item in invalid_cases:
+            case = item["case"]
+            if "元数据" not in case:
+                case["元数据"] = {}
+            case["元数据"]["录入状态"] = "待完善"
+            case["元数据"]["校验错误"] = item["errors"]
+
+            rel_path = get_file_path(case)
+            abs_path = os.path.join(config["cases_dir"], rel_path)
+
+            if os.path.exists(abs_path):
+                stats["updated"] += 1
+            else:
+                stats["created"] += 1
+
+            git_ops.write_case_file(case)
+            written_files.add(f"cases/{rel_path.replace('\\', '/')}")
+            logger.info(f"保留待完善案件: {item['name']}（{len(item['errors'])}个错误）")
+
+        # 只有飞书Base中明确不存在的记录才归档
         deleted_files = existing_files - written_files
         for rel_path in deleted_files:
             parts = rel_path.replace("cases/", "").split("/")
@@ -173,14 +195,16 @@ def main():
                 case_name = filename.replace(".json", "")
                 git_ops.archive_case_file(case_name, source_type, region)
                 stats["archived"] += 1
-                logger.info(f"归档删除案件: {case_name}")
+                logger.info(f"归档删除案件（飞书中已不存在）: {case_name}")
 
-        if valid_cases:
+        # 生成全量导出（包括待完善案例）
+        all_cases = valid_cases + [item["case"] for item in invalid_cases]
+        if all_cases:
             logger.info("生成全量导出...")
             exports_path = os.path.join(config["exports_dir"], "all_cases.json")
             os.makedirs(os.path.dirname(exports_path), exist_ok=True)
             with open(exports_path, "w", encoding="utf-8") as f:
-                json.dump(valid_cases, f, ensure_ascii=False, indent=2)
+                json.dump(all_cases, f, ensure_ascii=False, indent=2)
 
     report_path = os.path.join(config["reports_dir"], f"{datetime.now().strftime('%Y-%m-%d-%H%M')}.md")
     generate_report(stats, invalid_cases, report_path)
@@ -188,7 +212,7 @@ def main():
 
     if not args.dry_run and git_ops.has_changes():
         now = datetime.now().strftime("%Y-%m-%d %H:%M")
-        message = f"sync: 自动同步 {now}（新增{stats['created']}，更新{stats['updated']}）"
+        message = f"sync: 自动同步 {now}（新增{stats['created']}，更新{stats['updated']}，待完善{stats['invalid']}）"
         success = git_ops.commit_and_push(message)
         if success:
             logger.info("同步完成并已推送到远程")
@@ -201,7 +225,7 @@ def main():
             logger.info("没有变更需要提交")
 
     logger.info("=" * 50)
-    logger.info(f"同步完成：新增{stats['created']}，更新{stats['updated']}，归档{stats['archived']}，失败{stats['invalid']}")
+    logger.info(f"同步完成：新增{stats['created']}，更新{stats['updated']}，归档{stats['archived']}，待完善{stats['invalid']}")
     logger.info("=" * 50)
 
 
