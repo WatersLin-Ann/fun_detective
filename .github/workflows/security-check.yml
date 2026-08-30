@@ -97,26 +97,7 @@ jobs:
       - name: Validate case JSON files
         run: |
           echo "=== 验证案件数据 JSON 格式 ==="
-          python << 'PYEOF'
-          import json, os, sys
-          errors = []
-          for root, dirs, files in os.walk('cases'):
-              for f in files:
-                  if f.endswith('.json'):
-                      path = os.path.join(root, f)
-                      try:
-                          with open(path, 'r', encoding='utf-8') as fp:
-                              json.load(fp)
-                      except Exception as e:
-                          errors.append(f'{path}: {e}')
-          if errors:
-              print('::error::JSON 格式错误:')
-              for e in errors:
-                  print(f'  {e}')
-              sys.exit(1)
-          else:
-              print('✓ 所有案件数据 JSON 格式正确')
-          PYEOF
+          python scripts/validate_cases.py
 
       - name: Check large files
         run: |
