@@ -1,0 +1,142 @@
+name: Security & Quality Check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  security-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Check forbidden files
+        run: |
+          echo "=== 检查禁止提交的文件 ==="
+          FORBIDDEN=$(find . -type f \( \
+            -name ".env" -o \
+            -name ".env.local" -o \
+            -name "*.log" -o \
+            -path "./.astro/*" -o \
+            -path "./dist/*" -o \
+            -path "./node_modules/*" -o \
+            -name "temp_*" \
+          \) -not -path "./.git/*" 2>/dev/null || true)
+
+          if [ -n "$FORBIDDEN" ]; then
+            echo "::error::发现禁止提交的文件:"
+            echo "$FORBIDDEN"
+            exit 1
+          else
+            echo "✓ 无禁止提交的文件"
+          fi
+
+      - name: Scan sensitive information
+        run: |
+          echo "=== 扫描敏感信息 ==="
+          SENSITIVE_FILES=""
+
+          # 扫描所有文本文件
+          while IFS= read -r -d '' file; do
+            # 跳过 .git 目录和 node_modules
+            if echo "$file" | grep -qE '\.git/|node_modules/'; then
+              continue
+            fi
+
+            # 跳过 .env.example（占位符示例）
+            if echo "$file" | grep -qE '\.example$'; then
+              continue
+            fi
+
+            # 检查文件是否为文本文件
+            if file "$file" | grep -qE 'text|JSON|XML|HTML|ASCII|UTF-8|source'; then
+              # 飞书 App Secret
+              if grep -qE 'LARK_APP_SECRET\s*=\s*[A-Za-z0-9]{20,}' "$file" 2>/dev/null; then
+                # 排除占位符
+                if ! grep -qE 'LARK_APP_SECRET\s*=\s*x{10,}' "$file" 2>/dev/null; then
+                  SENSITIVE_FILES="$SENSITIVE_FILES\n  $file (LARK_APP_SECRET)"
+                fi
+              fi
+
+              # 飞书 Base Token（非占位符）
+              if grep -qE 'LARK_BASE_TOKEN\s*=\s*[A-Za-z0-9]{15,}' "$file" 2>/dev/null; then
+                if ! grep -qE 'LARK_BASE_TOKEN\s*=\s*(your_|x{10,})' "$file" 2>/dev/null; then
+                  SENSITIVE_FILES="$SENSITIVE_FILES\n  $file (LARK_BASE_TOKEN)"
+                fi
+              fi
+
+              # 私钥
+              if grep -qE 'BEGIN (RSA|DSA|EC|OPENSSH) PRIVATE KEY' "$file" 2>/dev/null; then
+                SENSITIVE_FILES="$SENSITIVE_FILES\n  $file (PRIVATE KEY)"
+              fi
+
+              # AWS 密钥
+              if grep -qE 'AKIA[0-9A-Z]{16}' "$file" 2>/dev/null; then
+                SENSITIVE_FILES="$SENSITIVE_FILES\n  $file (AWS KEY)"
+              fi
+            fi
+          done < <(find . -type f -not -path "./.git/*" -print0)
+
+          if [ -n "$SENSITIVE_FILES" ]; then
+            echo "::error::发现可能的敏感信息:"
+            echo -e "$SENSITIVE_FILES"
+            exit 1
+          else
+            echo "✓ 未发现敏感信息"
+          fi
+
+      - name: Validate case JSON files
+        run: |
+          echo "=== 验证案件数据 JSON 格式 ==="
+          pip install jsonschema -q
+          python -c "
+          import json, os, sys
+          errors = []
+          for root, dirs, files in os.walk('cases'):
+              for f in files:
+                  if f.endswith('.json'):
+                      path = os.path.join(root, f)
+                      try:
+                          with open(path, 'r', encoding='utf-8') as fp:
+                              json.load(fp)
+                      except Exception as e:
+                          errors.append(f'{path}: {e}')
+          if errors:
+              print('::error::JSON 格式错误:')
+              for e in errors:
+                  print(f'  {e}')
+              sys.exit(1)
+          else:
+              print('✓ 所有案件数据 JSON 格式正确')
+          "
+
+      - name: Check large files
+        run: |
+          echo "=== 检查大文件 ==="
+          LARGE_FILES=$(find . -type f -size +1M -not -path "./.git/*" -not -path "./node_modules/*" 2>/dev/null || true)
+          if [ -n "$LARGE_FILES" ]; then
+            echo "::warning::发现超过 1MB 的文件:"
+            echo "$LARGE_FILES"
+            echo "（媒体文件可接受，其他文件请确认是否必要）"
+          else
+            echo "✓ 无超过 1MB 的文件"
+          fi
+
+      - name: Summary
+        run: |
+          echo "========================================"
+          echo "  安全与质量检查完成"
+          echo "========================================"
+          echo "✓ 禁止文件检查"
+          echo "✓ 敏感信息扫描"
+          echo "✓ JSON 格式验证"
+          echo "✓ 大文件检查"

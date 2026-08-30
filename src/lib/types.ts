@@ -11,6 +11,7 @@ export interface BasicInfo {
   来源类型: string;
   来源作品?: string;
   作者?: string;
+  大洲: string;
   地区: string;
   年代?: string;
   案件状态: string;
@@ -81,6 +82,7 @@ export interface CaseData {
 export interface CaseWithSlug extends CaseData {
   slug: string;
   sourceType: string;
+  continent: string;
   region: string;
 }
 

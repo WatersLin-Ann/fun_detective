@@ -35,6 +35,7 @@ const searchText = [
   data-case
   data-name={基本信息.案件名称}
   data-source={caseData.sourceType}
+  data-continent={caseData.continent}
   data-region={caseData.region}
   data-difficulty={difficulty}
   data-date={元数据.录入日期 || ''}
@@ -73,7 +74,7 @@ const searchText = [
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
-        {caseData.region}
+        {caseData.continent} · {caseData.region}
       </span>
       <span>{基本信息.案件状态}</span>
     </div>

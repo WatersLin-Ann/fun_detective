@@ -1,10 +1,11 @@
 ---
 import BaseLayout from '@layouts/BaseLayout.astro';
 import CaseCard from '@components/CaseCard.astro';
-import { loadAllCases, getSourceTypes, getRegions } from '@lib/caseLoader';
+import { loadAllCases, getSourceTypes, getRegions, getContinents } from '@lib/caseLoader';
 
 export async function getStaticPaths() {
-  const types = [...getSourceTypes(), ...getRegions()];
+  // 生成三种分类页面：来源类型、大洲、国家/地区
+  const types = [...getSourceTypes(), ...getContinents(), ...getRegions()];
   return types.map((type) => ({
     params: { type },
     props: { type },
@@ -14,15 +15,23 @@ export async function getStaticPaths() {
 const { type } = Astro.params;
 const allCases = loadAllCases();
 
-// 判断是按来源类型还是地区筛选
+// 判断是按来源类型、大洲还是国家筛选
 const isSourceType = getSourceTypes().includes(type);
+const isContinent = getContinents().includes(type);
 const isRegion = getRegions().includes(type);
 
-const filteredCases = allCases.filter((c) =>
-  isSourceType ? c.sourceType === type : c.region === type
-);
+const filteredCases = allCases.filter((c) => {
+  if (isSourceType) return c.sourceType === type;
+  if (isContinent) return c.continent === type;
+  if (isRegion) return c.region === type;
+  return false;
+});
 
-const categoryTitle = isSourceType ? `来源：${type}` : `地区：${type}`;
+let categoryTitle = '';
+if (isSourceType) categoryTitle = `来源：${type}`;
+else if (isContinent) categoryTitle = `大洲：${type}`;
+else if (isRegion) categoryTitle = `国家/地区：${type}`;
+else categoryTitle = type;
 ---
 
 <BaseLayout title={categoryTitle} description={`${categoryTitle}的案件列表`}>
