@@ -1,4 +1,4 @@
-"""配置管理模块：从环境变量和 .env 文件读取配置。"""
+﻿"""配置管理模块：从环境变量和 .env 文件读取配置。"""
 import os
 from pathlib import Path
 
@@ -41,9 +41,9 @@ def get_config() -> dict:
         "lark_app_secret": os.getenv("LARK_APP_SECRET", ""),
 
         # 飞书 Base
-        "lark_base_token": os.getenv("LARK_BASE_TOKEN", "NlZabSCWaa4NXbsUf1Wc6inQnjf"),
-        "lark_main_table_id": os.getenv("LARK_MAIN_TABLE_ID", "tbl02kunLvM8fGow"),
-        "lark_sub_table_id": os.getenv("LARK_SUB_TABLE_ID", "tblqyVU3YzPiw5IS"),
+        "lark_base_token": os.getenv("LARK_BASE_TOKEN", ""),
+        "lark_main_table_id": os.getenv("LARK_MAIN_TABLE_ID", ""),
+        "lark_sub_table_id": os.getenv("LARK_SUB_TABLE_ID", ""),
 
         # Git
         "git_repo_path": repo_path,

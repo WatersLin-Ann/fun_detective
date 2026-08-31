@@ -36,6 +36,7 @@ SENSITIVE_PATTERNS = [
     (r"LARK_BASE_TOKEN\s*=\s*[A-Za-z0-9]{15,}", "LARK_BASE_TOKEN"),
     (r"LARK_MAIN_TABLE_ID\s*=\s*tbl[A-Za-z0-9]{10,}", "LARK_MAIN_TABLE_ID"),
     (r"LARK_SUB_TABLE_ID\s*=\s*tbl[A-Za-z0-9]{10,}", "LARK_SUB_TABLE_ID"),
+    (r"NlZab[A-Za-z0-9]{15,}", "飞书 Base Token（硬编码）"),
     (r"AKIA[0-9A-Z]{16}", "AWS Access Key"),
     (r"AIza[0-9A-Za-z\-_]{35}", "Google API Key"),
     (r"BEGIN (RSA|DSA|EC|OPENSSH) PRIVATE KEY", "Private Key"),

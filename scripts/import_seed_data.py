@@ -1,4 +1,4 @@
-"""将种子数据转换为 lark-cli batch-create 格式并导入。"""
+﻿"""将种子数据转换为 lark-cli batch-create 格式并导入。"""
 import json
 import os
 import subprocess
@@ -6,8 +6,8 @@ import sys
 from datetime import datetime
 
 SEED_FILE = os.path.join(os.path.dirname(__file__), "..", "data", "seed_cases.json")
-BASE_TOKEN = "NlZabSCWaa4NXbsUf1Wc6inQnjf"
-TABLE_ID = "tbl02kunLvM8fGow"
+BASE_TOKEN = os.getenv("LARK_BASE_TOKEN", "")
+TABLE_ID = os.getenv("LARK_MAIN_TABLE_ID", "")
 
 def main():
     with open(SEED_FILE, "r", encoding="utf-8") as f:

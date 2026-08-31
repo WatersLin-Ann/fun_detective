@@ -15,11 +15,19 @@ def test_get_config_returns_dict():
 
 
 def test_get_config_default_values():
+    # 测试前清除飞书相关环境变量，确保测试的是默认值
+    for key in ["LARK_APP_ID", "LARK_APP_SECRET", "LARK_BASE_TOKEN",
+                "LARK_MAIN_TABLE_ID", "LARK_SUB_TABLE_ID"]:
+        os.environ.pop(key, None)
+
     config = get_config()
-    # 默认值应该与计划中的一致
-    assert config["lark_base_token"] == "NlZabSCWaa4NXbsUf1Wc6inQnjf"
-    assert config["lark_main_table_id"] == "tbl02kunLvM8fGow"
-    assert config["lark_sub_table_id"] == "tblqyVU3YzPiw5IS"
+
+    # 敏感凭证不应该有硬编码默认值，必须通过环境变量配置
+    assert config["lark_base_token"] == ""
+    assert config["lark_main_table_id"] == ""
+    assert config["lark_sub_table_id"] == ""
+
+    # 非敏感配置可以有默认值
     assert config["git_remote"] == "origin"
     assert config["git_branch"] == "main"
     assert config["sync_mode"] == "incremental"
