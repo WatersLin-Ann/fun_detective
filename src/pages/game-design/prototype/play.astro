@@ -88,6 +88,14 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
     <div id="dialog-container"></div>
   </div>
 
+  <!-- 引入游戏数据（必须在内联脚本之前加载） -->
+  <script is:inline src="/fun_detective/game/data-orient-express.js"></script>
+  <!-- 引入游戏UI工具模块 -->
+  <script is:inline src="/fun_detective/game/ui.js"></script>
+  <!-- 引入玩家数据与笔记系统 -->
+  <script is:inline src="/fun_detective/game/playerData.js"></script>
+  <script is:inline src="/fun_detective/game/notebookUI.js"></script>
+
   <script is:inline>
     // 游戏数据（从外部模块加载）
     const gameScenes = GameData.scenes;
@@ -737,12 +745,4 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
     // 启动
     init();
   </script>
-
-  <!-- 引入游戏UI工具模块 -->
-  <script is:inline src="/fun_detective/game/ui.js"></script>
-  <!-- 引入玩家数据与笔记系统 -->
-  <script is:inline src="/fun_detective/game/playerData.js"></script>
-  <script is:inline src="/fun_detective/game/notebookUI.js"></script>
-  <!-- 引入游戏数据 -->
-  <script is:inline src="/fun_detective/game/data-orient-express.js"></script>
 </BaseLayout>
