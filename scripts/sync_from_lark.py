@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 飞书 Base → GitHub 同步主程序。
 
@@ -164,7 +164,7 @@ def main():
                 stats["created_list"].append(f"{case['id']} {case['基本信息']['案件名称']}")
 
             git_ops.write_case_file(case)
-            written_files.add(f"cases/{rel_path.replace('\\', '/')}")
+            written_files.add("cases/" + rel_path.replace("\\", "/"))
 
         # 写入校验失败的案例（标记为待完善，保留在cases目录，避免误归档）
         for item in invalid_cases:
@@ -183,7 +183,7 @@ def main():
                 stats["created"] += 1
 
             git_ops.write_case_file(case)
-            written_files.add(f"cases/{rel_path.replace('\\', '/')}")
+            written_files.add("cases/" + rel_path.replace("\\", "/"))
             logger.info(f"保留待完善案件: {item['name']}（{len(item['errors'])}个错误）")
 
         # 只有飞书Base中明确不存在的记录才归档
