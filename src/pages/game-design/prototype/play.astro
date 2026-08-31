@@ -44,10 +44,10 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
       <div id="investigation-section" class="hidden">
         <div class="mb-4">
           <h2 class="text-xl font-bold mb-2">🔍 调查阶段</h2>
-          <p class="text-sm text-stone-400">点击场景中的物品和人物进行互动。收集至少3件证据、询问至少3个证人后，可前往餐车进行审判。</p>
+          <p class="text-sm text-stone-400">点击场景中的物品和人物进行互动。收集至少3件证据、询问至少2个证人后，可前往餐车进行审判。</p>
           <div class="mt-2 flex gap-4 text-sm">
             <span>已收集证据: <span id="inv-evidence-count" class="text-accent-400 font-bold">0</span>/3</span>
-            <span>已询问证人: <span id="inv-witness-count" class="text-accent-400 font-bold">0</span>/3</span>
+            <span>已询问证人: <span id="inv-witness-count" class="text-accent-400 font-bold">0</span>/2</span>
           </div>
         </div>
         <div id="game-scene-container"></div>
@@ -561,7 +561,7 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
 
     window.__exit = function(sceneId) {
       if (sceneId === 'dining-car' && state.gamePhase === 'investigation') {
-        if (state.collectedEvidence.length >= 3 && state.interviewedWitnesses.length >= 3) {
+        if (state.collectedEvidence.length >= 3 && state.interviewedWitnesses.length >= 2) {
           GameUI.showModal({
             title: '进入审判阶段？',
             message: '调查阶段将结束，未收集的证据将无法获取。确定要前往餐车进行审判吗？',
@@ -577,7 +577,7 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
         } else {
           GameUI.showModal({
             title: '还不能进入审判',
-            message: `还需要收集至少3件证据和询问3个证人。\n当前：证据${state.collectedEvidence.length}/3，证人${state.interviewedWitnesses.length}/3`,
+            message: `还需要收集至少3件证据和询问2个证人。\n当前：证据${state.collectedEvidence.length}/3，证人${state.interviewedWitnesses.length}/2`,
             confirmText: '我知道了',
             cancelText: '关闭',
             type: 'info',

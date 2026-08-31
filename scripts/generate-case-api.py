@@ -12,15 +12,16 @@ for root, dirs, files in os.walk(cases_dir):
             with open(filepath, 'r', encoding='utf-8') as fp:
                 data = json.load(fp)
             
-            # 计算slug
+            # 计算slug：与站点 caseLoader 口径一致
+            # sourceType/region 取文件夹路径，案件名称取 JSON 内的 基本信息.案件名称
             rel_path = os.path.relpath(filepath, cases_dir).replace('\\', '/')
             parts = rel_path.replace('.json', '').split('/')
             source_type = parts[0] if len(parts) > 0 else '未分类'
             region = parts[1] if len(parts) > 1 else '未分类'
-            name = parts[2] if len(parts) > 2 else f
-            
-            slug = f"{source_type}/{region}/{name}"
-            
+            case_name = data.get('基本信息', {}).get('案件名称') or parts[2] if len(parts) > 2 else f
+
+            slug = f"{source_type}/{region}/{case_name}"
+
             # 添加slug和sourceType、region
             data['slug'] = slug
             data['sourceType'] = source_type

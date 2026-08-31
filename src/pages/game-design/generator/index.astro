@@ -1,7 +1,7 @@
 ---
 import BaseLayout from '@layouts/BaseLayout.astro';
 import { loadAllCases, getGameTemplates } from '@lib/caseLoader';
-import { generateLevelStructure, exportToMarkdown, exportToJSON, recommendTemplate, downloadFile } from '@lib/generator';
+import { recommendTemplate } from '@lib/generator';
 import type { CaseWithSlug } from '@lib/types';
 
 const allCases = loadAllCases();
@@ -178,19 +178,19 @@ const recommendations = allCases.map((c) => {
     </div>
   </div>
 
-  <!-- 模板数据（供script使用） -->
-  <script type="application/json" id="templates-data">
-  {JSON.stringify(templates)}
-  </script>
+  <!-- 模板数据（通过 data 属性注入，供 module 脚本读取） -->
+  <div id="templates-data" data-templates={JSON.stringify(templates)} style="display:none"></div>
 
   <script>
+    import { generateLevelStructure, exportToMarkdown, exportToJSON, downloadFile } from '@lib/generator';
+
     // 状态
     let selectedCaseSlug = null;
     let selectedTemplateName = null;
     let generatedStructure = null;
 
-    // 从页面注入的模板数据
-    const templatesData = JSON.parse(document.getElementById('templates-data').textContent);
+    // 从 data 属性读取模板数据
+    const templatesData = JSON.parse(document.getElementById('templates-data').dataset.templates);
 
     // DOM元素
     const caseSearch = document.getElementById('case-search');
@@ -272,13 +272,6 @@ const recommendations = allCases.map((c) => {
 
     // 生成关卡结构
     generateBtn?.addEventListener('click', () => {
-      // 这里需要从完整案例数据中获取
-      // 由于Astro静态构建，我们通过API或重新加载数据
-      // 简化处理：使用页面上已有的数据结构
-      alert('生成功能需要完整案例数据支持，请确保已选择案例和模板');
-      
-      // 实际生成逻辑在客户端完成
-      // 由于数据量较大，这里通过fetch获取案例数据
       generateLevel();
     });
 
@@ -288,8 +281,7 @@ const recommendations = allCases.map((c) => {
         generateBtn.disabled = true;
         
         // 获取完整案例数据（通过API或本地数据）
-        // 这里简化为从页面数据中获取
-        const response = await fetch('/fun_detective/api/case-data.json');
+        const response = await fetch(`${import.meta.env.BASE_URL}api/case-data.json`);
         if (!response.ok) throw new Error('数据加载失败');
         const allCases = await response.json();
         
