@@ -10,7 +10,7 @@ const stats = getStats();
 const sourceTypes = getSourceTypes();
 const continents = getContinents();
 
-// 预先生成大洲→国家映射，用于客户端动态更新国家下拉
+// 预先生成大洲→国家映射，用于二级菜单
 const continentCountries: Record<string, string[]> = {};
 for (const continent of continents) {
   continentCountries[continent] = getRegionsByContinent(continent);
@@ -74,18 +74,56 @@ const PAGE_SIZE = 12;
           </svg>
         </div>
         <!-- 筛选器 -->
-        <div class="flex flex-wrap gap-3">
+        <div class="flex flex-wrap gap-3 items-center">
           <select id="filter-source" class="input w-auto">
             <option value="">全部类型</option>
             {sourceTypes.map((type) => <option value={type}>{type}</option>)}
           </select>
-          <select id="filter-continent" class="input w-auto">
-            <option value="">全部地区</option>
-            {continents.map((c) => <option value={c}>{c}</option>)}
-          </select>
-          <select id="filter-region" class="input w-auto">
-            <option value="">全部国家</option>
-          </select>
+
+          <!-- 自定义二级下拉菜单：地区→国家 -->
+          <div class="region-dropdown" id="region-dropdown">
+            <button type="button" class="input w-auto flex items-center justify-between gap-2 cursor-pointer" id="region-trigger">
+              <span id="region-trigger-text">全部地区</span>
+              <svg class="w-4 h-4 text-stone-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            <div class="region-menu" id="region-menu">
+              <!-- 全部地区 -->
+              <div class="region-menu-item" data-region="" data-continent="">
+                <span>全部地区</span>
+              </div>
+              <!-- 各地区分组 -->
+              {continents.map((continent) => {
+                const countries = continentCountries[continent] || [];
+                const hasChildren = countries.length > 0;
+                return (
+                  <div class={`region-menu-item ${hasChildren ? 'has-children' : ''}`} data-continent={continent}>
+                    <span class="region-menu-label">{continent}</span>
+                    {hasChildren && (
+                      <>
+                        <svg class="w-4 h-4 text-stone-400 ml-auto flex-shrink-0 submenu-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                        <div class="region-submenu">
+                          <div class="region-submenu-title">{continent} · 全部国家</div>
+                          <div class="region-submenu-item" data-region="" data-continent={continent}>
+                            全部国家
+                          </div>
+                          {countries.map((country) => (
+                            <div class="region-submenu-item" data-region={country} data-continent={continent}>
+                              {country}
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
           <select id="filter-sort" class="input w-auto">
             <option value="date">最新录入</option>
             <option value="name">名称排序</option>
@@ -124,10 +162,103 @@ const PAGE_SIZE = 12;
     </div>
   </section>
 
-  <!-- 大洲→国家映射数据（用JSON脚本标签注入，避免is:inline模板不替换的问题） -->
-  <script type="application/json" id="continent-countries">
-    {JSON.stringify(continentCountries)}
-  </script>
+  <style>
+    /* 二级下拉菜单样式 */
+    .region-dropdown {
+      position: relative;
+    }
+    .region-menu {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      margin-top: 4px;
+      background: white;
+      border: 1px solid #e7e5e4;
+      border-radius: 8px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      min-width: 160px;
+      z-index: 50;
+      padding: 4px 0;
+    }
+    .region-dropdown.open .region-menu {
+      display: block;
+    }
+    .region-menu-item {
+      display: flex;
+      align-items: center;
+      padding: 8px 14px;
+      cursor: pointer;
+      font-size: 14px;
+      color: #44403c;
+      position: relative;
+      transition: background 0.15s;
+    }
+    .region-menu-item:hover {
+      background: #f5f5f4;
+    }
+    .region-menu-item.has-children:hover {
+      background: #f5f5f4;
+    }
+    .region-menu-label {
+      flex: 1;
+    }
+    /* 二级子菜单：PC端hover显示 */
+    .region-submenu {
+      display: none;
+      position: absolute;
+      left: 100%;
+      top: -4px;
+      margin-left: 2px;
+      background: white;
+      border: 1px solid #e7e5e4;
+      border-radius: 8px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      min-width: 140px;
+      z-index: 51;
+      padding: 4px 0;
+    }
+    .region-menu-item.has-children:hover > .region-submenu {
+      display: block;
+    }
+    .region-submenu-title {
+      padding: 6px 14px;
+      font-size: 12px;
+      color: #a8a29e;
+      border-bottom: 1px solid #f5f5f4;
+      margin-bottom: 2px;
+    }
+    .region-submenu-item {
+      padding: 8px 14px;
+      cursor: pointer;
+      font-size: 14px;
+      color: #44403c;
+      transition: background 0.15s;
+    }
+    .region-submenu-item:hover {
+      background: #f5f5f4;
+      color: #1c1917;
+    }
+    /* 移动端：点击展开二级 */
+    @media (max-width: 768px) {
+      .region-menu-item.has-children.open-submenu > .region-submenu {
+        display: block;
+        position: static;
+        margin-left: 0;
+        margin-top: 4px;
+        box-shadow: none;
+        border: none;
+        background: #fafaf9;
+        border-radius: 4px;
+      }
+      .region-menu-item.has-children.open-submenu .submenu-arrow {
+        transform: rotate(90deg);
+      }
+      .submenu-arrow {
+        transition: transform 0.2s;
+      }
+    }
+  </style>
 
   <script>
     // 导入 fuse.js 模糊搜索
@@ -136,8 +267,6 @@ const PAGE_SIZE = 12;
     // 客户端搜索和筛选
     const searchInput = document.getElementById('search-input') as HTMLInputElement;
     const filterSource = document.getElementById('filter-source') as HTMLSelectElement;
-    const filterContinent = document.getElementById('filter-continent') as HTMLSelectElement;
-    const filterRegion = document.getElementById('filter-region') as HTMLSelectElement;
     const filterSort = document.getElementById('filter-sort') as HTMLSelectElement;
     const caseGrid = document.getElementById('case-grid')!;
     const noResults = document.getElementById('no-results')!;
@@ -145,10 +274,18 @@ const PAGE_SIZE = 12;
     const loadMoreBtn = document.getElementById('load-more-btn')!;
     const loadMoreContainer = document.getElementById('load-more-container')!;
 
-    // 从JSON标签读取大洲→国家映射
-    const CONTINENT_COUNTRIES: Record<string, string[]> = JSON.parse(
-      document.getElementById('continent-countries')?.textContent || '{}'
-    );
+    // 二级下拉菜单元素
+    const regionDropdown = document.getElementById('region-dropdown')!;
+    const regionTrigger = document.getElementById('region-trigger')!;
+    const regionTriggerText = document.getElementById('region-trigger-text')!;
+    const regionMenu = document.getElementById('region-menu')!;
+
+    // 当前选中的筛选值
+    let selectedRegion = '';      // 国家名，空表示全部
+    let selectedContinent = '';   // 大洲名，空表示全部
+
+    // 检测是否为触屏设备
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
     // 分页配置
     const PAGE_SIZE = 12;
@@ -194,41 +331,94 @@ const PAGE_SIZE = 12;
       minMatchCharLength: 1,
     });
 
-    // 更新国家下拉选项（根据选中的大洲）
-    function updateRegionOptions() {
-      const selectedContinent = filterContinent.value;
-      // 清空当前选项
-      filterRegion.innerHTML = '<option value="">全部国家</option>';
+    // ===== 二级下拉菜单逻辑 =====
 
-      let countries: string[] = [];
-      if (selectedContinent) {
-        // 只显示该大洲下的国家
-        countries = CONTINENT_COUNTRIES[selectedContinent] || [];
-      } else {
-        // 显示所有国家（去重）
-        const allCountries = new Set<string>();
-        Object.values(CONTINENT_COUNTRIES).forEach((list) => {
-          list.forEach((c) => allCountries.add(c));
+    // 打开/关闭下拉
+    function toggleDropdown(open?: boolean) {
+      const shouldOpen = open !== undefined ? open : !regionDropdown.classList.contains('open');
+      regionDropdown.classList.toggle('open', shouldOpen);
+      if (!shouldOpen) {
+        // 关闭时收起所有移动端展开的子菜单
+        regionMenu.querySelectorAll('.has-children.open-submenu').forEach((el) => {
+          el.classList.remove('open-submenu');
         });
-        countries = Array.from(allCountries).sort();
-      }
-
-      for (const country of countries) {
-        const option = document.createElement('option');
-        option.value = country;
-        option.textContent = country;
-        filterRegion.appendChild(option);
       }
     }
 
+    // 更新触发按钮显示文本
+    function updateTriggerText() {
+      if (selectedRegion) {
+        regionTriggerText.textContent = selectedRegion;
+      } else if (selectedContinent) {
+        regionTriggerText.textContent = `${selectedContinent} · 全部`;
+      } else {
+        regionTriggerText.textContent = '全部地区';
+      }
+    }
+
+    // 选中一个值（国家或大洲）
+    function selectRegion(region: string, continent: string) {
+      selectedRegion = region;
+      selectedContinent = continent;
+      updateTriggerText();
+      toggleDropdown(false);
+      applyFilters();
+    }
+
+    // 点击触发按钮
+    regionTrigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleDropdown();
+    });
+
+    // 点击菜单项
+    regionMenu.addEventListener('click', (e) => {
+      const target = e.target as HTMLElement;
+
+      // 点击了子菜单项（国家或全部国家）
+      const submenuItem = target.closest('.region-submenu-item') as HTMLElement | null;
+      if (submenuItem) {
+        e.stopPropagation();
+        const region = submenuItem.dataset.region || '';
+        const continent = submenuItem.dataset.continent || '';
+        selectRegion(region, continent);
+        return;
+      }
+
+      // 点击了一级菜单项
+      const menuItem = target.closest('.region-menu-item') as HTMLElement | null;
+      if (menuItem) {
+        e.stopPropagation();
+        const hasChildren = menuItem.classList.contains('has-children');
+
+        if (isTouchDevice && hasChildren) {
+          // 移动端：有子菜单的项点击展开/收起子菜单
+          menuItem.classList.toggle('open-submenu');
+        } else if (!hasChildren) {
+          // 无子菜单的项（全部地区）直接选中
+          const region = menuItem.dataset.region || '';
+          const continent = menuItem.dataset.continent || '';
+          selectRegion(region, continent);
+        }
+        // PC端有子菜单的项靠hover显示子菜单，点击不做操作
+      }
+    });
+
+    // 点击外部关闭下拉
+    document.addEventListener('click', (e) => {
+      if (!regionDropdown.contains(e.target as Node)) {
+        toggleDropdown(false);
+      }
+    });
+
+    // ===== 筛选和显示逻辑 =====
+
     // 更新显示（支持分页）
     function updateDisplay() {
-      // 隐藏所有
       caseItems.forEach((item) => {
         item.element.style.display = 'none';
       });
 
-      // 显示当前页的案件
       const endIndex = currentPage * PAGE_SIZE;
       const toShow = currentFiltered.slice(0, endIndex);
       toShow.forEach((item) => {
@@ -236,7 +426,6 @@ const PAGE_SIZE = 12;
         item.element.style.display = '';
       });
 
-      // 更新加载更多按钮
       if (endIndex >= currentFiltered.length) {
         loadMoreContainer.classList.add('hidden');
       } else {
@@ -244,7 +433,6 @@ const PAGE_SIZE = 12;
         loadMoreBtn.textContent = `加载更多（已显示 ${toShow.length}/${currentFiltered.length}）`;
       }
 
-      // 更新计数和空状态
       resultCount.textContent = `共 ${currentFiltered.length} 条`;
       noResults.classList.toggle('hidden', currentFiltered.length > 0);
     }
@@ -252,8 +440,6 @@ const PAGE_SIZE = 12;
     function applyFilters() {
       const query = searchInput.value.trim();
       const source = filterSource.value;
-      const continent = filterContinent.value;
-      const region = filterRegion.value;
       const sort = filterSort.value;
 
       // 先用 fuse.js 进行模糊搜索
@@ -265,15 +451,17 @@ const PAGE_SIZE = 12;
         filtered = [...caseItems];
       }
 
-      // 再应用类型、大洲、国家筛选
+      // 应用类型、地区/国家筛选
       filtered = filtered.filter((item) => {
         const matchSource = !source || item.source === source;
-        const matchContinent = !continent || item.continent === continent;
-        const matchRegion = !region || item.region === region;
-        return matchSource && matchContinent && matchRegion;
+        // 选了具体国家 → 按国家匹配
+        const matchRegion = !selectedRegion || item.region === selectedRegion;
+        // 没选国家但选了大洲 → 按大洲匹配
+        const matchContinent = !selectedContinent || selectedRegion || item.continent === selectedContinent;
+        return matchSource && matchRegion && matchContinent;
       });
 
-      // 排序（搜索时默认按匹配度，否则按用户选择）
+      // 排序
       if (!query || sort !== 'date') {
         filtered.sort((a, b) => {
           switch (sort) {
@@ -291,15 +479,9 @@ const PAGE_SIZE = 12;
       }
 
       currentFiltered = filtered;
-      currentPage = 1; // 筛选时重置分页
+      currentPage = 1;
       updateDisplay();
     }
-
-    // 大洲变化时更新国家下拉，并重新筛选
-    filterContinent.addEventListener('change', () => {
-      updateRegionOptions();
-      applyFilters();
-    });
 
     // 加载更多
     loadMoreBtn.addEventListener('click', () => {
@@ -309,11 +491,8 @@ const PAGE_SIZE = 12;
 
     searchInput.addEventListener('input', applyFilters);
     filterSource.addEventListener('change', applyFilters);
-    filterRegion.addEventListener('change', applyFilters);
     filterSort.addEventListener('change', applyFilters);
 
-    // 初始化国家下拉
-    updateRegionOptions();
     // 初始化显示
     applyFilters();
   </script>
