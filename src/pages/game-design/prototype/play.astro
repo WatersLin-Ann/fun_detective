@@ -1,4 +1,4 @@
-﻿---
+---
 import BaseLayout from '@layouts/BaseLayout.astro';
 import GameScene from '@components/prototype/GameScene.astro';
 import EvidenceBar from '@components/prototype/EvidenceBar.astro';
@@ -7,100 +7,100 @@ import TrialPanel from '@components/prototype/TrialPanel.astro';
 import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prototype-orient-express';
 ---
 
-<BaseLayout title="涓滄柟蹇溅锛氭帹鐞嗗鍒? description="鍙氦浜掓帹鐞嗘父鎴忓師鍨?>
+<BaseLayout title="东方快车：推理审判" description="可交互推理游戏原型">
   <div class="min-h-screen bg-stone-900 text-white">
-    <!-- 娓告垙椤堕儴鏍?-->
+    <!-- 游戏顶部栏 -->
     <div class="bg-stone-800 p-3 flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <a href="/fun_detective/game-design/prototype" class="text-stone-400 hover:text-white text-sm">鈫?杩斿洖</a>
-        <span class="font-bold">涓滄柟蹇溅锛氭帹鐞嗗鍒?/span>
+        <a href="/fun_detective/game-design/prototype" class="text-stone-400 hover:text-white text-sm">← 返回</a>
+        <span class="font-bold">东方快车：推理审判</span>
       </div>
       <div class="flex items-center gap-4 text-sm">
-        <span id="phase-indicator" class="text-stone-300">寮€鍦?/span>
-        <span id="confidence-display" class="text-stone-300">淇″績鍊? 100</span>
+        <span id="phase-indicator" class="text-stone-300">开场</span>
+        <span id="confidence-display" class="text-stone-300">信心值: 100</span>
         <button id="evidence-btn" class="px-3 py-1 bg-stone-700 rounded hover:bg-stone-600">
-          璇佹嵁 (<span id="evidence-count">0</span>)
+          证据 (<span id="evidence-count">0</span>)
         </button>
         <button onclick="NotebookUI.open()" class="px-3 py-1 bg-amber-700 rounded hover:bg-amber-600 text-xs">
-          馃摑 绗旇
+          📝 笔记
         </button>
-        <button id="reset-btn" class="px-3 py-1 bg-red-800 rounded hover:bg-red-700 text-xs">閲嶇疆</button>
+        <button id="reset-btn" class="px-3 py-1 bg-red-800 rounded hover:bg-red-700 text-xs">重置</button>
       </div>
     </div>
 
-    <!-- 娓告垙涓诲尯鍩?-->
+    <!-- 游戏主区域 -->
     <div class="container-page py-6 pb-32">
-      <!-- 寮€鍦?瀵硅瘽闃舵 -->
+      <!-- 开场/对话阶段 -->
       <div id="intro-section" class="max-w-2xl mx-auto">
         <div class="bg-stone-800 rounded-xl p-8 min-h-64 flex flex-col justify-between">
           <div id="intro-text" class="text-lg leading-relaxed text-stone-200"></div>
           <button id="intro-continue" class="mt-6 self-end px-6 py-2 bg-primary-600 rounded-lg hover:bg-primary-700">
-            缁х画
+            继续
           </button>
         </div>
       </div>
 
-      <!-- 璋冩煡闃舵 -->
+      <!-- 调查阶段 -->
       <div id="investigation-section" class="hidden">
         <div class="mb-4">
-          <h2 class="text-xl font-bold mb-2">馃攳 璋冩煡闃舵</h2>
-          <p class="text-sm text-stone-400">鐐瑰嚮鍦烘櫙涓殑鐗╁搧鍜屼汉鐗╄繘琛屼簰鍔ㄣ€傛敹闆嗚嚦灏?浠惰瘉鎹€佽闂嚦灏?涓瘉浜哄悗锛屽彲鍓嶅線椁愯溅杩涜瀹″垽銆?/p>
+          <h2 class="text-xl font-bold mb-2">🔍 调查阶段</h2>
+          <p class="text-sm text-stone-400">点击场景中的物品和人物进行互动。收集至少3件证据、询问至少3个证人后，可前往餐车进行审判。</p>
           <div class="mt-2 flex gap-4 text-sm">
-            <span>宸叉敹闆嗚瘉鎹? <span id="inv-evidence-count" class="text-accent-400 font-bold">0</span>/3</span>
-            <span>宸茶闂瘉浜? <span id="inv-witness-count" class="text-accent-400 font-bold">0</span>/3</span>
+            <span>已收集证据: <span id="inv-evidence-count" class="text-accent-400 font-bold">0</span>/3</span>
+            <span>已询问证人: <span id="inv-witness-count" class="text-accent-400 font-bold">0</span>/3</span>
           </div>
         </div>
         <div id="game-scene-container"></div>
       </div>
 
-      <!-- 瀹″垽闃舵 -->
+      <!-- 审判阶段 -->
       <div id="trial-section" class="hidden max-w-4xl mx-auto">
         <div id="trial-panel-container"></div>
         <div id="trial-dialog-container" class="mt-6"></div>
       </div>
 
-      <!-- 缁撳眬闃舵 -->
+      <!-- 结局阶段 -->
       <div id="ending-section" class="hidden max-w-2xl mx-auto">
         <div class="bg-stone-800 rounded-xl p-8">
           <h2 id="ending-title" class="text-3xl font-bold mb-4 text-center"></h2>
           <p id="ending-description" class="text-lg leading-relaxed text-stone-300 mb-6"></p>
           <div id="ending-stats" class="bg-stone-700 rounded-lg p-4 mb-6">
-            <h3 class="font-bold mb-2">娓告垙缁熻</h3>
+            <h3 class="font-bold mb-2">游戏统计</h3>
             <div class="grid grid-cols-2 gap-2 text-sm">
-              <div>鏀堕泦璇佹嵁: <span id="stat-evidence"></span></div>
-              <div>璇㈤棶璇佷汉: <span id="stat-witness"></span></div>
-              <div>鎻湶鐭涚浘: <span id="stat-contradiction"></span></div>
-              <div>鏈€缁堜俊蹇冨€? <span id="stat-confidence"></span></div>
+              <div>收集证据: <span id="stat-evidence"></span></div>
+              <div>询问证人: <span id="stat-witness"></span></div>
+              <div>揭露矛盾: <span id="stat-contradiction"></span></div>
+              <div>最终信心值: <span id="stat-confidence"></span></div>
             </div>
           </div>
           <div class="flex gap-4 justify-center">
-            <button id="ending-restart" class="px-6 py-2 bg-primary-600 rounded-lg hover:bg-primary-700">閲嶆柊寮€濮?/button>
-            <a href="/fun_detective/game-design" class="px-6 py-2 bg-stone-600 rounded-lg hover:bg-stone-500">杩斿洖娓告垙璁捐</a>
+            <button id="ending-restart" class="px-6 py-2 bg-primary-600 rounded-lg hover:bg-primary-700">重新开始</button>
+            <a href="/fun_detective/game-design" class="px-6 py-2 bg-stone-600 rounded-lg hover:bg-stone-500">返回游戏设计</a>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- 璇佹嵁鏍?-->
+    <!-- 证据栏 -->
     <div id="evidence-bar-container"></div>
 
-    <!-- 瀵硅瘽妗?-->
+    <!-- 对话框 -->
     <div id="dialog-container"></div>
   </div>
 
   <script is:inline>
-    // 娓告垙鏁版嵁
-    const gameScenes = [{"id": "intro", "name": "娉㈡礇鐨勫寘鍘?, "description": "娣卞锛屼笢鏂瑰揩杞﹀洜澶ч洩琚洶鍦ㄥ崡鏂媺澶殑鑽掗噹涓€備綘鏄憲鍚嶄睛鎺㈣但灏斿厠閲屄锋尝娲涳紝琚竴闃靛皷鍙０鎯婇啋...", "background": "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)", "interactables": [{"id": "door", "name": "鍖呭帰闂?, "description": "閫氬線璧板粖鐨勯棬锛屽闈技涔庡緢鍚甸椆銆?, "type": "object", "position": {"x": 80, "y": 50}}], "exits": [{"to": "corridor", "label": "璧板嚭鍖呭帰"}]}, {"id": "corridor", "name": "鍒楄溅璧板粖", "description": "鏄忔殫鐨勮蛋寤婇噷锛屽垪杞﹀憳姝ｇ劍鎬ュ湴鏁茬潃涓€闂村寘鍘㈢殑闂ㄣ€備箻瀹滑绾风悍鎺㈠嚭澶存煡鐪嬫儏鍐点€?, "background": "linear-gradient(135deg, #2d2d44 0%, #1f1f33 50%, #1a1a2e 100%)", "interactables": [{"id": "victim-door", "name": "鍙楀鑰呭寘鍘?, "description": "闂ㄨ閿佷綇浜嗭紝閲岄潰娌℃湁鍥炲簲銆?, "type": "object", "position": {"x": 30, "y": 40}}, {"id": "conductor", "name": "鍒楄溅鍛樼毊鍩冨皵", "description": "绌跨潃鍒舵湇鐨勫垪杞﹀憳锛岀鎯呯揣寮犮€?, "type": "witness", "witnessId": "conductor", "position": {"x": 50, "y": 45}}, {"id": "mrs-hubbard", "name": "璧集寰峰か浜?, "description": "涓€浣嶇編鍥藉浜猴紝鐪嬭捣鏉ュ緢婵€鍔ㄣ€?, "type": "witness", "witnessId": "mrs-hubbard", "position": {"x": 70, "y": 35}}], "exits": [{"to": "victim-room", "label": "杩涘叆鍙楀鑰呭寘鍘?}, {"to": "dining-car", "label": "鍓嶅線椁愯溅"}]}, {"id": "victim-room", "name": "鍙楀鑰呭寘鍘?, "description": "鍖呭帰鍐咃紝涓€涓敺浜哄€掑湪搴婁笂锛岃韩涓婃湁澶氬鍒€浼ゃ€傜獥鎴峰紑鐫€锛岄洩椋樹簡杩涙潵銆?, "background": "linear-gradient(135deg, #3d1a1a 0%, #2d1414 50%, #1a0d0d 100%)", "interactables": [{"id": "body", "name": "灏镐綋", "description": "鍙楀鑰呴浄鍒囩壒鍏堢敓锛岃韩涓?2鍒€銆?, "type": "evidence", "evidenceId": "body", "position": {"x": 50, "y": 55}}, {"id": "window", "name": "鏁炲紑鐨勭獥鎴?, "description": "绐楁埛澶у紑锛岀獥鍙颁笂鏈夐洩锛屼絾娌℃湁鑴氬嵃銆?, "type": "evidence", "evidenceId": "window", "position": {"x": 80, "y": 30}}, {"id": "handkerchief", "name": "鎵嬪笗", "description": "涓€鍧楃簿鑷寸殑鎵嬪笗锛屼笂闈㈢唬鐫€瀛楁瘝\"H\"銆?, "type": "evidence", "evidenceId": "handkerchief", "position": {"x": 25, "y": 60}}, {"id": "watch", "name": "鎬€琛?, "description": "涓€鍧楁憯鍧忕殑鎬€琛紝鎸囬拡鍋滃湪1:15銆?, "type": "evidence", "evidenceId": "watch", "position": {"x": 60, "y": 70}}, {"id": "ash", "name": "鐑熺伆", "description": "鐑熺伆缂搁噷鏈変袱绉嶄笉鍚岀殑鐑熺伆銆?, "type": "evidence", "evidenceId": "ash", "position": {"x": 35, "y": 40}}], "exits": [{"to": "corridor", "label": "杩斿洖璧板粖"}]}, {"id": "dining-car", "name": "椁愯溅", "description": "鎵€鏈変箻瀹㈤兘鑱氶泦鍦ㄩ杞︼紝姘旀皼绱у紶銆備綘灏嗗湪杩欓噷杩涜\"瀹″垽\"銆?, "background": "linear-gradient(135deg, #2a2a3e 0%, #1e1e30 50%, #181828 100%)", "interactables": [{"id": "mary", "name": "鐜涗附路寰锋湰姹?, "description": "涓€浣嶅喎闈欑殑鑻卞浗濂冲＋锛屽搴暀甯堛€?, "type": "witness", "witnessId": "mary", "position": {"x": 20, "y": 40}}, {"id": "colonel", "name": "闃垮反鏂鐗逛笂鏍?, "description": "涓€浣嶈嫳鍥藉啗瀹橈紝鐪嬭捣鏉ュ緢涓ヨ們銆?, "type": "witness", "witnessId": "colonel", "position": {"x": 40, "y": 50}}, {"id": "princess", "name": "寰锋媺鎴堢背缃楀か鍏富", "description": "涓€浣嶅勾杩堢殑淇勫浗璐垫棌锛岀鎯呭▉涓ャ€?, "type": "witness", "witnessId": "princess", "position": {"x": 60, "y": 35}}, {"id": "countess", "name": "瀹夊痉鐑堜集鐖靛か浜?, "description": "涓€浣嶅勾杞荤殑鍖堢墮鍒╁コ澹紝鐪嬭捣鏉ュ緢绱у紶銆?, "type": "witness", "witnessId": "countess", "position": {"x": 80, "y": 45}}], "exits": [{"to": "corridor", "label": "杩斿洖璧板粖"}]}, {"id": "ending", "name": "缁撳眬", "description": "鎵€鏈夌湡鐩搁兘宸叉彮寮€锛岀幇鍦ㄦ槸鍋氬嚭鏈€缁堥€夋嫨鐨勬椂鍊?..", "background": "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)", "interactables": [], "exits": []}];
-    const gameEvidence = [{"id": "body", "name": "灏镐綋", "description": "鍙楀鑰呴浄鍒囩壒锛岃韩涓?2鍒€锛屼激鍙ｆ繁娴呬笉涓€銆?, "keyInfo": "12澶勫垁浼わ紝娣辨祬涓嶄竴锛岃鏄庡彲鑳芥湁澶氫釜鍑舵墜锛屼笖鍔涘害涓嶅悓銆?, "scene": "victim-room", "foundIn": "鍙楀鑰呭寘鍘㈢殑搴婁笂"}, {"id": "window", "name": "鏁炲紑鐨勭獥鎴?, "description": "绐楁埛澶у紑锛岀獥澶栨槸闆湴锛屼絾绐楀彴涓婃病鏈夎剼鍗般€?, "keyInfo": "濡傛灉鍑舵墜浠庣獥鎴烽€冭蛋锛岄洩鍦颁笂搴旇鏈夎剼鍗帮紝浣嗗疄闄呬笂娌℃湁銆傝繖璇存槑绐楁埛鏄晠鎰忔墦寮€鐨勶紝浼€犻€冭蛋璺嚎銆?, "scene": "victim-room", "foundIn": "鍙楀鑰呭寘鍘?}, {"id": "handkerchief", "name": "鎵嬪笗", "description": "涓€鍧楃簿鑷寸殑濂冲＋鎵嬪笗锛岃钀界唬鐫€瀛楁瘝\"H\"銆?, "keyInfo": "鎵嬪笗涓婄殑\"H\"鍙兘鏄嚩鎵嬬殑鍚嶅瓧棣栧瓧姣嶃€備箻瀹腑锛岃但浼痉澶汉(Hubbard)鍜屽痉鎷夋垐绫崇綏澶叕涓荤殑鏁欏悕閮芥槸H寮€澶淬€?, "scene": "victim-room", "foundIn": "鍙楀鑰呭寘鍘㈠湴鏉夸笂"}, {"id": "watch", "name": "鎬€琛?, "description": "涓€鍧楅噾璐ㄦ€€琛紝琛ㄥ３鍑归櫡锛屾寚閽堝仠鍦?:15銆?, "keyInfo": "鎬€琛ㄥ仠鍦?:15锛岃繖鍙兘鏄鍙戞椂闂淬€備絾鎬€琛ㄥ彲鑳借鏁呮剰璋冭繃锛岀敤鏉ヨ瀵艰皟鏌ユ柟鍚戙€?, "scene": "victim-room", "foundIn": "鍙楀鑰呭彛琚?}, {"id": "ash", "name": "鐑熺伆", "description": "鐑熺伆缂搁噷鏈変袱绉嶄笉鍚岀殑鐑熺伆锛屼竴绉嶆槸闆寗锛屼竴绉嶆槸棣欑儫銆?, "keyInfo": "鍙楀鑰呭彧鎶介洩鑼勶紝浣嗙幇鍦烘湁棣欑儫鐏帮紝璇存槑妗堝彂鏃舵湁鍙︿竴涓汉鍦ㄥ満銆?, "scene": "victim-room", "foundIn": "鍙楀鑰呭寘鍘㈢儫鐏扮几"}];
-    const gameWitnesses = [{"id": "conductor", "name": "鍒楄溅鍛樼毊鍩冨皵", "description": "涓滄柟蹇溅鐨勫垪杞﹀憳锛屽湪閾佽矾鍏徃宸ヤ綔澶氬勾銆?, "avatar": "馃鈥嶁湀锔?, "initialTestimony": "鎴戞暣鏅氶兘鍦ㄥ骇浣嶄笂锛屽ぇ绾?2:37鐨勬椂鍊欏惉鍒伴浄鍒囩壒鍏堢敓鎸夐搩锛屾垜杩囧幓鏃朵粬鐢ㄦ硶璇\"娌′簨锛屾垜鎼為敊浜哱"銆備箣鍚庢垜灏辨病鍚埌浠€涔堝姩闈欎簡銆?, "followUpTestimony": "鍛?..瀹為檯涓婏紝1:15宸﹀彸鎴戝ソ鍍忓惉鍒颁簡浠€涔堝０闊筹紝浣嗘垜浠ヤ负鏄但浼痉澶汉鍦ㄥ彨鎴戙€傛垜杩囧幓鐨勬椂鍊欏ス璇存湁涓敺浜哄湪濂瑰寘鍘㈤噷銆?, "contradiction": {"evidenceId": "watch", "description": "鎬€琛ㄥ仠鍦?:15锛屼笌鍒楄溅鍛樺惉鍒板姩闈欑殑鏃堕棿鍚诲悎锛屼絾浠栬浠ヤ负鏄但浼痉澶汉銆?, "revealedText": "鎬€琛ㄥ仠鍦?:15锛岃€屼綘璇?:15鍚埌鍔ㄩ潤銆傝繖鐪熺殑鏄阀鍚堝悧锛熻繕鏄綘鍦ㄩ殣鐬掍粈涔堬紵"}}, {"id": "mrs-hubbard", "name": "璧集寰峰か浜?, "description": "涓€浣嶈亽鍣殑缇庡浗濡囦汉锛屽０绉拌嚜宸卞寘鍘㈤噷鏈変釜鐢蜂汉銆?, "avatar": "馃懇", "initialTestimony": "鎴戣窡浣犺锛屾槰鏅氭湁涓敺浜哄湪鎴戝寘鍘㈤噷锛佹垜鎸夐搩鍙垪杞﹀憳锛屼絾浠栨潵鐨勬椂鍊欓偅浜哄凡缁忚蛋浜嗐€傛垜鐨勫寘鍘㈠拰闆峰垏鐗圭殑鏄€氱殑锛屼粬鑲畾鏄粠閭ｈ竟杩囨潵鐨勶紒", "followUpTestimony": "瀵逛簡锛屾垜杩樺湪鎴戝寘鍘㈢殑鍦版澘涓婂彂鐜颁簡涓€棰楀垪杞﹀憳鍒舵湇鐨勭航鎵ｃ€傞偅鑲畾鏄偅涓敺浜烘帀鐨勶紒", "contradiction": {"evidenceId": "handkerchief", "description": "璧集寰峰か浜虹殑鍚嶅瓧棣栧瓧姣嶆槸H锛屼笌鐜板満鎵嬪笗涓婄殑瀛楁瘝鍚诲悎銆?, "revealedText": "璧集寰峰か浜猴紝鎮ㄧ殑濮撴皬鏄疕ubbard锛岄瀛楁瘝姝ｆ槸H銆傝繖鍧楁墜甯?..鏄偍鐨勫惂锛?}}, {"id": "mary", "name": "鐜涗附路寰锋湰姹?, "description": "鍐烽潤娌夌潃鐨勮嫳鍥藉搴暀甯堬紝鏇惧湪闃垮鏂壒鏈楀宸ヤ綔銆?, "avatar": "馃懇鈥嶐煉?, "initialTestimony": "鎴戠潯寰楀緢娌夛紝浠€涔堥兘娌″惉鍒般€傛棭涓婇啋鏉ユ墠鐭ラ亾鍑轰簡浜嬨€?, "followUpTestimony": "鎴?..鎴戠‘瀹炶璇嗛樋濮嗘柉鐗规湕涓€瀹躲€傞粵瑗柯烽樋濮嗘柉鐗规湕鏄垜鐨勫鐢熴€備絾杩欏拰璋嬫潃妗堟湁浠€涔堝叧绯伙紵", "contradiction": {"evidenceId": "ash", "description": "鐜涗附鎶介鐑燂紝鑰岀幇鍦烘湁棣欑儫鐏帮紝浣嗗ス璇磋嚜宸辩潯寰楀緢娌夈€?, "revealedText": "寰锋湰姹夊皬濮愶紝鎮ㄦ娊棣欑儫銆傝€岀幇鍦烘湁棣欑儫鐏帮紝鍙楀鑰呭彧鎶介洩鑼勩€傛偍璇存偍鐫″緱寰堟矇锛岄偅棣欑儫鐏版槸鎬庝箞鍥炰簨锛?}}, {"id": "colonel", "name": "闃垮反鏂鐗逛笂鏍?, "description": "鑻卞浗鍐涘畼锛岄樋濮嗘柉鐗规湕涓婃牎鐨勫ソ鍙嬨€?, "avatar": "馃帠锔?, "initialTestimony": "鎴戝拰鐜涗附路寰锋湰姹夊皬濮愬湪鑱婂ぉ锛屽ぇ绾?鐐规墠鍥炲寘鍘€備箣鍚庡氨娌″嚭鏉ヨ繃銆?, "followUpTestimony": "鏄殑锛屾垜璁よ瘑闃垮鏂壒鏈椾笂鏍°€備粬鏄垜鏈€濂界殑鏈嬪弸銆備粬濂冲効琚粦鏋舵潃瀹冲悗锛屼粬浼ゅ績杩囧害鍘讳笘浜嗐€?, "contradiction": null}, {"id": "princess", "name": "寰锋媺鎴堢背缃楀か鍏富", "description": "淇勫浗璐垫棌锛岄樋濮嗘柉鐗规湕澶汉鐨勬暀姣嶃€?, "avatar": "馃憫", "initialTestimony": "鎴戝勾绾ぇ浜嗭紝鐫″緱鏃┿€備粈涔堥兘娌″惉鍒帮紝浠€涔堥兘涓嶇煡閬撱€?, "followUpTestimony": "鎴戞槸绱㈠凹濞吢烽樋濮嗘柉鐗规湕鐨勬暀姣嶃€傚ス鏄釜濂藉コ瀛╋紝濂圭殑閬亣澶偛鎯ㄤ簡銆傞浄鍒囩壒灏辨槸閭ｄ釜缁戞灦鐘崱濉炶拏锛屼粬璇ユ銆?, "contradiction": {"evidenceId": "handkerchief", "description": "鍏富鐨勬暀鍚嶆槸濞滃鑾変簹(Natalia)锛屼絾淇勬枃鎷煎啓鐨勯瀛楁瘝鐪嬭捣鏉ュ儚H銆?, "revealedText": "鍏富娈夸笅锛屾偍鐨勬暀鍚嶅濉旇帀浜氾紝鐢ㄤ縿鏂囨嫾鍐欐椂棣栧瓧姣嶇湅璧锋潵灏卞儚H銆傝繖鍧楁墜甯曪紝鏄偍鐨勫惂锛?}}, {"id": "countess", "name": "瀹夊痉鐑堜集鐖靛か浜?, "description": "鍖堢墮鍒╁浜ゅ畼鐨勫瀛愶紝鎶ょ収涓婄殑鍚嶅瓧浼间箮琚秱鏀硅繃銆?, "avatar": "馃拑", "initialTestimony": "鎴戝拰涓堝か涓€鐩村緟鍦ㄥ寘鍘㈤噷锛屽悆浜嗗畨鐪犺嵂灏辩潯浜嗐€?, "followUpTestimony": "鎴?..鎴戞槸娴蜂鸡濞溌锋垐鐧讳集鏍硷紝绱㈠凹濞吢烽樋濮嗘柉鐗规湕鐨勫濡广€傛垜鎶ょ収涓婄殑鍚嶅瓧琚垜涓堝か鏀逛簡锛屼粬鎯充繚鎶ゆ垜銆?, "contradiction": null}];
-    const gameDialogs = {"intro": ["娣卞锛屼笢鏂瑰揩杞﹀洜澶ч洩琚洶鍦ㄥ崡鏂媺澶殑鑽掗噹涓€?, "浣犳槸璧皵鍏嬮噷路娉㈡礇锛屼笘鐣屼笂鏈€浼熷ぇ鐨勪睛鎺€?, "涓€闃靛皷鍙０灏嗕綘浠庣潯姊︿腑鎯婇啋...", "浣犺蛋鍑哄寘鍘紝鐪嬪埌鍒楄溅鍛樻鍦ㄧ劍鎬ュ湴鏁蹭竴鎵囬棬銆?, "\"娉㈡礇鍏堢敓锛乗"鍒楄溅鍛樼湅鍒颁綘锛屽閲婇噸璐燂紝\"闆峰垏鐗瑰厛鐢熸病鏈夊洖搴旓紝闂ㄨ閿佷綇浜嗭紒\"", "浣犳剰璇嗗埌锛岃繖鍙兘涓嶆槸涓€璧风畝鍗曠殑鎰忓..."], "investigationStart": ["浣犲喅瀹氫翰鑷皟鏌ヨ繖璧锋浠躲€?, "棣栧厛锛屼綘闇€瑕佹煡鐪嬬姱缃幇鍦猴紝鏀堕泦璇佹嵁銆?, "鐒跺悗锛屼綘闇€瑕佽闂箻瀹紝鑾峰彇璇佽瘝銆?, "鏈€鍚庯紝鍦ㄩ杞﹁繘琛孿"瀹″垽\"锛屾壘鍑虹湡鐩搞€?, "鐐瑰嚮鍦烘櫙涓殑鐗╁搧鍜屼汉鐗╄繘琛屼簰鍔ㄣ€?, "鏀堕泦鑷冲皯3浠惰瘉鎹拰璇㈤棶3涓瘉浜哄悗锛屽彲鍓嶅線椁愯溅杩涜瀹″垽銆?]};
-    const gameContradictions = [{"id": "c1", "witnessId": "conductor", "evidenceId": "watch", "description": "鎬€琛ㄦ椂闂翠笌鍒楄溅鍛樿瘉璇嶇殑鐭涚浘", "revealed": false}, {"id": "c2", "witnessId": "mrs-hubbard", "evidenceId": "handkerchief", "description": "鎵嬪笗涓庤但浼痉澶汉鐨勫叧鑱?, "revealed": false}, {"id": "c3", "witnessId": "mary", "evidenceId": "ash", "description": "棣欑儫鐏颁笌鐜涗附璇佽瘝鐨勭煕鐩?, "revealed": false}, {"id": "c4", "witnessId": "princess", "evidenceId": "handkerchief", "description": "鎵嬪笗涓庡叕涓荤殑鐪熷疄鍏宠仈", "revealed": false}];
+    // 游戏数据
+    const gameScenes = [{"id": "intro", "name": "波洛的包厢", "description": "深夜，东方快车因大雪被困在南斯拉夫的荒野中。你是著名侦探赫尔克里·波洛，被一阵尖叫声惊醒...", "background": "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)", "interactables": [{"id": "door", "name": "包厢门", "description": "通往走廊的门，外面似乎很吵闹。", "type": "object", "position": {"x": 80, "y": 50}}], "exits": [{"to": "corridor", "label": "走出包厢"}]}, {"id": "corridor", "name": "列车走廊", "description": "昏暗的走廊里，列车员正焦急地敲着一间包厢的门。乘客们纷纷探出头查看情况。", "background": "linear-gradient(135deg, #2d2d44 0%, #1f1f33 50%, #1a1a2e 100%)", "interactables": [{"id": "victim-door", "name": "受害者包厢", "description": "门被锁住了，里面没有回应。", "type": "object", "position": {"x": 30, "y": 40}}, {"id": "conductor", "name": "列车员皮埃尔", "description": "穿着制服的列车员，神情紧张。", "type": "witness", "witnessId": "conductor", "position": {"x": 50, "y": 45}}, {"id": "mrs-hubbard", "name": "赫伯德夫人", "description": "一位美国妇人，看起来很激动。", "type": "witness", "witnessId": "mrs-hubbard", "position": {"x": 70, "y": 35}}], "exits": [{"to": "victim-room", "label": "进入受害者包厢"}, {"to": "dining-car", "label": "前往餐车"}]}, {"id": "victim-room", "name": "受害者包厢", "description": "包厢内，一个男人倒在床上，身上有多处刀伤。窗户开着，雪飘了进来。", "background": "linear-gradient(135deg, #3d1a1a 0%, #2d1414 50%, #1a0d0d 100%)", "interactables": [{"id": "body", "name": "尸体", "description": "受害者雷切特先生，身中12刀。", "type": "evidence", "evidenceId": "body", "position": {"x": 50, "y": 55}}, {"id": "window", "name": "敞开的窗户", "description": "窗户大开，窗台上有雪，但没有脚印。", "type": "evidence", "evidenceId": "window", "position": {"x": 80, "y": 30}}, {"id": "handkerchief", "name": "手帕", "description": "一块精致的手帕，上面绣着字母\"H\"。", "type": "evidence", "evidenceId": "handkerchief", "position": {"x": 25, "y": 60}}, {"id": "watch", "name": "怀表", "description": "一块摔坏的怀表，指针停在1:15。", "type": "evidence", "evidenceId": "watch", "position": {"x": 60, "y": 70}}, {"id": "ash", "name": "烟灰", "description": "烟灰缸里有两种不同的烟灰。", "type": "evidence", "evidenceId": "ash", "position": {"x": 35, "y": 40}}], "exits": [{"to": "corridor", "label": "返回走廊"}]}, {"id": "dining-car", "name": "餐车", "description": "所有乘客都聚集在餐车，气氛紧张。你将在这里进行\"审判\"。", "background": "linear-gradient(135deg, #2a2a3e 0%, #1e1e30 50%, #181828 100%)", "interactables": [{"id": "mary", "name": "玛丽·德本汉", "description": "一位冷静的英国女士，家庭教师。", "type": "witness", "witnessId": "mary", "position": {"x": 20, "y": 40}}, {"id": "colonel", "name": "阿巴斯诺特上校", "description": "一位英国军官，看起来很严肃。", "type": "witness", "witnessId": "colonel", "position": {"x": 40, "y": 50}}, {"id": "princess", "name": "德拉戈米罗夫公主", "description": "一位年迈的俄国贵族，神情威严。", "type": "witness", "witnessId": "princess", "position": {"x": 60, "y": 35}}, {"id": "countess", "name": "安德烈伯爵夫人", "description": "一位年轻的匈牙利女士，看起来很紧张。", "type": "witness", "witnessId": "countess", "position": {"x": 80, "y": 45}}], "exits": [{"to": "corridor", "label": "返回走廊"}]}, {"id": "ending", "name": "结局", "description": "所有真相都已揭开，现在是做出最终选择的时候...", "background": "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)", "interactables": [], "exits": []}];
+    const gameEvidence = [{"id": "body", "name": "尸体", "description": "受害者雷切特，身中12刀，伤口深浅不一。", "keyInfo": "12处刀伤，深浅不一，说明可能有多个凶手，且力度不同。", "scene": "victim-room", "foundIn": "受害者包厢的床上"}, {"id": "window", "name": "敞开的窗户", "description": "窗户大开，窗外是雪地，但窗台上没有脚印。", "keyInfo": "如果凶手从窗户逃走，雪地上应该有脚印，但实际上没有。这说明窗户是故意打开的，伪造逃走路线。", "scene": "victim-room", "foundIn": "受害者包厢"}, {"id": "handkerchief", "name": "手帕", "description": "一块精致的女士手帕，角落绣着字母\"H\"。", "keyInfo": "手帕上的\"H\"可能是凶手的名字首字母。乘客中，赫伯德夫人(Hubbard)和德拉戈米罗夫公主的教名都是H开头。", "scene": "victim-room", "foundIn": "受害者包厢地板上"}, {"id": "watch", "name": "怀表", "description": "一块金质怀表，表壳凹陷，指针停在1:15。", "keyInfo": "怀表停在1:15，这可能是案发时间。但怀表可能被故意调过，用来误导调查方向。", "scene": "victim-room", "foundIn": "受害者口袋"}, {"id": "ash", "name": "烟灰", "description": "烟灰缸里有两种不同的烟灰，一种是雪茄，一种是香烟。", "keyInfo": "受害者只抽雪茄，但现场有香烟灰，说明案发时有另一个人在场。", "scene": "victim-room", "foundIn": "受害者包厢烟灰缸"}];
+    const gameWitnesses = [{"id": "conductor", "name": "列车员皮埃尔", "description": "东方快车的列车员，在铁路公司工作多年。", "avatar": "🧑‍✈️", "initialTestimony": "我整晚都在座位上，大约12:37的时候听到雷切特先生按铃，我过去时他用法语说\"没事，我搞错了\"。之后我就没听到什么动静了。", "followUpTestimony": "呃...实际上，1:15左右我好像听到了什么声音，但我以为是赫伯德夫人在叫我。我过去的时候她说有个男人在她包厢里。", "contradiction": {"evidenceId": "watch", "description": "怀表停在1:15，与列车员听到动静的时间吻合，但他说以为是赫伯德夫人。", "revealedText": "怀表停在1:15，而你说1:15听到动静。这真的是巧合吗？还是你在隐瞒什么？"}}, {"id": "mrs-hubbard", "name": "赫伯德夫人", "description": "一位聒噪的美国妇人，声称自己包厢里有个男人。", "avatar": "👩", "initialTestimony": "我跟你说，昨晚有个男人在我包厢里！我按铃叫列车员，但他来的时候那人已经走了。我的包厢和雷切特的是通的，他肯定是从那边过来的！", "followUpTestimony": "对了，我还在我包厢的地板上发现了一颗列车员制服的纽扣。那肯定是那个男人掉的！", "contradiction": {"evidenceId": "handkerchief", "description": "赫伯德夫人的名字首字母是H，与现场手帕上的字母吻合。", "revealedText": "赫伯德夫人，您的姓氏是Hubbard，首字母正是H。这块手帕...是您的吧？"}}, {"id": "mary", "name": "玛丽·德本汉", "description": "冷静沉着的英国家庭教师，曾在阿姆斯特朗家工作。", "avatar": "👩‍💼", "initialTestimony": "我睡得很沉，什么都没听到。早上醒来才知道出了事。", "followUpTestimony": "我...我确实认识阿姆斯特朗一家。黛西·阿姆斯特朗是我的学生。但这和谋杀案有什么关系？", "contradiction": {"evidenceId": "ash", "description": "玛丽抽香烟，而现场有香烟灰，但她说自己睡得很沉。", "revealedText": "德本汉小姐，您抽香烟。而现场有香烟灰，受害者只抽雪茄。您说您睡得很沉，那香烟灰是怎么回事？"}}, {"id": "colonel", "name": "阿巴斯诺特上校", "description": "英国军官，阿姆斯特朗上校的好友。", "avatar": "🎖️", "initialTestimony": "我和玛丽·德本汉小姐在聊天，大约1点才回包厢。之后就没出来过。", "followUpTestimony": "是的，我认识阿姆斯特朗上校。他是我最好的朋友。他女儿被绑架杀害后，他伤心过度去世了。", "contradiction": null}, {"id": "princess", "name": "德拉戈米罗夫公主", "description": "俄国贵族，阿姆斯特朗夫人的教母。", "avatar": "👑", "initialTestimony": "我年纪大了，睡得早。什么都没听到，什么都不知道。", "followUpTestimony": "我是索尼娅·阿姆斯特朗的教母。她是个好女孩，她的遭遇太悲惨了。雷切特就是那个绑架犯卡塞蒂，他该死。", "contradiction": {"evidenceId": "handkerchief", "description": "公主的教名是娜塔莉亚(Natalia)，但俄文拼写的首字母看起来像H。", "revealedText": "公主殿下，您的教名娜塔莉亚，用俄文拼写时首字母看起来就像H。这块手帕，是您的吧？"}}, {"id": "countess", "name": "安德烈伯爵夫人", "description": "匈牙利外交官的妻子，护照上的名字似乎被涂改过。", "avatar": "💃", "initialTestimony": "我和丈夫一直待在包厢里，吃了安眠药就睡了。", "followUpTestimony": "我...我是海伦娜·戈登伯格，索尼娅·阿姆斯特朗的妹妹。我护照上的名字被我丈夫改了，他想保护我。", "contradiction": null}];
+    const gameDialogs = {"intro": ["深夜，东方快车因大雪被困在南斯拉夫的荒野中。", "你是赫尔克里·波洛，世界上最伟大的侦探。", "一阵尖叫声将你从睡梦中惊醒...", "你走出包厢，看到列车员正在焦急地敲一扇门。", "\"波洛先生！\"列车员看到你，如释重负，\"雷切特先生没有回应，门被锁住了！\"", "你意识到，这可能不是一起简单的意外..."], "investigationStart": ["你决定亲自调查这起案件。", "首先，你需要查看犯罪现场，收集证据。", "然后，你需要询问乘客，获取证词。", "最后，在餐车进行\"审判\"，找出真相。", "点击场景中的物品和人物进行互动。", "收集至少3件证据和询问3个证人后，可前往餐车进行审判。"]};
+    const gameContradictions = [{"id": "c1", "witnessId": "conductor", "evidenceId": "watch", "description": "怀表时间与列车员证词的矛盾", "revealed": false}, {"id": "c2", "witnessId": "mrs-hubbard", "evidenceId": "handkerchief", "description": "手帕与赫伯德夫人的关联", "revealed": false}, {"id": "c3", "witnessId": "mary", "evidenceId": "ash", "description": "香烟灰与玛丽证词的矛盾", "revealed": false}, {"id": "c4", "witnessId": "princess", "evidenceId": "handkerchief", "description": "手帕与公主的真实关联", "revealed": false}];
 
-    // 鏆撮湶娓告垙鏁版嵁鍒板叏灞€锛屼緵绗旇绯荤粺浣跨敤
+    // 暴露游戏数据到全局，供笔记系统使用
     window._gameEvidence = gameEvidence;
     window._gameWitnesses = gameWitnesses;
 
-    // 娓告垙鐘舵€?
+    // 游戏状态
     let state = {
       currentScene: 'intro',
       gamePhase: 'intro',
@@ -120,9 +120,9 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
       isTransitioning: false,
     };
 
-    // 鍒濆鍖?
+    // 初始化
     function init() {
-      // 妫€鏌ユ槸鍚︾户缁父鎴?
+      // 检查是否继续游戏
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get('continue') === '1') {
         const saved = localStorage.getItem('fun-detective-prototype-save');
@@ -135,16 +135,16 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
       render();
     }
 
-    // 淇濆瓨
+    // 保存
     function save() {
       localStorage.setItem('fun-detective-prototype-save', JSON.stringify(state));
     }
 
-    // 娓叉煋
+    // 渲染
     function render() {
       updateTopBar();
       
-      // 闅愯棌鎵€鏈夐樁娈?
+      // 隐藏所有阶段
       document.getElementById('intro-section').classList.add('hidden');
       document.getElementById('investigation-section').classList.add('hidden');
       document.getElementById('trial-section').classList.add('hidden');
@@ -165,13 +165,13 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
     }
 
     function updateTopBar() {
-      const phaseNames = { intro: '寮€鍦?, investigation: '璋冩煡', trial: '瀹″垽', ending: '缁撳眬' };
+      const phaseNames = { intro: '开场', investigation: '调查', trial: '审判', ending: '结局' };
       document.getElementById('phase-indicator').textContent = phaseNames[state.gamePhase] || '';
-      document.getElementById('confidence-display').textContent = `淇″績鍊? ${state.confidence}`;
+      document.getElementById('confidence-display').textContent = `信心值: ${state.confidence}`;
       document.getElementById('evidence-count').textContent = state.collectedEvidence.length;
     }
 
-    // 寮€鍦烘覆鏌?
+    // 开场渲染
     function renderIntro() {
       document.getElementById('intro-section').classList.remove('hidden');
       const texts = state.dialogIndex < 6 ? gameDialogs.intro : gameDialogs.investigationStart;
@@ -180,19 +180,19 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
       
       const btn = document.getElementById('intro-continue');
       if (state.dialogIndex >= 11) {
-        btn.textContent = '寮€濮嬭皟鏌?;
+        btn.textContent = '开始调查';
       } else {
-        btn.textContent = '缁х画';
+        btn.textContent = '继续';
       }
     }
 
-    // 璋冩煡闃舵娓叉煋
+    // 调查阶段渲染
     function renderInvestigation() {
       document.getElementById('investigation-section').classList.remove('hidden');
       document.getElementById('inv-evidence-count').textContent = state.collectedEvidence.length;
       document.getElementById('inv-witness-count').textContent = state.interviewedWitnesses.length;
       
-      // 鍦烘櫙鍒囨崲鍔ㄧ敾
+      // 场景切换动画
       const sceneContainer = document.getElementById('game-scene-container');
       if (sceneContainer && !state.isTransitioning) {
         state.isTransitioning = true;
@@ -211,7 +211,7 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
 
       const container = document.getElementById('game-scene-container');
       
-      // 鍦烘櫙鑳屾櫙閰嶇疆
+      // 场景背景配置
       const sceneBgs = {
         train: 'linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
         room: 'linear-gradient(180deg, #2d2d2d 0%, #3d3d3d 50%, #4a4a4a 100%)',
@@ -222,7 +222,7 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
       };
       const bgGradient = scene.sceneType ? sceneBgs[scene.sceneType] : scene.background;
       
-      // 鍦烘櫙瑁呴グHTML
+      // 场景装饰HTML
       let sceneDecor = '';
       if (scene.sceneType === 'train') {
         sceneDecor = `<div class="absolute inset-0 pointer-events-none"><div class="absolute top-8 left-1/4 w-20 h-28 bg-gradient-to-b from-blue-900/50 to-blue-950/70 rounded-lg border-4 border-stone-700"></div><div class="absolute top-8 right-1/4 w-20 h-28 bg-gradient-to-b from-blue-900/50 to-blue-950/70 rounded-lg border-4 border-stone-700"></div><div class="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-stone-800 to-transparent"></div></div>`;
@@ -234,9 +234,9 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
         sceneDecor = `<div class="absolute inset-0 pointer-events-none"><div class="absolute bottom-20 left-1/2 -translate-x-1/2 w-3/4 h-6 bg-amber-800/60 rounded-lg"></div><div class="absolute top-0 left-1/2 -translate-x-1/2 w-1 h-12 bg-stone-600"></div><div class="absolute top-10 left-1/2 -translate-x-1/2 w-16 h-6 bg-yellow-600/40 rounded-full blur-sm"></div></div>`;
       }
       
-      // 鐏煷浜篠VG鐢熸垚鍑芥暟
+      // 火柴人SVG生成函数
       function stickFigure(color, size = 48) {
-        return `<svg width="${size}" height="${size * 1.4}" viewBox="0 0 100 140" class="drop-shadow-lg"><circle cx="50" cy="25" r="18" fill="none" stroke="${color}" stroke-width="3"/><text x="50" y="28" text-anchor="middle" font-size="10" fill="${color}">鈼?鈼?/text><text x="50" y="38" text-anchor="middle" font-size="8" fill="${color}">鈥?/text><line x1="50" y1="43" x2="50" y2="90" stroke="${color}" stroke-width="3"/><line x1="50" y1="55" x2="25" y2="75" stroke="${color}" stroke-width="3"/><line x1="50" y1="55" x2="75" y2="75" stroke="${color}" stroke-width="3"/><line x1="50" y1="90" x2="35" y2="125" stroke="${color}" stroke-width="3"/><line x1="50" y1="90" x2="65" y2="125" stroke="${color}" stroke-width="3"/></svg>`;
+        return `<svg width="${size}" height="${size * 1.4}" viewBox="0 0 100 140" class="drop-shadow-lg"><circle cx="50" cy="25" r="18" fill="none" stroke="${color}" stroke-width="3"/><text x="50" y="28" text-anchor="middle" font-size="10" fill="${color}">● ●</text><text x="50" y="38" text-anchor="middle" font-size="8" fill="${color}">—</text><line x1="50" y1="43" x2="50" y2="90" stroke="${color}" stroke-width="3"/><line x1="50" y1="55" x2="25" y2="75" stroke="${color}" stroke-width="3"/><line x1="50" y1="55" x2="75" y2="75" stroke="${color}" stroke-width="3"/><line x1="50" y1="90" x2="35" y2="125" stroke="${color}" stroke-width="3"/><line x1="50" y1="90" x2="65" y2="125" stroke="${color}" stroke-width="3"/></svg>`;
       }
       
       container.innerHTML = `
@@ -253,21 +253,21 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
             const isInterviewed = item.witnessId && state.interviewedWitnesses.includes(item.witnessId);
             const itemColor = item.color || (item.type === 'witness' ? '#3b82f6' : item.type === 'evidence' ? '#eab308' : '#78716c');
             if (item.type === 'witness') {
-              return `<button class="absolute interactable group" style="left: ${item.position.x}%; top: ${item.position.y}%; transform: translate(-50%, -50%)" onclick="window.__interact('${item.id}')"><div class="relative transition-all duration-300 ${isInterviewed ? 'opacity-60' : 'hover:scale-110'}">${stickFigure(itemColor)}${isInterviewed ? '<div class="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-white text-xs">鉁?/div>' : ''}</div><div class="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap bg-black/80 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">${item.name}${isInterviewed ? ' (宸茶闂?' : ''}</div></button>`;
+              return `<button class="absolute interactable group" style="left: ${item.position.x}%; top: ${item.position.y}%; transform: translate(-50%, -50%)" onclick="window.__interact('${item.id}')"><div class="relative transition-all duration-300 ${isInterviewed ? 'opacity-60' : 'hover:scale-110'}">${stickFigure(itemColor)}${isInterviewed ? '<div class="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-white text-xs">✓</div>' : ''}</div><div class="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap bg-black/80 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">${item.name}${isInterviewed ? ' (已询问)' : ''}</div></button>`;
             } else {
-              const icon = item.type === 'evidence' ? (isCollected ? '鉁? : '馃攳') : '馃毆';
+              const icon = item.type === 'evidence' ? (isCollected ? '✅' : '🔍') : '🚪';
               const bgColor = item.type === 'evidence' ? 'bg-yellow-500/80' : 'bg-stone-500/80';
-              return `<button class="absolute interactable group" style="left: ${item.position.x}%; top: ${item.position.y}%; transform: translate(-50%, -50%)" onclick="window.__interact('${item.id}')"><div class="w-12 h-12 rounded-full flex items-center justify-center text-2xl transition-all duration-300 ${bgColor} ${isCollected ? 'opacity-40 scale-90' : 'hover:scale-110'}">${icon}</div><div class="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap bg-black/80 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">${item.name}${isCollected ? ' (宸叉敹闆?' : ''}</div></button>`;
+              return `<button class="absolute interactable group" style="left: ${item.position.x}%; top: ${item.position.y}%; transform: translate(-50%, -50%)" onclick="window.__interact('${item.id}')"><div class="w-12 h-12 rounded-full flex items-center justify-center text-2xl transition-all duration-300 ${bgColor} ${isCollected ? 'opacity-40 scale-90' : 'hover:scale-110'}">${icon}</div><div class="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap bg-black/80 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">${item.name}${isCollected ? ' (已收集)' : ''}</div></button>`;
             }
           }).join('')}
           <div class="absolute top-4 right-4 flex flex-col gap-2">
-            ${scene.exits.map(exit => `<button class="bg-white/90 hover:bg-white text-stone-800 px-4 py-2 rounded-lg text-sm font-medium shadow-lg transition-all hover:scale-105" onclick="window.__exit('${exit.to}')">${exit.label} 鈫?/button>`).join('')}
+            ${scene.exits.map(exit => `<button class="bg-white/90 hover:bg-white text-stone-800 px-4 py-2 rounded-lg text-sm font-medium shadow-lg transition-all hover:scale-105" onclick="window.__exit('${exit.to}')">${exit.label} →</button>`).join('')}
           </div>
         </div>
       `;
     }
 
-    // 瀹″垽闃舵娓叉煋
+    // 审判阶段渲染
     function renderTrial() {
       document.getElementById('trial-section').classList.remove('hidden');
       
@@ -275,16 +275,16 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
       panelContainer.innerHTML = `
         <div class="bg-stone-800 rounded-xl p-6">
           <div class="flex items-center justify-between mb-6">
-            <h2 class="text-xl font-bold">鈿栵笍 瀹″垽闃舵</h2>
+            <h2 class="text-xl font-bold">⚖️ 审判阶段</h2>
             <div class="flex items-center gap-4 text-sm">
-              <span>鐭涚浘鐐? <span class="text-accent-400 font-bold">${state.contradictionsFound.length}/4</span></span>
-              <span>淇″績鍊? <span class="${state.confidence >= 60 ? 'text-green-400' : state.confidence >= 30 ? 'text-yellow-400' : 'text-red-400'} font-bold">${state.confidence}</span></span>
+              <span>矛盾点: <span class="text-accent-400 font-bold">${state.contradictionsFound.length}/4</span></span>
+              <span>信心值: <span class="${state.confidence >= 60 ? 'text-green-400' : state.confidence >= 30 ? 'text-yellow-400' : 'text-red-400'} font-bold">${state.confidence}</span></span>
             </div>
           </div>
           <div class="w-full bg-stone-700 rounded-full h-2 mb-6">
             <div class="h-2 rounded-full ${state.confidence >= 60 ? 'bg-green-500' : state.confidence >= 30 ? 'bg-yellow-500' : 'bg-red-500'}" style="width: ${state.confidence}%"></div>
           </div>
-          <h3 class="font-bold mb-3">閫夋嫨瑕佽闂殑璇佷汉锛?/h3>
+          <h3 class="font-bold mb-3">选择要询问的证人：</h3>
           <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
             ${gameWitnesses.map(w => `
               <button class="p-4 rounded-lg text-left transition-all ${state.currentWitness === w.id ? 'bg-primary-600 ring-2 ring-primary-400' : 'bg-stone-700 hover:bg-stone-600'}" onclick="window.__selectWitness('${w.id}')">
@@ -298,17 +298,17 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
           </div>
           ${state.contradictionsFound.length >= 3 ? `
             <button class="mt-6 w-full py-3 bg-accent-600 rounded-lg font-bold hover:bg-accent-700" onclick="window.__goToEnding()">
-              杩涘叆鏈€缁堥€夋嫨 鈫?
+              进入最终选择 →
             </button>
           ` : `
             <div class="mt-6 p-4 bg-blue-900/50 rounded-lg text-sm text-blue-200">
-              <strong>鎻愮ず锛?/strong>閫夋嫨璇佷汉鏌ョ湅璇佽瘝锛岀偣鍑?杩介棶"鑾峰彇鏇村淇℃伅锛屽彂鐜扮煕鐩炬椂鐐瑰嚮"鍑虹ず璇佹嵁"骞堕€夋嫨瀵瑰簲璇佹嵁銆傛纭?20淇″績鍊硷紝閿欒-10銆?
+              <strong>提示：</strong>选择证人查看证词，点击"追问"获取更多信息，发现矛盾时点击"出示证据"并选择对应证据。正确+20信心值，错误-10。
             </div>
           `}
         </div>
       `;
 
-      // 璇佷汉瀵硅瘽锛堢伀鏌翠汉瑙掕壊 + 瀵硅瘽鍘嗗彶锛?
+      // 证人对话（火柴人角色 + 对话历史）
       if (state.currentWitness) {
         const witness = gameWitnesses.find(w => w.id === state.currentWitness);
         if (witness) {
@@ -320,7 +320,7 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
             return cont && cont.witnessId === witness.id;
           });
           
-          // 璇佷汉棰滆壊鏄犲皠
+          // 证人颜色映射
           const witnessColors = {
             conductor: '#3b82f6',
             'mrs-hubbard': '#ec4899',
@@ -331,41 +331,41 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
           };
           const witnessColor = witnessColors[witness.id] || '#94a3b8';
           
-          // 鏍规嵁鐘舵€佸喅瀹氳〃鎯?
+          // 根据状态决定表情
           let expression = 'normal';
           if (state.witnessReaction === 'contradiction') expression = 'angry';
           else if (state.witnessReaction === 'followup') expression = 'thinking';
           else if (state.witnessReaction === 'shocked') expression = 'surprised';
           
-          // 鐏煷浜篠VG锛堟敮鎸佽〃鎯咃級
+          // 火柴人SVG（支持表情）
           function stickFigureWithExpr(color, expr, size = 56) {
-            const eyes = { normal: '鈼?鈼?, happy: '鈼?鈼?, sad: '鈼?鈼?, angry: '> <', surprised: '鈼?鈼?, thinking: '鈼?-' };
-            const mouth = { normal: '鈥?, happy: '鈼?, sad: '鈼?, angry: '锔?, surprised: '鈼?, thinking: '~' };
+            const eyes = { normal: '● ●', happy: '◠ ◠', sad: '◡ ◡', angry: '> <', surprised: '○ ○', thinking: '● -' };
+            const mouth = { normal: '—', happy: '◡', sad: '◠', angry: '︵', surprised: '○', thinking: '~' };
             return `<svg width="${size}" height="${size * 1.4}" viewBox="0 0 100 140" class="drop-shadow-lg"><circle cx="50" cy="25" r="18" fill="none" stroke="${color}" stroke-width="3"/><text x="50" y="28" text-anchor="middle" font-size="10" fill="${color}">${eyes[expr] || eyes.normal}</text><text x="50" y="38" text-anchor="middle" font-size="8" fill="${color}">${mouth[expr] || mouth.normal}</text><line x1="50" y1="43" x2="50" y2="90" stroke="${color}" stroke-width="3"/><line x1="50" y1="55" x2="25" y2="75" stroke="${color}" stroke-width="3"/><line x1="50" y1="55" x2="75" y2="75" stroke="${color}" stroke-width="3"/><line x1="50" y1="90" x2="35" y2="125" stroke="${color}" stroke-width="3"/><line x1="50" y1="90" x2="65" y2="125" stroke="${color}" stroke-width="3"/></svg>`;
           }
           
-          // 瀵硅瘽鍘嗗彶HTML
+          // 对话历史HTML
           const historyHtml = state.dialogueHistory && state.dialogueHistory.length > 0 
             ? state.dialogueHistory.slice(-8).map(h => `
                 <div class="flex gap-2 text-sm py-1 border-b border-stone-700/50">
-                  <span class="font-medium flex-shrink-0" style="color: ${h.color}">${h.speaker}锛?/span>
+                  <span class="font-medium flex-shrink-0" style="color: ${h.color}">${h.speaker}：</span>
                   <span class="text-stone-400">${h.text.substring(0, 60)}${h.text.length > 60 ? '...' : ''}</span>
                 </div>
               `).join('')
-            : '<p class="text-stone-500 text-sm text-center py-2">鏆傛棤瀵硅瘽鍘嗗彶</p>';
+            : '<p class="text-stone-500 text-sm text-center py-2">暂无对话历史</p>';
           
           dialogContainer.innerHTML = `
             <div class="bg-stone-800 rounded-xl overflow-hidden">
-              <!-- 瀵硅瘽鍘嗗彶鏍?-->
+              <!-- 对话历史栏 -->
               <div class="bg-stone-900/50 px-4 py-2 flex items-center justify-between border-b border-stone-700">
-                <span class="text-xs text-stone-400">瀵硅瘽璁板綍 (${state.dialogueHistory?.length || 0})</span>
-                <button class="text-xs text-primary-400 hover:text-primary-300" onclick="window.__toggleTrialHistory()">${state.showHistory ? '鏀惰捣' : '鏌ョ湅鍘嗗彶'}</button>
+                <span class="text-xs text-stone-400">对话记录 (${state.dialogueHistory?.length || 0})</span>
+                <button class="text-xs text-primary-400 hover:text-primary-300" onclick="window.__toggleTrialHistory()">${state.showHistory ? '收起' : '查看历史'}</button>
               </div>
-              <!-- 鍘嗗彶闈㈡澘 -->
+              <!-- 历史面板 -->
               <div id="trial-history-panel" class="${state.showHistory ? '' : 'hidden'} max-h-32 overflow-y-auto bg-stone-900/30 px-4 py-2">
                 ${historyHtml}
               </div>
-              <!-- 瀵硅瘽鍐呭 -->
+              <!-- 对话内容 -->
               <div class="p-6">
                 <div class="flex items-start gap-4 mb-4">
                   <div class="flex-shrink-0">
@@ -373,14 +373,14 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
                   </div>
                   <div class="pt-2">
                     <h3 class="font-bold text-lg" style="color: ${witnessColor}">${witness.name}</h3>
-                    <p class="text-xs text-stone-500">${expression === 'angry' ? '鎯呯华锛氭縺鍔? : expression === 'thinking' ? '鎯呯华锛氭€濊€? : expression === 'surprised' ? '鎯呯华锛氭儕璁? : '鎯呯华锛氬钩闈?}</p>
+                    <p class="text-xs text-stone-500">${expression === 'angry' ? '情绪：激动' : expression === 'thinking' ? '情绪：思考' : expression === 'surprised' ? '情绪：惊讶' : '情绪：平静'}</p>
                   </div>
                 </div>
                 <p class="text-stone-300 leading-relaxed mb-6 min-h-20">${testimony}</p>
                 <div class="flex gap-3 justify-end">
-                  ${!isFollowedUp ? `<button class="px-4 py-2 bg-stone-600 rounded-lg hover:bg-stone-500 transition-colors" onclick="window.__followUp()">杩介棶</button>` : ''}
-                  ${hasContradiction ? `<button class="px-4 py-2 bg-yellow-600 rounded-lg hover:bg-yellow-500 font-bold transition-all hover:scale-105" onclick="window.__presentEvidence()">鍑虹ず璇佹嵁</button>` : ''}
-                  <button class="px-4 py-2 bg-stone-700 rounded-lg hover:bg-stone-600 transition-colors" onclick="window.__closeWitnessDialog()">鍏抽棴</button>
+                  ${!isFollowedUp ? `<button class="px-4 py-2 bg-stone-600 rounded-lg hover:bg-stone-500 transition-colors" onclick="window.__followUp()">追问</button>` : ''}
+                  ${hasContradiction ? `<button class="px-4 py-2 bg-yellow-600 rounded-lg hover:bg-yellow-500 font-bold transition-all hover:scale-105" onclick="window.__presentEvidence()">出示证据</button>` : ''}
+                  <button class="px-4 py-2 bg-stone-700 rounded-lg hover:bg-stone-600 transition-colors" onclick="window.__closeWitnessDialog()">关闭</button>
                 </div>
               </div>
             </div>
@@ -391,15 +391,15 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
       }
     }
 
-    // 缁撳眬娓叉煋
+    // 结局渲染
     function renderEnding() {
       document.getElementById('ending-section').classList.remove('hidden');
       const choice = state.choices['final-choice'];
       let ending;
       if (choice === 'reveal') {
-        ending = { name: '鐪熺浉澶х櫧', description: '浣犳彮闇蹭簡鐪熺浉锛?2鍚嶄箻瀹㈤兘鏄嚩鎵嬶紝浠栦滑涓轰簡缁欓樋濮嗘柉鐗规湕涓€瀹跺浠囷紝姣忎汉鍒轰簡涓€鍒€銆備綘閫夋嫨灏嗙湡鐩稿憡璇夎鏂广€傛涔夊緱鍒颁簡浼稿紶锛屼絾娉曞涔嬫儏涔熶护浜哄攺鍢樸€? };
+        ending = { name: '真相大白', description: '你揭露了真相：12名乘客都是凶手，他们为了给阿姆斯特朗一家复仇，每人刺了一刀。你选择将真相告诉警方。正义得到了伸张，但法外之情也令人唏嘘。' };
       } else {
-        ending = { name: '娉曞瀹规儏', description: '浣犳彮闇蹭簡鐪熺浉锛屼絾鐞嗚В浜?2浜虹殑鍔ㄦ満銆備綘閫夋嫨鍚戣鏂归殣鐬掔湡鐩革紝璇村嚩鎵嬪凡缁忛€冭蛋銆傛涔夛紝鏈夋椂鍦ㄦ硶寰嬩箣澶栥€傛尝娲涚殑鍐呭績锛屾垨璁告案杩滀笉浼氬钩闈欍€? };
+        ending = { name: '法外容情', description: '你揭露了真相，但理解了12人的动机。你选择向警方隐瞒真相，说凶手已经逃走。正义，有时在法律之外。波洛的内心，或许永远不会平静。' };
       }
       
       document.getElementById('ending-title').textContent = ending.name;
@@ -410,7 +410,7 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
       document.getElementById('stat-confidence').textContent = state.confidence;
     }
 
-    // 璇佹嵁鏍忔覆鏌?
+    // 证据栏渲染
     function renderEvidenceBar() {
       const container = document.getElementById('evidence-bar-container');
       if (!state.showEvidenceBar) {
@@ -423,23 +423,23 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
         <div class="fixed bottom-0 left-0 right-0 bg-stone-900 p-4 z-50 border-t border-stone-700">
           <div class="container-page">
             <div class="flex items-center justify-between mb-3">
-              <h3 class="font-bold">${state.evidenceMode === 'select' ? '閫夋嫨瑕佸嚭绀虹殑璇佹嵁' : `璇佹嵁鏍?(${evidence.length})`}</h3>
-              ${state.evidenceMode === 'select' ? `<button class="text-sm text-stone-400 hover:text-white" onclick="window.__cancelEvidence()">鍙栨秷</button>` : ''}
+              <h3 class="font-bold">${state.evidenceMode === 'select' ? '选择要出示的证据' : `证据栏 (${evidence.length})`}</h3>
+              ${state.evidenceMode === 'select' ? `<button class="text-sm text-stone-400 hover:text-white" onclick="window.__cancelEvidence()">取消</button>` : ''}
             </div>
-            ${evidence.length === 0 ? '<p class="text-stone-400 text-sm">杩樻病鏈夋敹闆嗗埌浠讳綍璇佹嵁</p>' : `
+            ${evidence.length === 0 ? '<p class="text-stone-400 text-sm">还没有收集到任何证据</p>' : `
               <div class="flex gap-3 overflow-x-auto pb-2">
                 ${evidence.map(e => `
                   <button class="flex-shrink-0 w-40 p-3 rounded-lg text-left transition-all ${state.selectedEvidence === e.id ? 'bg-primary-600 ring-2 ring-primary-400' : 'bg-stone-800 hover:bg-stone-700'}" onclick="window.__selectEvidence('${e.id}')">
                     <div class="font-bold text-sm mb-1">${e.name}</div>
                     <div class="text-xs text-stone-300">${e.description}</div>
-                    ${state.selectedEvidence === e.id && state.evidenceMode === 'select' ? '<div class="mt-2 text-xs text-primary-200">鐐瑰嚮纭鍑虹ず</div>' : ''}
+                    ${state.selectedEvidence === e.id && state.evidenceMode === 'select' ? '<div class="mt-2 text-xs text-primary-200">点击确认出示</div>' : ''}
                   </button>
                 `).join('')}
               </div>
             `}
             ${state.evidenceMode === 'select' && state.selectedEvidence ? `
               <button class="mt-3 w-full py-2 bg-yellow-600 rounded-lg font-bold hover:bg-yellow-500" onclick="window.__confirmPresentEvidence()">
-                纭鍑虹ず銆?{gameEvidence.find(e => e.id === state.selectedEvidence)?.name}銆?
+                确认出示「${gameEvidence.find(e => e.id === state.selectedEvidence)?.name}」
               </button>
             ` : ''}
           </div>
@@ -448,17 +448,17 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
     }
 
 
-    // 璁板綍瀵硅瘽鍘嗗彶
+    // 记录对话历史
     function addDialogueHistory(speaker, text, color) {
       if (!state.dialogueHistory) state.dialogueHistory = [];
       state.dialogueHistory.push({ speaker, text, color, time: Date.now() });
-      // 鏈€澶氫繚鐣?0鏉?
+      // 最多保留50条
       if (state.dialogueHistory.length > 50) {
         state.dialogueHistory = state.dialogueHistory.slice(-50);
       }
     }
     
-    // 鍒囨崲瀵硅瘽鍘嗗彶鏄剧ず
+    // 切换对话历史显示
     window.__toggleTrialHistory = function() {
       state.showHistory = !state.showHistory;
       const panel = document.getElementById('trial-history-panel');
@@ -466,7 +466,7 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
       renderTrial();
     };
     
-    // 璁剧疆璇佷汉琛ㄦ儏
+    // 设置证人表情
     function setWitnessReaction(reaction) {
       state.witnessReaction = reaction;
       setTimeout(() => {
@@ -475,7 +475,7 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
       }, 2000);
     }
 
-    // 娓告垙浜や簰鍑芥暟
+    // 游戏交互函数
     window.__introContinue = function() {
       state.dialogIndex++;
       if (state.dialogIndex >= 12) {
@@ -494,13 +494,13 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
       if (item.type === 'evidence' && item.evidenceId) {
         if (!state.collectedEvidence.includes(item.evidenceId)) {
           const evidence = gameEvidence.find(e => e.id === item.evidenceId);
-          // 浣跨敤璇佹嵁鍗＄墖鏇夸唬alert
+          // 使用证据卡片替代alert
           GameUI.showEvidenceCard(evidence, (ev) => {
             state.collectedEvidence.push(ev.id);
-            GameUI.showToast(`鏀堕泦鍒拌瘉鎹細${ev.name}`, 'success');
-            // 鑷姩娣诲姞鍒扮瑪璁扮嚎绱?
-            PlayerData.addNotebookItem('clues', `銆愯瘉鎹€?{ev.name}锛?{ev.description}`);
-            // 鎾斁鏀堕泦鍔ㄧ敾
+            GameUI.showToast(`收集到证据：${ev.name}`, 'success');
+            // 自动添加到笔记线索
+            PlayerData.addNotebookItem('clues', `【证据】${ev.name}：${ev.description}`);
+            // 播放收集动画
             const rect = event.target.getBoundingClientRect();
             GameUI.playCollectAnimation(rect.left, rect.top, ev.name);
             render();
@@ -512,7 +512,7 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
       } else if (item.type === 'witness' && item.witnessId) {
         if (!state.interviewedWitnesses.includes(item.witnessId)) {
           state.interviewedWitnesses.push(item.witnessId);
-          GameUI.showToast(`璇㈤棶浜?{gameWitnesses.find(w => w.id === item.witnessId)?.name}`, 'info');
+          GameUI.showToast(`询问了${gameWitnesses.find(w => w.id === item.witnessId)?.name}`, 'info');
         }
         const witness = gameWitnesses.find(w => w.id === item.witnessId);
         const witnessColors = {
@@ -524,13 +524,13 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
           countess: '#06b6d4',
         };
         const color = witnessColors[witness.id] || '#94a3b8';
-        // 浣跨敤瀵硅瘽妗嗘浛浠lert
+        // 使用对话框替代alert
         GameUI.showDialog({
           speaker: witness.name,
           color: color,
           text: witness.initialTestimony,
           options: witness.followUpTestimony ? [{
-            text: '杩介棶鏇村缁嗚妭',
+            text: '追问更多细节',
             action: () => {
               GameUI.showDialog({
                 speaker: witness.name,
@@ -554,10 +554,10 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
       if (sceneId === 'dining-car' && state.gamePhase === 'investigation') {
         if (state.collectedEvidence.length >= 3 && state.interviewedWitnesses.length >= 3) {
           GameUI.showModal({
-            title: '杩涘叆瀹″垽闃舵锛?,
-            message: '璋冩煡闃舵灏嗙粨鏉燂紝鏈敹闆嗙殑璇佹嵁灏嗘棤娉曡幏鍙栥€傜‘瀹氳鍓嶅線椁愯溅杩涜瀹″垽鍚楋紵',
-            confirmText: '杩涘叆瀹″垽',
-            cancelText: '缁х画璋冩煡',
+            title: '进入审判阶段？',
+            message: '调查阶段将结束，未收集的证据将无法获取。确定要前往餐车进行审判吗？',
+            confirmText: '进入审判',
+            cancelText: '继续调查',
             type: 'warning',
             onConfirm: () => {
               state.gamePhase = 'trial';
@@ -567,10 +567,10 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
           });
         } else {
           GameUI.showModal({
-            title: '杩樹笉鑳借繘鍏ュ鍒?,
-            message: `杩橀渶瑕佹敹闆嗚嚦灏?浠惰瘉鎹拰璇㈤棶3涓瘉浜恒€俓n褰撳墠锛氳瘉鎹?{state.collectedEvidence.length}/3锛岃瘉浜?{state.interviewedWitnesses.length}/3`,
-            confirmText: '鎴戠煡閬撲簡',
-            cancelText: '鍏抽棴',
+            title: '还不能进入审判',
+            message: `还需要收集至少3件证据和询问3个证人。\n当前：证据${state.collectedEvidence.length}/3，证人${state.interviewedWitnesses.length}/3`,
+            confirmText: '我知道了',
+            cancelText: '关闭',
             type: 'info',
             onConfirm: () => {},
             onCancel: () => {}
@@ -639,21 +639,21 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
       const evidence = gameEvidence.find(e => e.id === state.selectedEvidence);
       
       if (witness?.contradiction && witness.contradiction.evidenceId === state.selectedEvidence) {
-        // 姝ｇ‘鎸囧嚭鐭涚浘
+        // 正确指出矛盾
         const cont = gameContradictions.find(c => c.witnessId === witness.id && c.evidenceId === state.selectedEvidence);
         if (cont && !state.contradictionsFound.includes(cont.id)) {
           state.contradictionsFound.push(cont.id);
           state.confidence = Math.min(100, state.confidence + 20);
           GameUI.showDialog({
-            speaker: '娉㈡礇',
+            speaker: '波洛',
             color: '#fbbf24',
-            text: `姝ｇ‘锛佸彂鐜扮煕鐩撅紒\n\n${witness.contradiction.revealedText}\n\n淇″績鍊?+20`,
+            text: `正确！发现矛盾！\n\n${witness.contradiction.revealedText}\n\n信心值 +20`,
           });
         }
       } else {
-        // 閿欒
+        // 错误
         state.confidence = Math.max(0, state.confidence - 10);
-        GameUI.showToast('杩欎釜璇佹嵁涓庤瘉璇嶆病鏈夌洿鎺ョ煕鐩?.. 淇″績鍊?-10', 'warning', 3000);
+        GameUI.showToast('这个证据与证词没有直接矛盾... 信心值 -10', 'warning', 3000);
       }
       
       state.evidenceMode = 'view';
@@ -674,10 +674,10 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
 
     window.__makeFinalChoice = function(choice) {
       GameUI.showModal({
-        title: '鍋氬嚭鏈€缁堥€夋嫨锛?,
-        message: '杩欏皢鍐冲畾娓告垙缁撳眬锛屾棤娉曟洿鏀广€傜‘瀹氳鍋氬嚭杩欎釜閫夋嫨鍚楋紵',
-        confirmText: '纭畾',
-        cancelText: '鍐嶆兂鎯?,
+        title: '做出最终选择？',
+        message: '这将决定游戏结局，无法更改。确定要做出这个选择吗？',
+        confirmText: '确定',
+        cancelText: '再想想',
         type: 'danger',
         onConfirm: () => {
           state.choices['final-choice'] = choice;
@@ -686,20 +686,20 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
       });
     };
 
-    // 璇佹嵁鏍忔寜閽?
+    // 证据栏按钮
     document.getElementById('evidence-btn')?.addEventListener('click', () => {
       state.showEvidenceBar = !state.showEvidenceBar;
       state.evidenceMode = 'view';
       render();
     });
 
-    // 閲嶇疆鎸夐挳
+    // 重置按钮
     document.getElementById('reset-btn')?.addEventListener('click', () => {
       GameUI.showModal({
-        title: '閲嶇疆娓告垙锛?,
-        message: '鎵€鏈夎繘搴﹀皢涓㈠け锛岀‘瀹氳閲嶇疆鍚楋紵',
-        confirmText: '閲嶇疆',
-        cancelText: '鍙栨秷',
+        title: '重置游戏？',
+        message: '所有进度将丢失，确定要重置吗？',
+        confirmText: '重置',
+        cancelText: '取消',
         type: 'danger',
         onConfirm: () => {
         localStorage.removeItem('fun-detective-prototype-save');
@@ -722,24 +722,24 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
       });
     });
 
-    // 寮€鍦虹户缁寜閽?
+    // 开场继续按钮
     document.getElementById('intro-continue')?.addEventListener('click', () => {
       window.__introContinue();
     });
 
-    // 缁撳眬閲嶆柊寮€濮?
+    // 结局重新开始
     document.getElementById('ending-restart')?.addEventListener('click', () => {
       localStorage.removeItem('fun-detective-prototype-save');
       window.location.reload();
     });
 
-    // 鍚姩
+    // 启动
     init();
   </script>
 
-  <!-- 寮曞叆娓告垙UI宸ュ叿妯″潡 -->
+  <!-- 引入游戏UI工具模块 -->
   <script is:inline src="/fun_detective/game/ui.js"></script>
-  <!-- 寮曞叆鐜╁鏁版嵁涓庣瑪璁扮郴缁?-->
+  <!-- 引入玩家数据与笔记系统 -->
   <script is:inline src="/fun_detective/game/playerData.js"></script>
   <script is:inline src="/fun_detective/game/notebookUI.js"></script>
 </BaseLayout>
