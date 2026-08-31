@@ -10,6 +10,7 @@ const GameUI = (function() {
     dialogHistory: [],
     isTyping: false,
     typewriterTimer: null,
+    dialogRemoveTimer: null,
   };
 
   // ========== 工具函数 ==========
@@ -91,8 +92,13 @@ const GameUI = (function() {
       }
     }
 
-    // 移除已有对话框
-    removeDialog();
+    // 移除已有对话框（立即移除，不等退场动画，防止与新对话框冲突）
+    if (state.dialogRemoveTimer) {
+      clearTimeout(state.dialogRemoveTimer);
+      state.dialogRemoveTimer = null;
+    }
+    const oldOverlay = document.getElementById('game-dialog-overlay');
+    if (oldOverlay) oldOverlay.remove();
 
     const dialog = createElement(`
       <div id="game-dialog-overlay" class="fixed inset-0 z-[90] flex items-end justify-center bg-black/40 backdrop-blur-sm" onclick="GameUI._handleDialogOverlayClick(event)">
@@ -237,12 +243,20 @@ const GameUI = (function() {
   }
 
   function removeDialog() {
+    // 清除之前的移除定时器，防止旧定时器移除新对话框
+    if (state.dialogRemoveTimer) {
+      clearTimeout(state.dialogRemoveTimer);
+      state.dialogRemoveTimer = null;
+    }
     const overlay = document.getElementById('game-dialog-overlay');
     if (overlay) {
       const box = document.getElementById('game-dialog-box');
       if (box) {
         box.style.transform = 'translateY(100%)';
-        setTimeout(() => overlay.remove(), 300);
+        state.dialogRemoveTimer = setTimeout(() => {
+          overlay.remove();
+          state.dialogRemoveTimer = null;
+        }, 300);
       } else {
         overlay.remove();
       }
