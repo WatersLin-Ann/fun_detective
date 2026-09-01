@@ -21,6 +21,9 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
         <button id="evidence-btn" class="px-3 py-1 bg-stone-700 rounded hover:bg-stone-600">
           证据 (<span id="evidence-count">0</span>)
         </button>
+        <button onclick="EvidenceBoard.openBoard()" class="px-3 py-1 bg-purple-700 rounded hover:bg-purple-600 text-xs">
+          🔗 关联
+        </button>
         <button onclick="NotebookUI.open()" class="px-3 py-1 bg-amber-700 rounded hover:bg-amber-600 text-xs">
           📝 笔记
         </button>
@@ -95,6 +98,8 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
   <!-- 引入玩家数据与笔记系统 -->
   <script is:inline src="/fun_detective/game/playerData.js"></script>
   <script is:inline src="/fun_detective/game/notebookUI.js"></script>
+  <!-- 引入证据关联系统 -->
+  <script is:inline src="/fun_detective/game/evidence-board.js"></script>
 
   <script is:inline>
     // 游戏数据（从外部模块加载）
@@ -104,10 +109,11 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
     const gameDialogs = GameData.dialogs;
     const gameContradictions = GameData.contradictions;
 
-        // 暴露游戏数据到全局，供笔记系统使用
+        // 暴露游戏数据到全局，供笔记系统和证据板使用
     window._gameEvidence = gameEvidence;
     window._gameWitnesses = gameWitnesses;
     window._gameData = GameData;
+    window._gameState = state;  // 供证据板更新信心值
 
     // 游戏状态
     let state = {

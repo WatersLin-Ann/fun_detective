@@ -20,7 +20,8 @@ const PlayerData = (function() {
         reasonings: [],       // 推理
         todos: []             // 待验证
       },
-      customLinks: [],        // 玩家自定义证据连线
+      customLinks: [],        // 玩家自定义证据连线（旧）
+      evidenceLinks: [],      // 证据关联系统的连线（含预设/自定义）
       settings: {
         autoSave: true,
         textSize: 'normal'
@@ -40,7 +41,8 @@ const PlayerData = (function() {
           ...defaults,
           ...data,
           notebook: { ...defaults.notebook, ...(data.notebook || {}) },
-          settings: { ...defaults.settings, ...(data.settings || {}) }
+          settings: { ...defaults.settings, ...(data.settings || {}) },
+          evidenceLinks: data.evidenceLinks || defaults.evidenceLinks
         };
       }
     } catch (e) {
@@ -190,6 +192,36 @@ const PlayerData = (function() {
     return load().customLinks;
   }
 
+  // ========== 证据关联连线 ==========
+  function addEvidenceLink(linkData) {
+    const data = load();
+    // 检查是否已存在（按presetId或from+to判断）
+    const exists = data.evidenceLinks.find(l => {
+      if (linkData.presetId && l.presetId === linkData.presetId) return true;
+      if (!linkData.presetId && !l.presetId) {
+        return (l.from === linkData.from && l.to === linkData.to) ||
+               (l.from === linkData.to && l.to === linkData.from);
+      }
+      return false;
+    });
+    if (!exists) {
+      data.evidenceLinks.push(linkData);
+      save(data);
+      return true;
+    }
+    return false;
+  }
+
+  function getEvidenceLinks() {
+    return load().evidenceLinks;
+  }
+
+  function clearEvidenceLinks() {
+    const data = load();
+    data.evidenceLinks = [];
+    save(data);
+  }
+
   // ========== 导出/导入 ==========
   function exportData() {
     const data = load();
@@ -268,6 +300,8 @@ const PlayerData = (function() {
       totalReasonings: data.notebook.reasonings.length,
       totalTodos: data.notebook.todos.length,
       todosDone: data.notebook.todos.filter(t => t.done).length,
+      evidenceLinks: data.evidenceLinks.length,
+      correctLinks: data.evidenceLinks.filter(l => l.isCorrect).length,
       customLinks: data.customLinks.length,
       lastSaved: data.lastSaved
     };
@@ -297,6 +331,10 @@ const PlayerData = (function() {
     addCustomLink,
     removeCustomLink,
     getCustomLinks,
+    // 证据关联
+    addEvidenceLink,
+    getEvidenceLinks,
+    clearEvidenceLinks,
     // 导出导入
     exportData,
     exportAsText,
