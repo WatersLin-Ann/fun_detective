@@ -76,12 +76,18 @@ const EvidenceBoard = (function() {
       return;
     }
 
-    // 获取玩家已发现的证据和证人（严格不剧透）
+    // 获取玩家已发现的证据和证人
+    // 调查阶段：只显示已发现的（防剧透）；审判阶段：全部显示（所有人都在场）
     const gameState = window._gameState || {};
+    const isTrialPhase = gameState.gamePhase === 'trial' || gameState.gamePhase === 'ending';
     const collectedIds = gameState.collectedEvidence || [];
     const interviewedIds = gameState.interviewedWitnesses || [];
-    const discoveredEvidence = window._gameEvidence.filter(ev => collectedIds.includes(ev.id));
-    const discoveredWitnesses = window._gameWitnesses.filter(w => interviewedIds.includes(w.id));
+    const discoveredEvidence = isTrialPhase
+      ? window._gameEvidence
+      : window._gameEvidence.filter(ev => collectedIds.includes(ev.id));
+    const discoveredWitnesses = isTrialPhase
+      ? window._gameWitnesses
+      : window._gameWitnesses.filter(w => interviewedIds.includes(w.id));
 
     // 清除之前的选择
     selectedFirst = null;
@@ -107,7 +113,7 @@ const EvidenceBoard = (function() {
             <p class="text-xs text-stone-400 mt-1">选择两个物品/人物进行关联，发现隐藏的矛盾点</p>
           </div>
           <div class="flex items-center gap-3">
-            <span class="text-xs text-stone-400">证据 <span class="text-amber-400 font-bold">${discoveredEvidence.length}</span>/${window._gameEvidence.length} | 证人 <span class="text-amber-400 font-bold">${discoveredWitnesses.length}</span>/${window._gameWitnesses.length} | 关联 <span class="text-amber-400 font-bold">${countCorrectLinks()}</span>/${presetLinks.length}</span>
+            <span class="text-xs text-stone-400">已发现关联 <span class="text-amber-400 font-bold">${countCorrectLinks()}</span></span>
             <button onclick="EvidenceBoard.closeBoard()" class="text-stone-400 hover:text-white text-2xl leading-none w-8 h-8 flex items-center justify-center rounded hover:bg-stone-700">×</button>
           </div>
         </div>
@@ -122,22 +128,20 @@ const EvidenceBoard = (function() {
           <!-- 证据区 -->
           <div class="mb-6">
             <h3 class="text-sm font-bold text-stone-300 mb-3 flex items-center gap-2">
-              <span>🔍</span> 已收集证据
-              <span class="text-xs text-stone-500 font-normal">(${discoveredEvidence.length}/${window._gameEvidence.length}件)</span>
+              <span>🔍</span> 证据
             </h3>
             <div id="board-evidence-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-              ${discoveredEvidence.length > 0 ? renderEvidenceCards(discoveredEvidence) : '<div class="col-span-full text-stone-500 text-sm text-center py-6">还没有收集到证据，去场景中点击物品探索吧</div>'}
+              ${discoveredEvidence.length > 0 ? renderEvidenceCards(discoveredEvidence) : ''}
             </div>
           </div>
 
           <!-- 证人区 -->
           <div class="mb-6">
             <h3 class="text-sm font-bold text-stone-300 mb-3 flex items-center gap-2">
-              <span>👤</span> 已询问证人
-              <span class="text-xs text-stone-500 font-normal">(${discoveredWitnesses.length}/${window._gameWitnesses.length}人)</span>
+              <span>👤</span> 人物
             </h3>
             <div id="board-witness-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-              ${discoveredWitnesses.length > 0 ? renderWitnessCards(discoveredWitnesses) : '<div class="col-span-full text-stone-500 text-sm text-center py-6">还没有询问证人，去场景中点击人物交谈吧</div>'}
+              ${discoveredWitnesses.length > 0 ? renderWitnessCards(discoveredWitnesses) : ''}
             </div>
           </div>
 
@@ -154,8 +158,7 @@ const EvidenceBoard = (function() {
         </div>
 
         <!-- 底部操作 -->
-        <div class="px-6 py-3 bg-stone-900/50 border-t border-stone-700 flex justify-between items-center">
-          <span class="text-xs text-stone-500">提示：成功的关联会自动记录到推理笔记</span>
+        <div class="px-6 py-3 bg-stone-900/50 border-t border-stone-700 flex justify-end items-center">
           <button onclick="EvidenceBoard.clearSelection()" class="text-xs text-stone-400 hover:text-white px-3 py-1.5 rounded hover:bg-stone-700">清除选择</button>
         </div>
       </div>
