@@ -127,8 +127,9 @@ const EvidenceBoard = (function() {
         <div class="flex-1 overflow-y-auto p-6">
           <!-- 证据区 -->
           <div class="mb-6">
-            <h3 class="text-sm font-bold text-stone-300 mb-3 flex items-center gap-2">
+            <h3 class="text-sm font-bold text-stone-200 mb-3 flex items-center gap-2">
               <span>🔍</span> 证据
+              <span class="text-xs text-stone-400 font-normal">(${discoveredEvidence.length})</span>
             </h3>
             <div id="board-evidence-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
               ${discoveredEvidence.length > 0 ? renderEvidenceCards(discoveredEvidence) : ''}
@@ -137,8 +138,9 @@ const EvidenceBoard = (function() {
 
           <!-- 证人区 -->
           <div class="mb-6">
-            <h3 class="text-sm font-bold text-stone-300 mb-3 flex items-center gap-2">
+            <h3 class="text-sm font-bold text-stone-200 mb-3 flex items-center gap-2">
               <span>👤</span> 人物
+              <span class="text-xs text-stone-400 font-normal">(${discoveredWitnesses.length})</span>
             </h3>
             <div id="board-witness-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
               ${discoveredWitnesses.length > 0 ? renderWitnessCards(discoveredWitnesses) : ''}
@@ -147,7 +149,7 @@ const EvidenceBoard = (function() {
 
           <!-- 已建立的连线 -->
           <div>
-            <h3 class="text-sm font-bold text-stone-300 mb-3 flex items-center gap-2">
+            <h3 class="text-sm font-bold text-stone-200 mb-3 flex items-center gap-2">
               <span>📋</span> 已建立的关联
               <span class="text-xs text-stone-500 font-normal">(${playerLinks.length}条)</span>
             </h3>
@@ -203,7 +205,7 @@ const EvidenceBoard = (function() {
    */
   function renderLinksList(links) {
     if (links.length === 0) {
-      return '<div class="text-stone-500 text-sm text-center py-4">还没有建立任何关联，尝试选择两个物品进行关联吧</div>';
+      return '<div class="text-stone-400 text-sm text-center py-4">暂无关联记录</div>';
     }
 
     return links.map(link => {

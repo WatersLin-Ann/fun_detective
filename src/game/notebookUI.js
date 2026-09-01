@@ -103,7 +103,7 @@ const NotebookUI = (function() {
         <div class="bg-stone-900/50 rounded-xl p-4">
           <div class="flex items-center justify-between mb-3">
             <h3 class="font-bold text-blue-400">🔎 我发现的线索</h3>
-            <span class="text-xs text-stone-500">${notebook.clues.length}</span>
+            <span class="text-xs text-stone-400">${notebook.clues.length}</span>
           </div>
           <div id="clues-list" class="space-y-2 mb-3">
             ${renderItemList(notebook.clues, 'clues')}
@@ -118,7 +118,7 @@ const NotebookUI = (function() {
         <div class="bg-stone-900/50 rounded-xl p-4">
           <div class="flex items-center justify-between mb-3">
             <h3 class="font-bold text-amber-400">💡 我的推理</h3>
-            <span class="text-xs text-stone-500">${notebook.reasonings.length}</span>
+            <span class="text-xs text-stone-400">${notebook.reasonings.length}</span>
           </div>
           <div id="reasonings-list" class="space-y-2 mb-3">
             ${renderItemList(notebook.reasonings, 'reasonings')}
@@ -133,7 +133,7 @@ const NotebookUI = (function() {
         <div class="bg-stone-900/50 rounded-xl p-4">
           <div class="flex items-center justify-between mb-3">
             <h3 class="font-bold text-green-400">✅ 待验证</h3>
-            <span class="text-xs text-stone-500">${notebook.todos.filter(t => t.done).length}/${notebook.todos.length}</span>
+            <span class="text-xs text-stone-400">${notebook.todos.length > 0 ? notebook.todos.filter(t => t.done).length + '/' + notebook.todos.length : notebook.todos.length}</span>
           </div>
           <div id="todos-list" class="space-y-2 mb-3">
             ${renderItemList(notebook.todos, 'todos')}
@@ -145,7 +145,7 @@ const NotebookUI = (function() {
         </div>
       </div>
 
-      <div class="mt-4 p-3 bg-stone-900/30 rounded-lg text-xs text-stone-500">
+      <div class="mt-4 p-3 bg-stone-800/50 rounded-lg text-xs text-stone-400 border border-stone-700">
         💡 提示：在笔记中写下特定关键词（如"12人"、"复仇"、"阿姆斯特朗"）可能会解锁隐藏的对话选项！
       </div>
     `;
@@ -153,7 +153,7 @@ const NotebookUI = (function() {
 
   function renderItemList(items, type) {
     if (items.length === 0) {
-      return '<p class="text-stone-600 text-sm text-center py-4">暂无内容</p>';
+      return '<p class="text-stone-400 text-sm text-center py-4">暂无内容</p>';
     }
     return items.map(item => `
       <div class="flex items-start gap-2 p-2 bg-stone-800 rounded-lg group ${item.done ? 'opacity-50' : ''}">
@@ -172,6 +172,13 @@ const NotebookUI = (function() {
       PlayerData.addNotebookItem(type, input.value.trim());
       input.value = '';
       renderContent();
+    } else if (input) {
+      // 空值时高亮输入框提示
+      input.classList.add('border-red-500', 'ring-2', 'ring-red-500/30');
+      input.placeholder = '请输入内容...';
+      setTimeout(() => {
+        input.classList.remove('border-red-500', 'ring-2', 'ring-red-500/30');
+      }, 1500);
     }
   }
 
@@ -197,8 +204,8 @@ const NotebookUI = (function() {
     const notes = PlayerData.getAllEvidenceNotes();
 
     container.innerHTML = `
-      <div class="space-y-3">
-        ${evidenceList.length === 0 ? '' :
+      <div class="space-y-3 min-h-[200px]">
+        ${evidenceList.length === 0 ? '<div class="text-stone-400 text-sm text-center py-12">暂无收集的证据</div>' :
         evidenceList.map(ev => {
           const note = notes[ev.id] || { note: '', tags: [], rating: 0 };
           return `
@@ -275,8 +282,8 @@ const NotebookUI = (function() {
     const notes = PlayerData.getAllCharacterNotes();
 
     container.innerHTML = `
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        ${witnesses.length === 0 ? '' :
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 min-h-[200px]">
+        ${witnesses.length === 0 ? '<div class="text-stone-400 text-sm text-center py-12 col-span-2">暂无询问的人物</div>' :
         witnesses.map(w => {
           const note = notes[w.id] || { suspicion: 50, note: '', relations: [] };
           const suspicionColor = note.suspicion >= 75 ? 'text-red-400' : note.suspicion >= 50 ? 'text-yellow-400' : 'text-green-400';
