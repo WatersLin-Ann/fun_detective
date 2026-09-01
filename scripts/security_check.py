@@ -76,6 +76,13 @@ MEDIA_EXTENSIONS = {
     ".pdf", ".zip",
 }
 
+# 允许的大文件路径模式（数据文件，随案件增长自然变大，不报错只警告）
+ALLOWED_LARGE_FILE_PATTERNS = [
+    r"^exports/all_cases\.json$",
+    r"^exports/all_cases\.csv$",
+    r"^public/api/case-data\.json$",
+]
+
 
 # ============================================
 # 工具函数
@@ -254,8 +261,12 @@ def check_large_files(files):
         if size > LARGE_FILE_THRESHOLD:
             ext = os.path.splitext(filepath)[1].lower()
             size_mb = size / (1024 * 1024)
+            # 检查是否为允许的大文件（数据文件）
+            is_allowed = any(re.search(pattern, filepath) for pattern in ALLOWED_LARGE_FILE_PATTERNS)
             if ext in MEDIA_EXTENSIONS:
                 warnings.append(f"{filepath} ({size_mb:.2f}MB, 媒体文件)")
+            elif is_allowed:
+                warnings.append(f"{filepath} ({size_mb:.2f}MB, 数据文件，已白名单)")
             else:
                 large_files.append(f"{filepath} ({size_mb:.2f}MB)")
 
