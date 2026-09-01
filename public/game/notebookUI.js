@@ -187,12 +187,16 @@ const NotebookUI = (function() {
 
   // ========== 证据标记 ==========
   function renderEvidenceMarks(container) {
-    const evidenceList = window._gameEvidence || [];
+    const allEvidence = window._gameEvidence || [];
+    const gameState = window._gameState || {};
+    const collectedIds = gameState.collectedEvidence || [];
+    const evidenceList = allEvidence.filter(ev => collectedIds.includes(ev.id));
     const notes = PlayerData.getAllEvidenceNotes();
 
     container.innerHTML = `
+      <div class="mb-3 text-xs text-stone-500">已收集 ${evidenceList.length}/${allEvidence.length} 件证据</div>
       <div class="space-y-3">
-        ${evidenceList.length === 0 ? '<p class="text-stone-500 text-center py-8">暂无证据数据</p>' :
+        ${evidenceList.length === 0 ? '<p class="text-stone-500 text-center py-8">还没有收集到证据，去场景中点击物品探索吧</p>' :
         evidenceList.map(ev => {
           const note = notes[ev.id] || { note: '', tags: [], rating: 0 };
           return `
@@ -259,12 +263,16 @@ const NotebookUI = (function() {
 
   // ========== 人物档案 ==========
   function renderCharacters(container) {
-    const witnesses = window._gameWitnesses || [];
+    const allWitnesses = window._gameWitnesses || [];
+    const gameState = window._gameState || {};
+    const interviewedIds = gameState.interviewedWitnesses || [];
+    const witnesses = allWitnesses.filter(w => interviewedIds.includes(w.id));
     const notes = PlayerData.getAllCharacterNotes();
 
     container.innerHTML = `
+      <div class="mb-3 text-xs text-stone-500">已询问 ${witnesses.length}/${allWitnesses.length} 名证人</div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        ${witnesses.length === 0 ? '<p class="text-stone-500 text-center py-8 col-span-2">暂有人物数据</p>' :
+        ${witnesses.length === 0 ? '<p class="text-stone-500 text-center py-8 col-span-2">还没有询问证人，去场景中点击人物交谈吧</p>' :
         witnesses.map(w => {
           const note = notes[w.id] || { suspicion: 50, note: '', relations: [] };
           const suspicionColor = note.suspicion >= 75 ? 'text-red-400' : note.suspicion >= 50 ? 'text-yellow-400' : 'text-green-400';

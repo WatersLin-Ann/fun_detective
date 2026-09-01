@@ -76,6 +76,13 @@ const EvidenceBoard = (function() {
       return;
     }
 
+    // 获取玩家已发现的证据和证人（严格不剧透）
+    const gameState = window._gameState || {};
+    const collectedIds = gameState.collectedEvidence || [];
+    const interviewedIds = gameState.interviewedWitnesses || [];
+    const discoveredEvidence = window._gameEvidence.filter(ev => collectedIds.includes(ev.id));
+    const discoveredWitnesses = window._gameWitnesses.filter(w => interviewedIds.includes(w.id));
+
     // 清除之前的选择
     selectedFirst = null;
 
@@ -100,7 +107,7 @@ const EvidenceBoard = (function() {
             <p class="text-xs text-stone-400 mt-1">选择两个物品/人物进行关联，发现隐藏的矛盾点</p>
           </div>
           <div class="flex items-center gap-3">
-            <span class="text-xs text-stone-400">已发现关联: <span class="text-amber-400 font-bold">${countCorrectLinks()}</span>/${presetLinks.length}</span>
+            <span class="text-xs text-stone-400">证据 <span class="text-amber-400 font-bold">${discoveredEvidence.length}</span>/${window._gameEvidence.length} | 证人 <span class="text-amber-400 font-bold">${discoveredWitnesses.length}</span>/${window._gameWitnesses.length} | 关联 <span class="text-amber-400 font-bold">${countCorrectLinks()}</span>/${presetLinks.length}</span>
             <button onclick="EvidenceBoard.closeBoard()" class="text-stone-400 hover:text-white text-2xl leading-none w-8 h-8 flex items-center justify-center rounded hover:bg-stone-700">×</button>
           </div>
         </div>
@@ -116,10 +123,10 @@ const EvidenceBoard = (function() {
           <div class="mb-6">
             <h3 class="text-sm font-bold text-stone-300 mb-3 flex items-center gap-2">
               <span>🔍</span> 已收集证据
-              <span class="text-xs text-stone-500 font-normal">(${window._gameEvidence.length}件)</span>
+              <span class="text-xs text-stone-500 font-normal">(${discoveredEvidence.length}/${window._gameEvidence.length}件)</span>
             </h3>
             <div id="board-evidence-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-              ${renderEvidenceCards()}
+              ${discoveredEvidence.length > 0 ? renderEvidenceCards(discoveredEvidence) : '<div class="col-span-full text-stone-500 text-sm text-center py-6">还没有收集到证据，去场景中点击物品探索吧</div>'}
             </div>
           </div>
 
@@ -127,10 +134,10 @@ const EvidenceBoard = (function() {
           <div class="mb-6">
             <h3 class="text-sm font-bold text-stone-300 mb-3 flex items-center gap-2">
               <span>👤</span> 已询问证人
-              <span class="text-xs text-stone-500 font-normal">(${window._gameWitnesses.length}人)</span>
+              <span class="text-xs text-stone-500 font-normal">(${discoveredWitnesses.length}/${window._gameWitnesses.length}人)</span>
             </h3>
             <div id="board-witness-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-              ${renderWitnessCards()}
+              ${discoveredWitnesses.length > 0 ? renderWitnessCards(discoveredWitnesses) : '<div class="col-span-full text-stone-500 text-sm text-center py-6">还没有询问证人，去场景中点击人物交谈吧</div>'}
             </div>
           </div>
 
@@ -163,8 +170,8 @@ const EvidenceBoard = (function() {
   /**
    * 渲染证据卡片
    */
-  function renderEvidenceCards() {
-    return window._gameEvidence.map(ev => `
+  function renderEvidenceCards(evidenceList) {
+    return evidenceList.map(ev => `
       <div class="evidence-card cursor-pointer p-3 rounded-lg border-2 border-stone-600 bg-stone-700/50 hover:border-amber-500 hover:bg-stone-700 transition-all"
            data-id="${ev.id}" data-type="evidence" onclick="EvidenceBoard.selectItem('${ev.id}', 'evidence', this)">
         <div class="text-2xl mb-1">🔎</div>
@@ -177,8 +184,8 @@ const EvidenceBoard = (function() {
   /**
    * 渲染证人卡片
    */
-  function renderWitnessCards() {
-    return window._gameWitnesses.map(w => `
+  function renderWitnessCards(witnessList) {
+    return witnessList.map(w => `
       <div class="witness-card cursor-pointer p-3 rounded-lg border-2 border-stone-600 bg-stone-700/50 hover:border-amber-500 hover:bg-stone-700 transition-all"
            data-id="${w.id}" data-type="witness" onclick="EvidenceBoard.selectItem('${w.id}', 'witness', this)">
         <div class="text-2xl mb-1">${w.avatar || '👤'}</div>
