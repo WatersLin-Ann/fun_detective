@@ -88,7 +88,7 @@ const EvidenceBoard = (function() {
     };
 
     // 获取玩家已建立的连线
-    const playerLinks = (window.PlayerData && PlayerData.getState().evidenceLinks) || [];
+    const playerLinks = (window.PlayerData && PlayerData.getEvidenceLinks()) || [];
 
     // 构建内容
     boardOverlay.innerHTML = `
@@ -341,8 +341,8 @@ const EvidenceBoard = (function() {
         window._gameState.confidence = Math.min(100, window._gameState.confidence + preset.confidence);
       }
       // 自动添加到笔记推理栏
-      if (window.NotebookUI) {
-        NotebookUI.addNote('推理', `【${preset.title}】${preset.conclusion}`, preset.confidence);
+      if (window.NotebookUI && typeof NotebookUI.addItem === 'function') {
+        NotebookUI.addItem('推理', `【${preset.title}】${preset.conclusion}`);
       }
     }
 
@@ -427,7 +427,7 @@ const EvidenceBoard = (function() {
    * 统计正确关联数
    */
   function countCorrectLinks() {
-    const playerLinks = (window.PlayerData && PlayerData.getState().evidenceLinks) || [];
+    const playerLinks = (window.PlayerData && PlayerData.getEvidenceLinks()) || [];
     return playerLinks.filter(l => l.isCorrect).length;
   }
 
