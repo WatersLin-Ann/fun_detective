@@ -104,6 +104,7 @@ const recommendations = allCases.map((c) => {
         生成关卡结构
       </button>
       <p id="generate-hint" class="text-sm text-stone-500 mt-2">请先选择案例和模板</p>
+      <p id="gen-error" class="hidden text-sm text-red-600 mt-2 bg-red-50 px-3 py-2 rounded"></p>
     </div>
 
     <!-- 输出区域 -->
@@ -281,7 +282,7 @@ const recommendations = allCases.map((c) => {
         generateBtn.disabled = true;
         
         // 获取完整案例数据（通过API或本地数据）
-        const response = await fetch(`${import.meta.env.BASE_URL}api/case-data.json`);
+        const response = await fetch(`${import.meta.env.BASE_URL}api/case-data.json`, { cache: 'no-cache' });
         if (!response.ok) throw new Error('数据加载失败');
         const allCases = await response.json();
         
@@ -289,7 +290,7 @@ const recommendations = allCases.map((c) => {
         const templateData = templatesData[selectedTemplateName];
         
         if (!caseData || !templateData) {
-          alert('未找到案例或模板数据');
+          showError('未找到案例或模板数据，请刷新页面重试');
           return;
         }
         
@@ -303,10 +304,19 @@ const recommendations = allCases.map((c) => {
         
       } catch (error) {
         console.error('生成失败:', error);
-        alert('生成失败：' + error.message);
+        showError('生成失败：' + error.message);
       } finally {
         generateBtn.textContent = '生成关卡结构';
         updateGenerateButton();
+      }
+    }
+
+    function showError(msg) {
+      const errEl = document.getElementById('gen-error');
+      if (errEl) {
+        errEl.textContent = msg;
+        errEl.classList.remove('hidden');
+        setTimeout(() => errEl.classList.add('hidden'), 5000);
       }
     }
 
