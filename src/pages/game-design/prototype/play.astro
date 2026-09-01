@@ -113,7 +113,6 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
     window._gameEvidence = gameEvidence;
     window._gameWitnesses = gameWitnesses;
     window._gameData = GameData;
-    window._gameState = state;  // 供证据板更新信心值
 
     // 游戏状态
     let state = {
@@ -134,6 +133,9 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
       showHistory: false,
       isTransitioning: false,
     };
+
+    // 暴露游戏状态到全局（必须在state定义之后，避免TDZ错误）
+    window._gameState = state;
 
     // 初始化
     function init() {
