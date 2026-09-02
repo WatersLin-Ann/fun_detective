@@ -18,6 +18,9 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
       <div class="flex items-center gap-4 text-sm">
         <span id="phase-indicator" class="text-stone-300">开场</span>
         <span id="confidence-display" class="text-stone-300">信心值: 100</span>
+        <button id="audio-toggle-btn" onclick="toggleAudio()" class="px-2 py-1 bg-stone-700 rounded hover:bg-stone-600 text-sm" title="静音/取消静音">
+          🔊
+        </button>
         <button id="evidence-btn" class="px-3 py-1 bg-stone-700 rounded hover:bg-stone-600">
           证据 (<span id="evidence-count">0</span>)
         </button>
@@ -93,6 +96,9 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
 
   <!-- 引入案件配置（必须在动态加载之前） -->
   <script is:inline src="/fun_detective/game/cases/index.js"></script>
+  <!-- 引入音效系统 -->
+  <script is:inline src="/fun_detective/game/audio-config.js"></script>
+  <script is:inline src="/fun_detective/game/audioManager.js"></script>
   <!-- 引入游戏UI工具模块 -->
   <script is:inline src="/fun_detective/game/ui.js"></script>
   <!-- 引入玩家数据与笔记系统 -->
@@ -190,6 +196,17 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
         PlayerData.setCaseId(currentCaseId);
       }
 
+      // 初始化音效系统
+      if (window.AudioManager) {
+        AudioManager.init();
+        // 应用配置的音量
+        if (window.AudioConfig) {
+          AudioManager.setMasterVolume(AudioConfig.settings.masterVolume);
+          AudioManager.setBgmVolume(AudioConfig.settings.bgmVolume);
+          AudioManager.setSfxVolume(AudioConfig.settings.sfxVolume);
+        }
+      }
+
       // 检查是否继续游戏
       if (urlParams.get('continue') === '1') {
         const saved = localStorage.getItem(SAVE_KEY);
@@ -210,6 +227,12 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
     // 渲染
     function render() {
       updateTopBar();
+
+      // 根据游戏阶段播放BGM
+      if (window.AudioManager && window.AudioConfig && AudioConfig.settings.autoPlayBgm) {
+        const bgmId = AudioConfig.phaseBgmMap[state.gamePhase] || 'investigation';
+        AudioManager.playBgm(bgmId);
+      }
       
       // 隐藏所有阶段
       document.getElementById('intro-section').classList.add('hidden');
@@ -564,6 +587,7 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
           // 使用证据卡片替代alert
           GameUI.showEvidenceCard(evidence, (ev) => {
             state.collectedEvidence.push(ev.id);
+            playSfx('collect_evidence');
             GameUI.showToast(`收集到证据：${ev.name}`, 'success');
             // 自动添加到笔记线索
             PlayerData.addNotebookItem('clues', `【证据】${ev.name}：${ev.description}`);
@@ -711,6 +735,7 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
         if (cont && !state.contradictionsFound.includes(cont.id)) {
           state.contradictionsFound.push(cont.id);
           state.confidence = Math.min(100, state.confidence + 20);
+          playSfx('trial_correct');
           GameUI.showDialog({
             speaker: '波洛',
             color: '#fbbf24',
@@ -720,6 +745,7 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
       } else {
         // 错误
         state.confidence = Math.max(0, state.confidence - 10);
+        playSfx('trial_wrong');
         GameUI.showToast('这个证据与证词没有直接矛盾... 信心值 -10', 'warning', 3000);
       }
       
@@ -801,6 +827,22 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
     });
 
     // 启动
+    // 音量切换
+    function toggleAudio() {
+      if (!window.AudioManager) return;
+      const isMuted = AudioManager.toggleMute();
+      const btn = document.getElementById('audio-toggle-btn');
+      if (btn) btn.textContent = isMuted ? '🔇' : '🔊';
+      if (!isMuted) {
+        AudioManager.playSfx('click');
+      }
+    }
+
+    // 全局音效辅助函数
+    function playSfx(sfxId) {
+      if (window.AudioManager) AudioManager.playSfx(sfxId);
+    }
+
     // 加载案件数据后初始化
     loadCaseData(currentCaseId, () => {
       init();
