@@ -29,6 +29,11 @@ const GameState = (function() {
     witnessReaction: 'normal',
     showHistory: false,
     isTransitioning: false,
+    // 审判阶段新增状态
+    trialPhase: 'opening',  // opening | questioning | closing | verdict
+    currentWitnessIndex: 0,
+    witnessStates: {},  // { witnessId: { questioned, followedUp, contradicted, emotion } }
+    objectionActive: false  // 异议动画是否激活
   };
 
   // 存档key（包含案件ID，实现存档隔离）
@@ -105,6 +110,26 @@ const GameState = (function() {
     } else {
       localStorage.removeItem(SAVE_KEY);
     }
+
+    // 初始化证人状态（兼容旧存档）
+    if (!state.witnessStates) {
+      state.witnessStates = {};
+    }
+    if (gameWitnesses) {
+      gameWitnesses.forEach(w => {
+        if (!state.witnessStates[w.id]) {
+          state.witnessStates[w.id] = {
+            questioned: false,
+            followedUp: false,
+            contradicted: false,
+            emotion: 'normal'
+          };
+        }
+      });
+    }
+    if (!state.trialPhase) state.trialPhase = 'opening';
+    if (!state.currentWitnessIndex) state.currentWitnessIndex = 0;
+    if (state.objectionActive === undefined) state.objectionActive = false;
 
     // 暴露游戏状态到全局
     window._gameState = state;

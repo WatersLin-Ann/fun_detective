@@ -68,6 +68,7 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
       <!-- 结局阶段 -->
       <div id="ending-section" class="hidden max-w-2xl mx-auto">
         <div class="bg-stone-800 rounded-xl p-8">
+          <div id="ending-grade"></div>
           <h2 id="ending-title" class="text-3xl font-bold mb-4 text-center"></h2>
           <p id="ending-description" class="text-lg leading-relaxed text-stone-300 mb-6"></p>
           <div id="ending-stats" class="bg-stone-700 rounded-lg p-4 mb-6">
@@ -89,6 +90,13 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
 
     <!-- 证据栏 -->
     <div id="evidence-bar-container"></div>
+
+    <!-- 异议动画遮罩 -->
+    <div id="objection-overlay" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/80 pointer-events-none">
+      <div class="objection-text text-8xl font-black text-red-500 animate-bounce" style="text-shadow: 0 0 20px rgba(239,68,68,0.8); transform: rotate(-5deg);">
+        异议！
+      </div>
+    </div>
 
     <!-- 对话框 -->
     <div id="dialog-container"></div>

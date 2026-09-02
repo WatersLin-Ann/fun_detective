@@ -174,128 +174,204 @@ const GameRender = (function() {
       `;
     }
 
-    // 审判阶段渲染
+    // 审判阶段渲染（多阶段：开场/质询/总结/判决）
     function renderTrial() {
       document.getElementById('trial-section').classList.remove('hidden');
-      
+
+      const { gameWitnesses, gameContradictions } = GameState.getGameData();
+      const st = GameState.state;
+
+      // 根据审判阶段渲染不同内容
+      if (st.trialPhase === 'opening') {
+        renderTrialOpening();
+      } else if (st.trialPhase === 'questioning') {
+        renderTrialQuestioning();
+      } else if (st.trialPhase === 'closing') {
+        renderTrialClosing();
+      }
+
+      // 异议动画遮罩
+      if (st.objectionActive) {
+        const overlay = document.getElementById('objection-overlay');
+        if (overlay) overlay.classList.remove('hidden');
+      }
+    }
+
+    // 审判开场
+    function renderTrialOpening() {
       const panelContainer = document.getElementById('trial-panel-container');
       panelContainer.innerHTML = `
+        <div class="bg-stone-800 rounded-xl p-8 text-center">
+          <div class="text-6xl mb-4">⚖️</div>
+          <h2 class="text-2xl font-bold mb-4">审判开始</h2>
+          <div class="bg-stone-900/50 rounded-lg p-6 mb-6 text-left max-w-2xl mx-auto">
+            <p class="text-stone-300 leading-relaxed mb-3">
+              <span class="text-amber-400 font-bold">法官：</span>现在开始审理东方快车谋杀案。受害者塞缪尔·雷切特死于自己的包厢内，身中12刀。
+            </p>
+            <p class="text-stone-300 leading-relaxed mb-3">
+              <span class="text-amber-400 font-bold">法官：</span>列车因大雪被困，凶手就在这节车厢的12名乘客之中。波洛先生，请开始你的质询。
+            </p>
+            <p class="text-stone-400 text-sm">
+              提示：询问每位证人，通过追问获取更多信息，发现矛盾时点击"异议！"并出示证据反驳。
+            </p>
+          </div>
+          <button onclick="window.__startQuestioning()" class="px-8 py-3 bg-amber-600 hover:bg-amber-500 rounded-lg font-bold text-lg transition-all hover:scale-105">
+            开始质询 →
+          </button>
+        </div>
+      `;
+    }
+
+    // 审判质询阶段
+    function renderTrialQuestioning() {
+      const { gameWitnesses, gameContradictions } = GameState.getGameData();
+      const st = GameState.state;
+      const panelContainer = document.getElementById('trial-panel-container');
+
+      // 计算进度
+      const questionedCount = Object.values(st.witnessStates).filter(w => w.questioned).length;
+      const contradictedCount = Object.values(st.witnessStates).filter(w => w.contradicted).length;
+
+      panelContainer.innerHTML = `
         <div class="bg-stone-800 rounded-xl p-6">
-          <div class="flex items-center justify-between mb-6">
-            <h2 class="text-xl font-bold">⚖️ 审判阶段</h2>
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xl font-bold">⚖️ 证人质询</h2>
             <div class="flex items-center gap-4 text-sm">
-              <span>矛盾点: <span class="text-accent-400 font-bold">${GameState.state.contradictionsFound.length}/4</span></span>
-              <span>信心值: <span class="${GameState.state.confidence >= 60 ? 'text-green-400' : GameState.state.confidence >= 30 ? 'text-yellow-400' : 'text-red-400'} font-bold">${GameState.state.confidence}</span></span>
+              <span>已质询: <span class="text-amber-400 font-bold">${questionedCount}</span></span>
+              <span>矛盾: <span class="text-red-400 font-bold">${contradictedCount}</span></span>
+              <span>信心: <span class="${st.confidence >= 60 ? 'text-green-400' : st.confidence >= 30 ? 'text-yellow-400' : 'text-red-400'} font-bold">${st.confidence}</span></span>
             </div>
           </div>
           <div class="w-full bg-stone-700 rounded-full h-2 mb-6">
-            <div class="h-2 rounded-full ${GameState.state.confidence >= 60 ? 'bg-green-500' : GameState.state.confidence >= 30 ? 'bg-yellow-500' : 'bg-red-500'}" style="width: ${GameState.state.confidence}%"></div>
+            <div class="h-2 rounded-full bg-gradient-to-r from-amber-500 to-red-500" style="width: ${(questionedCount / gameWitnesses.length) * 100}%"></div>
           </div>
-          <h3 class="font-bold mb-3">选择要询问的证人：</h3>
-          <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-            ${gameWitnesses.map(w => `
-              <button class="p-4 rounded-lg text-left transition-all ${GameState.state.currentWitness === w.id ? 'bg-primary-600 ring-2 ring-primary-400' : 'bg-stone-700 hover:bg-stone-600'}" onclick="window.__selectWitness('${w.id}')">
-                <div class="flex items-center gap-2 mb-1">
-                  <span class="text-2xl">${w.avatar}</span>
-                  <span class="font-bold text-sm">${w.name}</span>
-                </div>
-                <p class="text-xs text-stone-400">${w.description}</p>
-              </button>
-            `).join('')}
+
+          <h3 class="font-bold mb-3">选择证人：</h3>
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
+            ${gameWitnesses.map(w => {
+              const ws = st.witnessStates[w.id] || {};
+              const emotionLabels = { normal: '', confident: '😏自信', nervous: '😰紧张', angry: '😠愤怒', breakdown: '😱崩溃' };
+              return `
+                <button class="p-4 rounded-lg text-left transition-all ${st.currentWitness === w.id ? 'bg-amber-700 ring-2 ring-amber-400' : 'bg-stone-700 hover:bg-stone-600'} ${ws.contradicted ? 'border-2 border-red-500' : ''}" onclick="window.__selectWitness('${w.id}')">
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="text-2xl">${w.avatar}</span>
+                    <span class="font-bold text-sm">${w.name}</span>
+                    ${ws.contradicted ? '<span class="text-red-400 text-xs">⚡矛盾</span>' : ''}
+                  </div>
+                  <p class="text-xs text-stone-400 mb-1">${w.description}</p>
+                  <div class="flex gap-1 text-xs">
+                    ${ws.questioned ? '<span class="text-green-400">✓已问</span>' : '<span class="text-stone-500">未问</span>'}
+                    ${ws.followedUp ? '<span class="text-blue-400">✓追问</span>' : ''}
+                    ${ws.emotion && ws.emotion !== 'normal' ? `<span class="text-purple-400">${emotionLabels[ws.emotion] || ''}</span>` : ''}
+                  </div>
+                </button>
+              `;
+            }).join('')}
           </div>
-          ${GameState.state.contradictionsFound.length >= 3 ? `
-            <button class="mt-6 w-full py-3 bg-accent-600 rounded-lg font-bold hover:bg-accent-700" onclick="window.__goToEnding()">
-              进入最终选择 →
+
+          ${questionedCount >= gameWitnesses.length ? `
+            <button class="w-full py-3 bg-amber-600 rounded-lg font-bold hover:bg-amber-500 transition-all" onclick="window.__goToClosing()">
+              进入总结陈词 →
             </button>
           ` : `
-            <div class="mt-6 p-4 bg-blue-900/50 rounded-lg text-sm text-blue-200">
-              <strong>提示：</strong>选择证人查看证词，点击"追问"获取更多信息，发现矛盾时点击"出示证据"并选择对应证据。正确+20信心值，错误-10。
-            </div>
+            <p class="text-center text-stone-500 text-sm">询问所有证人后可进入总结陈词</p>
           `}
         </div>
       `;
 
-      // 证人对话（火柴人角色 + 对话历史）
-      if (GameState.state.currentWitness) {
-        const witness = GameState.getGameData().gameWitnesses.find(w => w.id === GameState.state.currentWitness);
-        if (witness) {
-          const dialogContainer = document.getElementById('trial-dialog-container');
-          const isFollowedUp = GameState.state.interviewedWitnesses.includes(witness.id);
-          const testimony = isFollowedUp ? witness.followUpTestimony : witness.initialTestimony;
-          const hasContradiction = witness.contradiction && !GameState.state.contradictionsFound.find(c => {
-            const cont = GameState.getGameData().gameContradictions.find(gc => gc.id === c);
-            return cont && cont.witnessId === witness.id;
-          });
-          
-          // 证人颜色映射
-          const witnessColors = {
-            conductor: '#3b82f6',
-            'mrs-hubbard': '#ec4899',
-            mary: '#8b5cf6',
-            colonel: '#22c55e',
-            princess: '#eab308',
-            countess: '#06b6d4',
-          };
-          const witnessColor = witnessColors[witness.id] || '#94a3b8';
-          
-          // 根据状态决定表情
-          let expression = 'normal';
-          if (GameState.state.witnessReaction === 'contradiction') expression = 'angry';
-          else if (GameState.state.witnessReaction === 'followup') expression = 'thinking';
-          else if (GameState.state.witnessReaction === 'shocked') expression = 'surprised';
-          
-          // 火柴人SVG（支持表情）
-          function stickFigureWithExpr(color, expr, size = 56) {
-            const eyes = { normal: '● ●', happy: '◠ ◠', sad: '◡ ◡', angry: '> <', surprised: '○ ○', thinking: '● -' };
-            const mouth = { normal: '—', happy: '◡', sad: '◠', angry: '︵', surprised: '○', thinking: '~' };
-            return `<svg width="${size}" height="${size * 1.4}" viewBox="0 0 100 140" class="drop-shadow-lg"><circle cx="50" cy="25" r="18" fill="none" stroke="${color}" stroke-width="3"/><text x="50" y="28" text-anchor="middle" font-size="10" fill="${color}">${eyes[expr] || eyes.normal}</text><text x="50" y="38" text-anchor="middle" font-size="8" fill="${color}">${mouth[expr] || mouth.normal}</text><line x1="50" y1="43" x2="50" y2="90" stroke="${color}" stroke-width="3"/><line x1="50" y1="55" x2="25" y2="75" stroke="${color}" stroke-width="3"/><line x1="50" y1="55" x2="75" y2="75" stroke="${color}" stroke-width="3"/><line x1="50" y1="90" x2="35" y2="125" stroke="${color}" stroke-width="3"/><line x1="50" y1="90" x2="65" y2="125" stroke="${color}" stroke-width="3"/></svg>`;
-          }
-          
-          // 对话历史HTML
-          const historyHtml = GameState.state.dialogueHistory && GameState.state.dialogueHistory.length > 0 
-            ? GameState.state.dialogueHistory.slice(-8).map(h => `
-                <div class="flex gap-2 text-sm py-1 border-b border-stone-700/50">
-                  <span class="font-medium flex-shrink-0" style="color: ${h.color}">${h.speaker}：</span>
-                  <span class="text-stone-400">${h.text.substring(0, 60)}${h.text.length > 60 ? '...' : ''}</span>
-                </div>
-              `).join('')
-            : '<p class="text-stone-500 text-sm text-center py-2">暂无对话历史</p>';
-          
-          dialogContainer.innerHTML = `
-            <div class="bg-stone-800 rounded-xl overflow-hidden">
-              <!-- 对话历史栏 -->
-              <div class="bg-stone-900/50 px-4 py-2 flex items-center justify-between border-b border-stone-700">
-                <span class="text-xs text-stone-400">对话记录 (${GameState.state.dialogueHistory?.length || 0})</span>
-                <button class="text-xs text-primary-400 hover:text-primary-300" onclick="window.__toggleTrialHistory()">${GameState.state.showHistory ? '收起' : '查看历史'}</button>
-              </div>
-              <!-- 历史面板 -->
-              <div id="trial-history-panel" class="${GameState.state.showHistory ? '' : 'hidden'} max-h-32 overflow-y-auto bg-stone-900/30 px-4 py-2">
-                ${historyHtml}
-              </div>
-              <!-- 对话内容 -->
-              <div class="p-6">
-                <div class="flex items-start gap-4 mb-4">
-                  <div class="flex-shrink-0">
-                    ${stickFigureWithExpr(witnessColor, expression)}
-                  </div>
-                  <div class="pt-2">
-                    <h3 class="font-bold text-lg" style="color: ${witnessColor}">${witness.name}</h3>
-                    <p class="text-xs text-stone-500">${expression === 'angry' ? '情绪：激动' : expression === 'thinking' ? '情绪：思考' : expression === 'surprised' ? '情绪：惊讶' : '情绪：平静'}</p>
-                  </div>
-                </div>
-                <p class="text-stone-300 leading-relaxed mb-6 min-h-20">${testimony}</p>
-                <div class="flex gap-3 justify-end">
-                  ${!isFollowedUp ? `<button class="px-4 py-2 bg-stone-600 rounded-lg hover:bg-stone-500 transition-colors" onclick="window.__followUp()">追问</button>` : ''}
-                  ${hasContradiction ? `<button class="px-4 py-2 bg-yellow-600 rounded-lg hover:bg-yellow-500 font-bold transition-all hover:scale-105" onclick="window.__presentEvidence()">出示证据</button>` : ''}
-                  <button class="px-4 py-2 bg-stone-700 rounded-lg hover:bg-stone-600 transition-colors" onclick="window.__closeWitnessDialog()">关闭</button>
-                </div>
-              </div>
-            </div>
-          `;
-        }
-      } else {
-        document.getElementById('trial-dialog-container').innerHTML = '';
+      // 如果选中了证人，显示证词
+      if (st.currentWitness) {
+        renderWitnessTestimony();
       }
+    }
+
+    // 渲染证人证词
+    function renderWitnessTestimony() {
+      const { gameWitnesses, gameContradictions } = GameState.getGameData();
+      const st = GameState.state;
+      const witness = gameWitnesses.find(w => w.id === st.currentWitness);
+      if (!witness) return;
+
+      const ws = st.witnessStates[witness.id] || {};
+      const dialogContainer = document.getElementById('trial-dialog-container');
+      const isFollowedUp = ws.followedUp || st.interviewedWitnesses.includes(witness.id);
+      const testimony = isFollowedUp ? witness.followUpTestimony : witness.initialTestimony;
+      const hasContradiction = witness.contradiction && !st.contradictionsFound.find(c => {
+        const cont = gameContradictions.find(gc => gc.id === c);
+        return cont && cont.witnessId === witness.id;
+      });
+
+      const emotionColors = {
+        normal: 'text-stone-300',
+        confident: 'text-blue-300',
+        nervous: 'text-yellow-300',
+        angry: 'text-red-300',
+        breakdown: 'text-purple-300'
+      };
+      const textColor = emotionColors[ws.emotion] || 'text-stone-300';
+
+      dialogContainer.innerHTML = `
+        <div class="bg-stone-900/80 rounded-xl p-6 mt-4">
+          <div class="flex items-start gap-4 mb-4">
+            <div class="flex-shrink-0">
+              ${stickFigureWithExpr(witnessColors[witness.id] || '#94a3b8', ws.emotion || 'normal', 64)}
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-2">
+                <h4 class="font-bold" style="color: ${witnessColors[witness.id] || '#94a3b8'}">${witness.name}</h4>
+                ${ws.emotion && ws.emotion !== 'normal' ? `<span class="text-xs px-2 py-0.5 bg-purple-900/50 text-purple-300 rounded">${ws.emotion}</span>` : ''}
+              </div>
+              <p class="${textColor} leading-relaxed">${testimony}</p>
+            </div>
+          </div>
+
+          <div class="flex gap-3 flex-wrap">
+            ${!ws.followedUp ? `<button class="px-4 py-2 bg-stone-600 rounded-lg hover:bg-stone-500 transition-colors" onclick="window.__followUp()">追问</button>` : ''}
+            ${hasContradiction ? `<button class="px-4 py-2 bg-red-600 rounded-lg hover:bg-red-500 font-bold transition-all hover:scale-105" onclick="window.__object()">⚡ 异议！</button>` : ''}
+            <button class="px-4 py-2 bg-stone-700 rounded-lg hover:bg-stone-600 transition-colors" onclick="window.__closeWitnessDialog()">关闭</button>
+          </div>
+        </div>
+      `;
+    }
+
+    // 审判总结陈词
+    function renderTrialClosing() {
+      const { gameWitnesses, gameContradictions } = GameState.getGameData();
+      const st = GameState.state;
+      const panelContainer = document.getElementById('trial-panel-container');
+
+      const foundContradictions = st.contradictionsFound.map(id => {
+        return gameContradictions.find(c => c.id === id);
+      }).filter(Boolean);
+
+      panelContainer.innerHTML = `
+        <div class="bg-stone-800 rounded-xl p-6">
+          <h2 class="text-xl font-bold mb-4">📋 总结陈词</h2>
+          <div class="bg-stone-900/50 rounded-lg p-4 mb-6">
+            <p class="text-stone-300 leading-relaxed mb-3">
+              <span class="text-amber-400 font-bold">波洛：</span>各位，经过详细的质询，我已经发现了${foundContradictions.length}处关键矛盾。让我们整理一下线索...
+            </p>
+          </div>
+
+          <h3 class="font-bold mb-3">已发现的矛盾：</h3>
+          <div class="space-y-2 mb-6">
+            ${foundContradictions.length > 0 ? foundContradictions.map(c => `
+              <div class="p-3 bg-red-900/30 border border-red-700 rounded-lg">
+                <p class="text-sm text-red-300">⚡ ${c.description}</p>
+              </div>
+            `).join('') : '<p class="text-stone-500 text-sm">未发现矛盾点</p>'}
+          </div>
+
+          <div class="flex items-center justify-between mb-4 p-3 bg-stone-900/50 rounded-lg">
+            <span class="text-stone-400">最终信心值：</span>
+            <span class="text-2xl font-bold ${st.confidence >= 60 ? 'text-green-400' : st.confidence >= 30 ? 'text-yellow-400' : 'text-red-400'}">${st.confidence}</span>
+          </div>
+
+          <button class="w-full py-3 bg-amber-600 rounded-lg font-bold hover:bg-amber-500 transition-all" onclick="window.__goToEnding()">
+            进入最终选择 →
+          </button>
+        </div>
+      `;
     }
 
     // 结局渲染

@@ -154,26 +154,34 @@ const GameInteractions = (function() {
       if (!GameState.state.interviewedWitnesses.includes(witnessId)) {
         GameState.state.interviewedWitnesses.push(witnessId);
       }
+      // 更新证人状态
+      if (!GameState.state.witnessStates[witnessId]) {
+        GameState.state.witnessStates[witnessId] = {};
+      }
+      GameState.state.witnessStates[witnessId].questioned = true;
+      GameState.state.witnessStates[witnessId].emotion = 'confident';
+      GameState.save();
       GameRender.render();
     };
 
     window.__followUp = function() {
       const witness = GameState.getGameData().gameWitnesses.find(w => w.id === GameState.state.currentWitness);
       if (witness) {
-        const witnessColors = {
-          conductor: '#3b82f6',
-          'mrs-hubbard': '#ec4899',
-          mary: '#8b5cf6',
-          colonel: '#22c55e',
-          princess: '#eab308',
-          countess: '#06b6d4',
-        };
         const color = witnessColors[witness.id] || '#94a3b8';
         GameUI.showDialog({
           speaker: witness.name,
           color: color,
           text: witness.followUpTestimony,
         });
+        // 更新证人状态
+        const wid = witness.id;
+        if (!GameState.state.witnessStates[wid]) {
+          GameState.state.witnessStates[wid] = {};
+        }
+        GameState.state.witnessStates[wid].followedUp = true;
+        GameState.state.witnessStates[wid].emotion = 'nervous';
+        GameState.save();
+        playSfx('dialog_continue');
       }
       GameRender.render();
     };
@@ -204,13 +212,21 @@ const GameInteractions = (function() {
     window.__confirmPresentEvidence = function() {
       const witness = GameState.getGameData().gameWitnesses.find(w => w.id === GameState.state.currentWitness);
       const evidence = GameState.getGameData().gameEvidence.find(e => e.id === GameState.state.selectedEvidence);
-      
+
       if (witness?.contradiction && witness.contradiction.evidenceId === GameState.state.selectedEvidence) {
         // 正确指出矛盾
         const cont = GameState.getGameData().gameContradictions.find(c => c.witnessId === witness.id && c.evidenceId === GameState.state.selectedEvidence);
         if (cont && !GameState.state.contradictionsFound.includes(cont.id)) {
           GameState.state.contradictionsFound.push(cont.id);
           GameState.state.confidence = Math.min(100, GameState.state.confidence + 20);
+          // 更新证人状态：被指出矛盾后崩溃
+          const wid = witness.id;
+          if (!GameState.state.witnessStates[wid]) {
+            GameState.state.witnessStates[wid] = {};
+          }
+          GameState.state.witnessStates[wid].contradicted = true;
+          GameState.state.witnessStates[wid].emotion = 'breakdown';
+          GameState.save();
           playSfx('trial_correct');
           GameUI.showDialog({
             speaker: '波洛',
@@ -221,6 +237,15 @@ const GameInteractions = (function() {
       } else {
         // 错误
         GameState.state.confidence = Math.max(0, GameState.state.confidence - 10);
+        // 证人愤怒
+        if (witness) {
+          const wid = witness.id;
+          if (!GameState.state.witnessStates[wid]) {
+            GameState.state.witnessStates[wid] = {};
+          }
+          GameState.state.witnessStates[wid].emotion = 'angry';
+          GameState.save();
+        }
         playSfx('trial_wrong');
         GameUI.showToast('这个证据与证词没有直接矛盾... 信心值 -10', 'warning', 3000);
       }
@@ -324,6 +349,43 @@ const GameInteractions = (function() {
       init();
     });
   
+
+    // 开始质询
+    window.__startQuestioning = function() {
+      GameState.state.trialPhase = 'questioning';
+      GameState.save();
+      playSfx('ui_page');
+      GameRender.render();
+    };
+
+    // 异议系统
+    window.__object = function() {
+      const witness = GameState.getGameData().gameWitnesses.find(w => w.id === GameState.state.currentWitness);
+      if (!witness) return;
+
+      // 播放异议动画
+      GameState.state.objectionActive = true;
+      GameRender.render();
+      playSfx('trial_object');
+
+      // 1.5秒后关闭动画，打开证据选择
+      setTimeout(() => {
+        GameState.state.objectionActive = false;
+        GameState.state.evidenceMode = 'select';
+        GameState.state.showEvidenceBar = true;
+        GameRender.render();
+      }, 1500);
+    };
+
+    // 进入总结陈词
+    window.__goToClosing = function() {
+      GameState.state.trialPhase = 'closing';
+      GameState.state.currentWitness = null;
+      GameState.save();
+      playSfx('ui_page');
+      GameRender.render();
+    };
+
   return {
     handleSceneClick,
     addDialogueHistory,
@@ -332,6 +394,7 @@ const GameInteractions = (function() {
     playSfx,
     witnessColors
   };
+  // 注意：__startQuestioning/__object/__goToClosing通过window.__xxx暴露
 })();
 
 window.GameInteractions = GameInteractions;
