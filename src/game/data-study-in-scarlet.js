@@ -89,9 +89,9 @@ const CaseData_studyInScarlet = (function() {
     },
     {
       id: "blood-word",
-      name: "血字"RACHE"",
-      description: "墙上用鲜血写的大写字母"RACHE"。雷斯垂德认为是人名"Rachel"的不完整拼写。",
-      detail: ""RACHE"是德语，意思是"复仇"。这不是人名，而是凶手留下的宣言。",
+      name: '血字"RACHE"',
+      description: '墙上用鲜血写的大写字母"RACHE"。雷斯垂德认为是人名"Rachel"的不完整拼写。',
+      detail: '"RACHE"是德语，意思是"复仇"。这不是人名，而是凶手留下的宣言。',
       icon: "🩸"
     },
     {
