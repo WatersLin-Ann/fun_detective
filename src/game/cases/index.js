@@ -14,19 +14,19 @@ const GameCases = [
     dataFile: '/fun_detective/game/data-orient-express.js',
     status: 'available',
     cover: '🚂'
+  },
+  {
+    id: 'study-in-scarlet',
+    name: '血字的研究',
+    description: '福尔摩斯首秀案件。伦敦空屋中发生离奇谋杀，墙上血字"RACHE"隐藏着复仇的真相。通过戒指、脚印、烟灰等线索，推理出凶手的真实身份。',
+    difficulty: '简单',
+    estimatedTime: '15-20分钟',
+    tags: ['推理小说', '侦探', '复仇'],
+    dataFile: '/fun_detective/game/data-study-in-scarlet.js',
+    status: 'available',
+    cover: '🔍'
   }
   // 后续案件在此添加
-  // {
-  //   id: 'xxx',
-  //   name: '案件名称',
-  //   description: '案件描述...',
-  //   difficulty: '简单/中等/困难',
-  //   estimatedTime: 'XX分钟',
-  //   tags: ['标签1', '标签2'],
-  //   dataFile: '/fun_detective/game/data-xxx.js',
-  //   status: 'available/coming-soon',
-  //   cover: '图标'
-  // }
 ];
 
 window.GameCases = GameCases;
