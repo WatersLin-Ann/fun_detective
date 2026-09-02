@@ -430,8 +430,10 @@ const GameInteractions = (function() {
     }
 
     // 加载案件数据后初始化
-    loadCaseData(currentCaseId, () => {
-      init();
+    const _urlParams = new URLSearchParams(window.location.search);
+    const _caseId = _urlParams.get('case') || 'orient-express';
+    GameState.loadCaseData(_caseId, () => {
+      GameState.init();
     });
   
 
