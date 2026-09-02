@@ -36,7 +36,19 @@ const GameState = (function() {
     objectionActive: false,  // 异议动画是否激活
     // 时间线系统
     discoveredTimeline: [],  // 已发现的时间线事件ID
-    timelineContradictionsFound: []  // 已发现的时间线矛盾ID
+    timelineContradictionsFound: [],  // 已发现的时间线矛盾ID
+    // 笔记关键词系统
+    discoveredKeywords: [],  // 已发现的关键词ID
+    // 游戏引导系统
+    tutorialCompleted: false,  // 新手教程是否完成
+    currentObjective: null,    // 当前目标ID
+    completedObjectives: [],   // 已完成的目标ID
+    lastActionTime: Date.now(), // 最后操作时间（用于进度提示）
+    // 内容深度系统
+    gameStartTime: Date.now(),  // 游戏开始时间
+    achievementsUnlocked: [],   // 已解锁成就ID
+    endingReached: null,        // 达成的结局ID
+    evidencePresented: 0        // 审判中出示证据次数
   };
 
   // 存档key（包含案件ID，实现存档隔离）

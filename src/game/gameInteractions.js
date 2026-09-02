@@ -252,6 +252,10 @@ const GameInteractions = (function() {
       const witness = GameState.getGameData().gameWitnesses.find(w => w.id === GameState.state.currentWitness);
       const evidence = GameState.getGameData().gameEvidence.find(e => e.id === GameState.state.selectedEvidence);
 
+      // 记录出示证据次数
+      GameState.state.evidencePresented = (GameState.state.evidencePresented || 0) + 1;
+      GameState.save();
+
       if (witness?.contradiction && witness.contradiction.evidenceId === GameState.state.selectedEvidence) {
         // 正确指出矛盾
         const cont = GameState.getGameData().gameContradictions.find(c => c.witnessId === witness.id && c.evidenceId === GameState.state.selectedEvidence);
@@ -301,8 +305,13 @@ const GameInteractions = (function() {
     };
 
     window.__goToEnding = function() {
-      GameState.state.gamePhase = 'ending';
-      GameRender.render();
+      // 使用新的结局系统
+      if (window.EndingUI) {
+        EndingUI.showEnding();
+      } else {
+        GameState.state.gamePhase = 'ending';
+        GameRender.render();
+      }
     };
 
     window.__makeFinalChoice = function(choice) {
@@ -314,7 +323,14 @@ const GameInteractions = (function() {
         type: 'danger',
         onConfirm: () => {
           GameState.state.choices['final-choice'] = choice;
-          GameRender.render();
+          // 两个选择都是合理的结局，不设错误选择
+          // 直接进入结局
+          if (window.EndingUI) {
+            EndingUI.showEnding();
+          } else {
+            GameState.state.gamePhase = 'ending';
+            GameRender.render();
+          }
         }
       });
     };

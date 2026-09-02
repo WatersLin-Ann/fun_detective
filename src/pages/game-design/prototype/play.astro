@@ -124,6 +124,13 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
       </div>
     </div>
 
+    <!-- 结局弹窗 -->
+    <div id="ending-overlay" class="hidden fixed inset-0 z-[95] flex items-center justify-center bg-black/90 overflow-y-auto">
+      <div class="bg-stone-800 rounded-xl p-6 w-full max-w-xl my-8 border border-stone-600">
+        <div id="ending-content"></div>
+      </div>
+    </div>
+
     <!-- 对话框 -->
     <div id="dialog-container"></div>
   </div>
@@ -144,6 +151,8 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
   <script is:inline src="/fun_detective/game/timelineUI.js"></script>
   <!-- 引入游戏引导系统 -->
   <script is:inline src="/fun_detective/game/guideUI.js"></script>
+  <!-- 引入结局系统 -->
+  <script is:inline src="/fun_detective/game/endingUI.js"></script>
 
     <!-- 引入游戏核心模块（按依赖顺序） -->
   <script is:inline src="/fun_detective/game/gameState.js"></script>

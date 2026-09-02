@@ -43,7 +43,12 @@ const GameState = (function() {
     tutorialCompleted: false,  // 新手教程是否完成
     currentObjective: null,    // 当前目标ID
     completedObjectives: [],   // 已完成的目标ID
-    lastActionTime: Date.now() // 最后操作时间（用于进度提示）
+    lastActionTime: Date.now(), // 最后操作时间（用于进度提示）
+    // 内容深度系统
+    gameStartTime: Date.now(),  // 游戏开始时间
+    achievementsUnlocked: [],   // 已解锁成就ID
+    endingReached: null,        // 达成的结局ID
+    evidencePresented: 0        // 审判中出示证据次数
   };
 
   // 存档key（包含案件ID，实现存档隔离）

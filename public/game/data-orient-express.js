@@ -247,6 +247,68 @@ const CaseData_orientExpress = (function() {
 
 
 
+
+  // ========== 结局配置 ==========
+  const endings = [
+    {
+      id: 'ending-s',
+      grade: 'S',
+      minConfidence: 90,
+      title: '完美的审判',
+      description: '你完美地揭露了真相。12名乘客的复仇计划被你一一拆解，每一个细节都逃不过你的眼睛。波洛微笑着说："这是我见过最精彩的推理。"',
+      detectiveComment: '出色！你不仅找到了凶手，还理解了这背后的故事。',
+      color: '#fbbf24'
+    },
+    {
+      id: 'ending-a',
+      grade: 'A',
+      minConfidence: 75,
+      title: '出色的推理',
+      description: '你成功揭露了真相，虽然有少数细节没有完全理清，但核心推理无懈可击。波洛点头表示认可。',
+      detectiveComment: '非常好的推理，只差一点点就完美了。',
+      color: '#22c55e'
+    },
+    {
+      id: 'ending-b',
+      grade: 'B',
+      minConfidence: 60,
+      title: '合格的侦探',
+      description: '你找到了凶手，但推理过程中有些跳跃。证据链不够完整，但结论是对的。',
+      detectiveComment: '结论正确，但过程可以更严谨。',
+      color: '#3b82f6'
+    },
+    {
+      id: 'ending-c',
+      grade: 'C',
+      minConfidence: 40,
+      title: '勉强的结论',
+      description: '你的结论是对的，但证据严重不足。如果这是真实的法庭，你的推理可能无法说服陪审团。',
+      detectiveComment: '方向对了，但还需要更多证据支撑。',
+      color: '#f97316'
+    },
+    {
+      id: 'ending-d',
+      grade: 'D',
+      minConfidence: 0,
+      title: '未解之谜',
+      description: '你未能揭露真相。案件的真相被永远埋藏在这列东方快车上，成为一个永恒的谜。',
+      detectiveComment: '这次失败了，但每个侦探都有失败的时候。再来一次吧。',
+      color: '#ef4444'
+    }
+  ];
+
+  // ========== 成就配置 ==========
+  const achievements = [
+    { id: 'ach-oe-001', name: '初出茅庐', description: '首次通关东方快车谋杀案', condition: 'complete', rarity: '普通' },
+    { id: 'ach-oe-002', name: '证据收藏家', description: '收集案件中所有证据', condition: 'all_evidence', rarity: '稀有' },
+    { id: 'ach-oe-003', name: '审讯专家', description: '询问案件中所有证人', condition: 'all_witnesses', rarity: '稀有' },
+    { id: 'ach-oe-004', name: '矛盾猎手', description: '发现案件中所有矛盾', condition: 'all_contradictions', rarity: '史诗' },
+    { id: 'ach-oe-005', name: '时间侦探', description: '发现所有时间线矛盾', condition: 'all_timeline_contradictions', rarity: '史诗' },
+    { id: 'ach-oe-006', name: '关键词大师', description: '发现案件中所有关键词', condition: 'all_keywords', rarity: '稀有' },
+    { id: 'ach-oe-007', name: '完美推理', description: '获得S级结局', condition: 's_ending', rarity: '传说' },
+    { id: 'ach-oe-008', name: '证据关联大师', description: '发现所有证据关联', condition: 'all_links', rarity: '史诗' }
+  ];
+
   // ========== 游戏目标配置 ==========
   const objectives = [
     { id: 'obj-oe-001', phase: 'investigation', title: '调查案发现场', description: '在包厢中收集所有可用的证据', type: 'collect_evidence', target: 5, hint: '点击场景中的物品来收集证据' },
@@ -343,6 +405,8 @@ const CaseData_orientExpress = (function() {
     timeline,
     timelineContradictions,
     objectives,
+    endings,
+    achievements,
     noteKeywords,
     presetLinks,
     witnessColors,

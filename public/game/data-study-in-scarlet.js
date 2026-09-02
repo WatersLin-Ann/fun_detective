@@ -268,6 +268,68 @@ const CaseData_studyInScarlet = (function() {
 
 
 
+
+  // ========== 结局配置 ==========
+  const endings = [
+    {
+      id: 'ending-s',
+      grade: 'S',
+      minConfidence: 90,
+      title: '基本演绎法',
+      description: '你完美地运用了演绎推理，从现场的蛛丝马迹中还原了整个案件。福尔摩斯说："出色，你已经掌握了基本演绎法的精髓。"',
+      detectiveComment: '精彩！你的推理逻辑严密，无懈可击。',
+      color: '#fbbf24'
+    },
+    {
+      id: 'ending-a',
+      grade: 'A',
+      minConfidence: 75,
+      title: '敏锐的观察',
+      description: '你成功揭露了真相，你的观察力令人印象深刻。虽然有少数细节遗漏，但核心推理完全正确。',
+      detectiveComment: '非常好，你有成为优秀侦探的天赋。',
+      color: '#22c55e'
+    },
+    {
+      id: 'ending-b',
+      grade: 'B',
+      minConfidence: 60,
+      title: '合格的推理',
+      description: '你找到了凶手，但推理过程中有些地方不够严谨。证据链可以更完整一些。',
+      detectiveComment: '结论正确，但过程还有提升空间。',
+      color: '#3b82f6'
+    },
+    {
+      id: 'ending-c',
+      grade: 'C',
+      minConfidence: 40,
+      title: '运气不错',
+      description: '你的结论是对的，但很大程度上依赖直觉而非证据。如果这是真实案件，你的推理可能站不住脚。',
+      detectiveComment: '直觉很重要，但证据更重要。',
+      color: '#f97316'
+    },
+    {
+      id: 'ending-d',
+      grade: 'D',
+      minConfidence: 0,
+      title: '迷雾重重',
+      description: '你未能揭露真相。凶手消失在伦敦的迷雾中，案件成为又一个未解之谜。',
+      detectiveComment: '这次没成功，但伦敦的雾总会散的。再来一次吧。',
+      color: '#ef4444'
+    }
+  ];
+
+  // ========== 成就配置 ==========
+  const achievements = [
+    { id: 'ach-sis-001', name: '初出茅庐', description: '首次通关血字的研究', condition: 'complete', rarity: '普通' },
+    { id: 'ach-sis-002', name: '证据收藏家', description: '收集案件中所有证据', condition: 'all_evidence', rarity: '稀有' },
+    { id: 'ach-sis-003', name: '审讯专家', description: '询问案件中所有证人', condition: 'all_witnesses', rarity: '稀有' },
+    { id: 'ach-sis-004', name: '矛盾猎手', description: '发现案件中所有矛盾', condition: 'all_contradictions', rarity: '史诗' },
+    { id: 'ach-sis-005', name: '时间侦探', description: '发现所有时间线矛盾', condition: 'all_timeline_contradictions', rarity: '史诗' },
+    { id: 'ach-sis-006', name: '关键词大师', description: '发现案件中所有关键词', condition: 'all_keywords', rarity: '稀有' },
+    { id: 'ach-sis-007', name: '完美推理', description: '获得S级结局', condition: 's_ending', rarity: '传说' },
+    { id: 'ach-sis-008', name: '证据关联大师', description: '发现所有证据关联', condition: 'all_links', rarity: '史诗' }
+  ];
+
   // ========== 游戏目标配置 ==========
   const objectives = [
     { id: 'obj-sis-001', phase: 'investigation', title: '调查犯罪现场', description: '在空屋中收集所有可用的证据', type: 'collect_evidence', target: 4, hint: '点击场景中的物品来收集证据' },
@@ -315,6 +377,8 @@ const CaseData_studyInScarlet = (function() {
     timeline,
     timelineContradictions,
     objectives,
+    endings,
+    achievements,
     noteKeywords,
     presetLinks,
     witnessColors,
