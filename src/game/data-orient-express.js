@@ -246,6 +246,18 @@ const CaseData_orientExpress = (function() {
   ];
 
 
+
+  // ========== 游戏目标配置 ==========
+  const objectives = [
+    { id: 'obj-oe-001', phase: 'investigation', title: '调查案发现场', description: '在包厢中收集所有可用的证据', type: 'collect_evidence', target: 5, hint: '点击场景中的物品来收集证据' },
+    { id: 'obj-oe-002', phase: 'investigation', title: '询问关键证人', description: '至少询问3名证人了解案发经过', type: 'interview_witness', target: 3, hint: '点击证人卡片与他们对话' },
+    { id: 'obj-oe-003', phase: 'investigation', title: '整理推理笔记', description: '打开笔记，记录你的推理思路', type: 'open_notebook', target: 1, hint: '点击顶部"笔记"按钮' },
+    { id: 'obj-oe-004', phase: 'investigation', title: '发现证词矛盾', description: '在证人证词中找出至少1个矛盾', type: 'find_contradiction', target: 1, hint: '仔细对比不同证人的证词' },
+    { id: 'obj-oe-005', phase: 'investigation', title: '准备进入审判', description: '收集足够证据后，进入审判阶段', type: 'enter_trial', target: 1, hint: '点击"进入审判"按钮' },
+    { id: 'obj-oe-006', phase: 'trial', title: '质询所有证人', description: '在审判中质询所有证人', type: 'question_all_witnesses', target: 1, hint: '点击证人进行质询' },
+    { id: 'obj-oe-007', phase: 'trial', title: '出示关键证据', description: '在质询中出示至少2次证据', type: 'present_evidence', target: 2, hint: '点击"出示证据"按钮' }
+  ];
+
   // ========== 笔记关键词配置 ==========
   const noteKeywords = [
     { id: 'kw-oe-001', keyword: '12人', aliases: ['十二人', '12乘客', '十二乘客'], category: '推理', unlockType: 'dialog', description: '12人与陪审团的联系', unlockContent: { speaker: '波洛', text: '你注意到了吗？车厢里正好有12名乘客，而陪审团也正好是12人...这不是巧合，他们在执行自己的"审判"。', confidence: 10 } },
@@ -330,6 +342,7 @@ const CaseData_orientExpress = (function() {
     contradictions,
     timeline,
     timelineContradictions,
+    objectives,
     noteKeywords,
     presetLinks,
     witnessColors,

@@ -12,6 +12,17 @@ const NotebookUI = (function() {
     remove();
     renderOverlay();
     renderPanel();
+    // 记录笔记已打开（用于目标系统）
+    if (window.GameState) {
+      GameState.state.notebookOpened = true;
+      GameState.save();
+    }
+    // 更新引导系统
+    if (window.GuideUI) {
+      GuideUI.updateLastAction();
+      GuideUI.checkObjectives();
+      GuideUI.renderObjective();
+    }
   }
 
   function remove() {

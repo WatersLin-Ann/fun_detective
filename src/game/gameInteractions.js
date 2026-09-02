@@ -71,6 +71,12 @@ const GameInteractions = (function() {
             if (window.TimelineUI) {
               TimelineUI.autoDiscoverBySource('证据', ev.id);
             }
+            // 更新引导系统
+            if (window.GuideUI) {
+              GuideUI.updateLastAction();
+              GuideUI.checkObjectives();
+              GuideUI.renderObjective();
+            }
             // 播放收集动画
             const rect = event.target.getBoundingClientRect();
             GameUI.playCollectAnimation(rect.left, rect.top, ev.name);
@@ -136,6 +142,12 @@ const GameInteractions = (function() {
               GameState.state.currentScene = 'dining-car';
               GameState.save();
               playSfx('ui_page');
+              // 更新引导系统
+              if (window.GuideUI) {
+                GuideUI.updateLastAction();
+                GuideUI.checkObjectives();
+                GuideUI.renderObjective();
+              }
               GameRender.render();
             }
           });
@@ -157,6 +169,12 @@ const GameInteractions = (function() {
       if (window.TimelineUI) {
         TimelineUI.autoDiscoverBySource('场景', sceneId);
       }
+      // 更新引导系统
+      if (window.GuideUI) {
+        GuideUI.updateLastAction();
+        GuideUI.checkObjectives();
+        GuideUI.renderObjective();
+      }
       GameRender.render();
     };
 
@@ -175,6 +193,12 @@ const GameInteractions = (function() {
       // 自动收集该证人的时间线索
       if (window.TimelineUI) {
         TimelineUI.autoDiscoverBySource('证人', witnessId);
+      }
+      // 更新引导系统
+      if (window.GuideUI) {
+        GuideUI.updateLastAction();
+        GuideUI.checkObjectives();
+        GuideUI.renderObjective();
       }
       GameRender.render();
     };

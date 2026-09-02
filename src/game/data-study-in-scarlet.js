@@ -267,6 +267,18 @@ const CaseData_studyInScarlet = (function() {
   ];
 
 
+
+  // ========== 游戏目标配置 ==========
+  const objectives = [
+    { id: 'obj-sis-001', phase: 'investigation', title: '调查犯罪现场', description: '在空屋中收集所有可用的证据', type: 'collect_evidence', target: 4, hint: '点击场景中的物品来收集证据' },
+    { id: 'obj-sis-002', phase: 'investigation', title: '询问相关证人', description: '至少询问2名证人了解情况', type: 'interview_witness', target: 2, hint: '点击证人卡片与他们对话' },
+    { id: 'obj-sis-003', phase: 'investigation', title: '整理推理笔记', description: '打开笔记，记录你的推理思路', type: 'open_notebook', target: 1, hint: '点击顶部"笔记"按钮' },
+    { id: 'obj-sis-004', phase: 'investigation', title: '发现证词矛盾', description: '在证人证词中找出至少1个矛盾', type: 'find_contradiction', target: 1, hint: '仔细对比不同证人的证词' },
+    { id: 'obj-sis-005', phase: 'investigation', title: '准备进入审判', description: '收集足够证据后，进入审判阶段', type: 'enter_trial', target: 1, hint: '点击"进入审判"按钮' },
+    { id: 'obj-sis-006', phase: 'trial', title: '质询所有证人', description: '在审判中质询所有证人', type: 'question_all_witnesses', target: 1, hint: '点击证人进行质询' },
+    { id: 'obj-sis-007', phase: 'trial', title: '出示关键证据', description: '在质询中出示至少2次证据', type: 'present_evidence', target: 2, hint: '点击"出示证据"按钮' }
+  ];
+
   // ========== 笔记关键词配置 ==========
   const noteKeywords = [
     { id: 'kw-sis-001', keyword: 'RACHE', aliases: ['rache', '复仇'], category: '推理', unlockType: 'dialog', description: '血字的含义', unlockContent: { speaker: '福尔摩斯', text: '"RACHE"在德语中是"复仇"的意思，不是什么人名Rachel。凶手在现场留下了复仇的宣言。', confidence: 15 } },
@@ -302,6 +314,7 @@ const CaseData_studyInScarlet = (function() {
     contradictions,
     timeline,
     timelineContradictions,
+    objectives,
     noteKeywords,
     presetLinks,
     witnessColors,

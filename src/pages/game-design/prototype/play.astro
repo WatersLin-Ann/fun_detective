@@ -30,6 +30,11 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
         <button onclick="TimelineUI.open()" class="px-3 py-1 bg-blue-700 rounded hover:bg-blue-600 text-xs">
           ⏱️ 时间线
         </button>
+        <!-- 当前目标显示 -->
+        <div id="objective-display"></div>
+        <button onclick="GuideUI.openTutorial()" class="px-3 py-1 bg-stone-700 rounded hover:bg-stone-600 text-xs" title="帮助">
+          ❓
+        </button>
         <button onclick="NotebookUI.open()" class="px-3 py-1 bg-amber-700 rounded hover:bg-amber-600 text-xs">
           📝 笔记
         </button>
@@ -112,6 +117,13 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
       </div>
     </div>
 
+    <!-- 新手教程弹窗 -->
+    <div id="tutorial-overlay" class="hidden fixed inset-0 z-[95] flex items-center justify-center bg-black/80">
+      <div class="bg-stone-800 rounded-xl p-8 w-full max-w-lg border border-amber-600/50">
+        <div id="tutorial-content"></div>
+      </div>
+    </div>
+
     <!-- 对话框 -->
     <div id="dialog-container"></div>
   </div>
@@ -130,6 +142,8 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
   <script is:inline src="/fun_detective/game/evidence-board.js"></script>
   <!-- 引入时间线系统 -->
   <script is:inline src="/fun_detective/game/timelineUI.js"></script>
+  <!-- 引入游戏引导系统 -->
+  <script is:inline src="/fun_detective/game/guideUI.js"></script>
 
     <!-- 引入游戏核心模块（按依赖顺序） -->
   <script is:inline src="/fun_detective/game/gameState.js"></script>
@@ -140,6 +154,11 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
     // 游戏初始化：加载案件数据后初始化
     GameState.loadCaseData(GameState.currentCaseId, () => {
       GameState.init();
+      // 初始化游戏引导系统
+      if (window.GuideUI) {
+        GuideUI.init();
+        GuideUI.renderObjective();
+      }
     });
   </script>
 </BaseLayout>

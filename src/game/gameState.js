@@ -38,7 +38,12 @@ const GameState = (function() {
     discoveredTimeline: [],  // 已发现的时间线事件ID
     timelineContradictionsFound: [],  // 已发现的时间线矛盾ID
     // 笔记关键词系统
-    discoveredKeywords: []  // 已发现的关键词ID
+    discoveredKeywords: [],  // 已发现的关键词ID
+    // 游戏引导系统
+    tutorialCompleted: false,  // 新手教程是否完成
+    currentObjective: null,    // 当前目标ID
+    completedObjectives: [],   // 已完成的目标ID
+    lastActionTime: Date.now() // 最后操作时间（用于进度提示）
   };
 
   // 存档key（包含案件ID，实现存档隔离）
