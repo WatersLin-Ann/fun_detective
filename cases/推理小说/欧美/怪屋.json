@@ -9,7 +9,34 @@
     "年代": "黄金时代（1920-1950）",
     "案件状态": "已破案",
     "一句话简介": "富裕的希腊裔老人在自家豪宅中被毒杀，整个扭曲的家族中每个人都有嫌疑，结局令人不寒而栗。",
-    "参考链接": []
+    "参考链接": [
+      {
+        "标题": "维基百科 - 怪屋",
+        "URL": "https://zh.wikipedia.org/wiki/怪屋",
+        "类型": "维基百科"
+      },
+      {
+        "标题": "豆瓣读书 - 搜索《怪屋》",
+        "URL": "https://search.douban.com/book/subject_search?search_text=%E6%80%AA%E5%B1%8B",
+        "类型": "豆瓣"
+      }
+    ],
+    "推荐视频": [
+      {
+        "标题": "B站搜索 - 《怪屋》作品解说",
+        "URL": "https://search.bilibili.com/all?keyword=%E6%80%AA%E5%B1%8B%20%E8%A7%A3%E8%AF%B4",
+        "来源": "B站",
+        "视频类型": "解说",
+        "简介": "搜索《怪屋》相关的作品解读、剧情分析和作者介绍视频"
+      },
+      {
+        "标题": "YouTube搜索 - 怪屋",
+        "URL": "https://www.youtube.com/results?search_query=%E6%80%AA%E5%B1%8B",
+        "来源": "YouTube",
+        "视频类型": "解说",
+        "简介": "Search YouTube for videos related to 怪屋"
+      }
+    ]
   },
   "故事视图": {
     "故事摘要": "富裕的希腊裔老人在自家豪宅中被毒杀，整个扭曲的家族中每个人都有嫌疑，结局令人不寒而栗。",

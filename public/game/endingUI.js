@@ -48,7 +48,7 @@ const EndingUI = (function() {
           unlocked = state.interviewedWitnesses.length >= (caseData.witnesses?.length || 0);
           break;
         case 'all_contradictions':
-          unlocked = (state.foundContradictions || []).length >= (caseData.contradictions?.length || 0);
+          unlocked = (state.contradictionsFound || []).length >= (caseData.contradictions?.length || 0);
           break;
         case 'all_timeline_contradictions':
           unlocked = (state.timelineContradictionsFound || []).length >= (caseData.timelineContradictions?.length || 0);
@@ -153,7 +153,7 @@ const EndingUI = (function() {
           <div class="flex justify-between"><span class="text-stone-400">游戏时长</span><span class="text-white">${getGameDuration()}</span></div>
           <div class="flex justify-between"><span class="text-stone-400">收集证据</span><span class="text-white">${state.collectedEvidence.length}/${totalEvidence}</span></div>
           <div class="flex justify-between"><span class="text-stone-400">询问证人</span><span class="text-white">${state.interviewedWitnesses.length}/${totalWitnesses}</span></div>
-          <div class="flex justify-between"><span class="text-stone-400">发现矛盾</span><span class="text-white">${(state.foundContradictions || []).length}/${totalContradictions}</span></div>
+          <div class="flex justify-between"><span class="text-stone-400">发现矛盾</span><span class="text-white">${(state.contradictionsFound || []).length}/${totalContradictions}</span></div>
           <div class="flex justify-between"><span class="text-stone-400">证据关联</span><span class="text-white">${playerLinks}/${totalLinks}</span></div>
           <div class="flex justify-between"><span class="text-stone-400">时间线事件</span><span class="text-white">${(state.discoveredTimeline || []).length}/${totalTimeline}</span></div>
           <div class="flex justify-between"><span class="text-stone-400">关键词</span><span class="text-white">${(state.discoveredKeywords || []).length}/${totalKeywords}</span></div>

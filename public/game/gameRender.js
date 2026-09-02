@@ -76,14 +76,42 @@ const GameRender = (function() {
       document.getElementById('phase-indicator').textContent = phaseNames[GameState.state.gamePhase] || '';
       document.getElementById('confidence-display').textContent = `信心值: ${GameState.state.confidence}`;
       document.getElementById('evidence-count').textContent = GameState.state.collectedEvidence.length;
+      // 动态设置案件标题
+      const caseTitleEl = document.getElementById('case-title');
+      const caseName = window.GameData?.meta?.name || window.GameData?.meta?.title || '推理游戏';
+      if (caseTitleEl) {
+        caseTitleEl.textContent = caseName;
+      }
+      // 动态设置浏览器标签页标题
+      if (document.title !== `${caseName} | Fun Detective`) {
+        document.title = `${caseName} | Fun Detective`;
+      }
+      // 音频总开关关闭时（用户尚未提供真实音乐），隐藏音量按钮
+      const audioBtn = document.getElementById('audio-toggle-btn');
+      if (audioBtn) {
+        const audioEnabled = window.AudioConfig?.settings?.audioEnabled === true;
+        audioBtn.style.display = audioEnabled ? '' : 'none';
+      }
     }
 
     // 开场渲染
     function renderIntro() {
       document.getElementById('intro-section').classList.remove('hidden');
-      const texts = GameState.state.dialogIndex < 6 ? GameState.getGameData().gameDialogs.intro : GameState.getGameData().gameDialogs.investigationStart;
-      const idx = GameState.state.dialogIndex < 6 ? GameState.state.dialogIndex : GameState.state.dialogIndex - 6;
-      document.getElementById('intro-text').textContent = texts[idx] || '';
+      const dialogs = GameState.getGameData().gameDialogs;
+      if (!dialogs) {
+        document.getElementById('intro-text').textContent = '案件数据加载异常，请刷新页面';
+        return;
+      }
+      const useIntro = GameState.state.dialogIndex < 6;
+      const texts = useIntro ? dialogs.intro : dialogs.investigationStart;
+      const idx = useIntro ? GameState.state.dialogIndex : GameState.state.dialogIndex - 6;
+      let text = texts?.[idx];
+      // 防御性处理：如果不是字符串，转换为字符串
+      if (text !== null && text !== undefined && typeof text !== 'string') {
+        console.warn('对话内容不是字符串:', text);
+        text = typeof text === 'object' ? (text.text || text.content || JSON.stringify(text)) : String(text);
+      }
+      document.getElementById('intro-text').textContent = text || '';
       
       const btn = document.getElementById('intro-continue');
       if (GameState.state.dialogIndex >= 11) {
@@ -96,9 +124,15 @@ const GameRender = (function() {
     // 调查阶段渲染
     function renderInvestigation() {
       document.getElementById('investigation-section').classList.remove('hidden');
-      document.getElementById('inv-evidence-count').textContent = GameState.state.collectedEvidence.length;
-      document.getElementById('inv-witness-count').textContent = GameState.state.interviewedWitnesses.length;
       
+      // 防御性检查：场景数据必须是数组
+      const scenes = GameState.getGameData().gameScenes;
+      if (!Array.isArray(scenes)) {
+        console.error('场景数据不是数组:', scenes);
+        document.getElementById('game-scene-container').innerHTML = '<div class="text-red-400 p-4">场景数据异常，请刷新页面</div>';
+        return;
+      }
+
       // 场景切换动画
       const sceneContainer = document.getElementById('game-scene-container');
       if (sceneContainer && !GameState.state.isTransitioning) {
@@ -113,8 +147,12 @@ const GameRender = (function() {
         }, 50);
       }
 
-      const scene = GameState.getGameData().gameScenes.find(s => s.id === GameState.state.currentScene);
-      if (!scene) return;
+      const scene = scenes.find(s => s.id === GameState.state.currentScene);
+      if (!scene) {
+        console.error('未找到场景:', GameState.state.currentScene, '可用场景:', scenes.map(s => s.id));
+        document.getElementById('game-scene-container').innerHTML = '<div class="text-red-400 p-4">场景未找到: ' + GameState.state.currentScene + '</div>';
+        return;
+      }
 
       const container = document.getElementById('game-scene-container');
       
@@ -160,11 +198,11 @@ const GameRender = (function() {
             const isInterviewed = item.witnessId && GameState.state.interviewedWitnesses.includes(item.witnessId);
             const itemColor = item.color || (item.type === 'witness' ? '#3b82f6' : item.type === 'evidence' ? '#eab308' : '#78716c');
             if (item.type === 'witness') {
-              return `<button class="absolute interactable group" style="left: ${item.position.x}%; top: ${item.position.y}%; transform: translate(-50%, -50%)" onclick="window.__interact('${item.id}')"><div class="relative transition-all duration-300 ${isInterviewed ? 'opacity-60' : 'hover:scale-110'}">${stickFigure(itemColor)}${isInterviewed ? '<div class="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-white text-xs">✓</div>' : ''}</div><div class="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap bg-black/80 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">${item.name}${isInterviewed ? ' (已询问)' : ''}</div></button>`;
+              return `<button class="absolute interactable group" style="left: ${item.position.x}%; top: ${item.position.y}%; transform: translate(-50%, -50%)" onclick="window.__interact('${item.id}', {left: event.clientX, top: event.clientY})"><div class="relative transition-all duration-300 ${isInterviewed ? 'opacity-60' : 'hover:scale-110'}">${stickFigure(itemColor)}${isInterviewed ? '<div class="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-white text-xs">✓</div>' : ''}</div><div class="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap bg-black/80 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">${item.name}${isInterviewed ? ' (已询问)' : ''}</div></button>`;
             } else {
               const icon = item.type === 'evidence' ? (isCollected ? '✅' : '🔍') : '🚪';
               const bgColor = item.type === 'evidence' ? 'bg-yellow-500/80' : 'bg-stone-500/80';
-              return `<button class="absolute interactable group" style="left: ${item.position.x}%; top: ${item.position.y}%; transform: translate(-50%, -50%)" onclick="window.__interact('${item.id}')"><div class="w-12 h-12 rounded-full flex items-center justify-center text-2xl transition-all duration-300 ${bgColor} ${isCollected ? 'opacity-40 scale-90' : 'hover:scale-110'}">${icon}</div><div class="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap bg-black/80 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">${item.name}${isCollected ? ' (已收集)' : ''}</div></button>`;
+              return `<button class="absolute interactable group" style="left: ${item.position.x}%; top: ${item.position.y}%; transform: translate(-50%, -50%)" onclick="window.__interact('${item.id}', {left: event.clientX, top: event.clientY})"><div class="w-12 h-12 rounded-full flex items-center justify-center text-2xl transition-all duration-300 ${bgColor} ${isCollected ? 'opacity-40 scale-90' : 'hover:scale-110'}">${icon}</div><div class="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap bg-black/80 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">${item.name}${isCollected ? ' (已收集)' : ''}</div></button>`;
             }
           }).join('')}
           <div class="absolute top-4 right-4 flex flex-col gap-2">
@@ -200,17 +238,22 @@ const GameRender = (function() {
     // 审判开场
     function renderTrialOpening() {
       const panelContainer = document.getElementById('trial-panel-container');
+      const caseData = window.GameData || {};
+      const meta = caseData.meta || {};
+      // 优先读案件自定义的审判开场文案，否则用meta生成通用文案
+      const openingLines = caseData.trialOpening || [
+        `现在开始审理${meta.name || '本案'}。${meta.victim ? '受害者' + meta.victim + '。' : ''}`,
+        `${meta.detective ? meta.detective + '，' : ''}请开始你的质询。`
+      ];
+      const openingHtml = openingLines.map(line =>
+        `<p class="text-stone-300 leading-relaxed mb-3"><span class="text-amber-400 font-bold">法官：</span>${line}</p>`
+      ).join('');
       panelContainer.innerHTML = `
         <div class="bg-stone-800 rounded-xl p-8 text-center">
           <div class="text-6xl mb-4">⚖️</div>
           <h2 class="text-2xl font-bold mb-4">审判开始</h2>
           <div class="bg-stone-900/50 rounded-lg p-6 mb-6 text-left max-w-2xl mx-auto">
-            <p class="text-stone-300 leading-relaxed mb-3">
-              <span class="text-amber-400 font-bold">法官：</span>现在开始审理东方快车谋杀案。受害者塞缪尔·雷切特死于自己的包厢内，身中12刀。
-            </p>
-            <p class="text-stone-300 leading-relaxed mb-3">
-              <span class="text-amber-400 font-bold">法官：</span>列车因大雪被困，凶手就在这节车厢的12名乘客之中。波洛先生，请开始你的质询。
-            </p>
+            ${openingHtml}
             <p class="text-stone-400 text-sm">
               提示：询问每位证人，通过追问获取更多信息，发现矛盾时点击"异议！"并出示证据反驳。
             </p>
@@ -384,13 +427,28 @@ const GameRender = (function() {
       } else {
         ending = { name: '法外容情', description: '你揭露了真相，但理解了12人的动机。你选择向警方隐瞒真相，说凶手已经逃走。正义，有时在法律之外。波洛的内心，或许永远不会平静。' };
       }
-      
+
+      // 信心值评级
+      const confidence = GameState.state.confidence;
+      let grade, gradeColor, gradeText;
+      if (confidence >= 90) { grade = 'S'; gradeColor = 'text-yellow-400'; gradeText = '完美推理！你洞察了一切真相'; }
+      else if (confidence >= 70) { grade = 'A'; gradeColor = 'text-green-400'; gradeText = '出色的推理，几乎没有遗漏'; }
+      else if (confidence >= 50) { grade = 'B'; gradeColor = 'text-blue-400'; gradeText = '不错的推理，但还有一些疑点'; }
+      else if (confidence >= 30) { grade = 'C'; gradeColor = 'text-yellow-500'; gradeText = '推理不够充分，真相仍有迷雾'; }
+      else { grade = 'D'; gradeColor = 'text-red-400'; gradeText = '推理失败，真凶逍遥法外'; }
+
       document.getElementById('ending-title').textContent = ending.name;
       document.getElementById('ending-description').textContent = ending.description;
       document.getElementById('stat-evidence').textContent = GameState.state.collectedEvidence.length;
       document.getElementById('stat-witness').textContent = GameState.state.interviewedWitnesses.length;
       document.getElementById('stat-contradiction').textContent = GameState.state.contradictionsFound.length;
       document.getElementById('stat-confidence').textContent = GameState.state.confidence;
+
+      // 显示评级
+      const gradeEl = document.getElementById('ending-grade');
+      if (gradeEl) {
+        gradeEl.innerHTML = `<div class="text-center mb-4"><div class="text-6xl font-bold ${gradeColor}">${grade}</div><div class="text-sm text-stone-400 mt-2">${gradeText}</div></div>`;
+      }
     }
 
     // 证据栏渲染

@@ -249,8 +249,9 @@ const PlayerData = (function() {
 
   function exportAsText() {
     const data = load();
+    const caseName = window.GameData?.meta?.name || window.GameData?.meta?.title || '推理案件';
     let text = '═══════════════════════════════\n';
-    text += '  侦探推理笔记 - 东方快车谋杀案\n';
+    text += `  侦探推理笔记 - ${caseName}\n`;
     text += '═══════════════════════════════\n\n';
 
     text += '【我的线索】\n';

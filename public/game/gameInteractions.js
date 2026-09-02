@@ -44,15 +44,44 @@ const GameInteractions = (function() {
     // 游戏交互函数
     window.__introContinue = function() {
       GameState.state.dialogIndex++;
-      if (GameState.state.dialogIndex >= 12) {
-        GameState.state.gamePhase = 'investigation';
-        GameState.state.currentScene = 'corridor';
+      const dialogs = GameState.getGameData().gameDialogs;
+      const introLen = dialogs?.intro?.length || 6;
+      const invStartLen = dialogs?.investigationStart?.length || 6;
+      const totalIntro = introLen + invStartLen;
+      const meta = window.GameData?.meta || {};
+
+      if (GameState.state.dialogIndex >= totalIntro) {
+        // 纯法庭案件（如逆转裁判）开场结束直接进入审判
+        if (meta.flowType === 'courtroom-only') {
+          GameState.state.gamePhase = 'trial';
+          GameState.state.trialPhase = 'opening';
+          GameState.state.currentScene = meta.trialScene || 'courtroom';
+          // 纯法庭案件证据在开庭时全部预置
+          if (Array.isArray(GameState.getGameData().gameEvidence)) {
+            GameState.state.collectedEvidence = GameState.getGameData().gameEvidence.map(e => e.id);
+            GameState.state.interviewedWitnesses = [];
+          }
+        } else {
+          GameState.state.gamePhase = 'investigation';
+          // 从案件配置取首个调查场景，兼容数组/对象两种scenes结构
+          const scenes = GameState.getGameData().gameScenes;
+          let firstScene = meta.firstScene;
+          if (!firstScene) {
+            if (Array.isArray(scenes)) {
+              firstScene = (scenes.find(s => s.id !== 'intro') || scenes[0])?.id;
+            } else if (scenes && typeof scenes === 'object') {
+              firstScene = Object.values(scenes).find(s => s.id !== 'intro')?.id || Object.keys(scenes)[0];
+            }
+          }
+          GameState.state.currentScene = firstScene || 'corridor';
+        }
         GameState.state.dialogIndex = 0;
+        GameState.save();
       }
       GameRender.render();
     };
 
-    window.__interact = function(itemId) {
+    window.__interact = function(itemId, sourceRect) {
       const scene = GameState.getGameData().gameScenes.find(s => s.id === GameState.state.currentScene);
       const item = scene?.interactables.find(i => i.id === itemId);
       if (!item) return;
@@ -77,8 +106,8 @@ const GameInteractions = (function() {
               GuideUI.checkObjectives();
               GuideUI.renderObjective();
             }
-            // 播放收集动画
-            const rect = event.target.getBoundingClientRect();
+            // 播放收集动画（使用传入的源位置，无则用屏幕中心）
+            const rect = sourceRect || { left: window.innerWidth / 2, top: window.innerHeight / 2 };
             GameUI.playCollectAnimation(rect.left, rect.top, ev.name);
             GameRender.render();
           });
@@ -92,15 +121,9 @@ const GameInteractions = (function() {
           GameUI.showToast(`询问了${GameState.getGameData().gameWitnesses.find(w => w.id === item.witnessId)?.name}`, 'info');
         }
         const witness = GameState.getGameData().gameWitnesses.find(w => w.id === item.witnessId);
-        const witnessColors = {
-          conductor: '#3b82f6',
-          'mrs-hubbard': '#ec4899',
-          mary: '#8b5cf6',
-          colonel: '#22c55e',
-          princess: '#eab308',
-          countess: '#06b6d4',
-        };
-        const color = witnessColors[witness.id] || '#94a3b8';
+        // 优先读证人自带颜色，其次读案件的witnessColors映射，最后默认灰色
+        const caseWitnessColors = window.GameData?.witnessColors || {};
+        const color = witness.color || caseWitnessColors[witness.id] || '#94a3b8';
         // 使用对话框替代alert
         GameUI.showDialog({
           speaker: witness.name,
@@ -128,18 +151,25 @@ const GameInteractions = (function() {
     };
 
     window.__exit = function(sceneId) {
-      if (sceneId === 'dining-car' && GameState.state.gamePhase === 'investigation') {
-        if (GameState.state.collectedEvidence.length >= 3 && GameState.state.interviewedWitnesses.length >= 2) {
+      const meta = window.GameData?.meta || {};
+      const trialScene = meta.trialScene || 'dining-car';
+      const trialSceneName = meta.trialSceneName || '审判室';
+      const req = meta.trialRequirement || { minEvidence: 3, minWitnesses: 2 };
+      const evCount = GameState.state.collectedEvidence.length;
+      const wtCount = GameState.state.interviewedWitnesses.length;
+
+      if (sceneId === trialScene && GameState.state.gamePhase === 'investigation') {
+        if (evCount >= req.minEvidence && wtCount >= req.minWitnesses) {
           GameUI.showModal({
             title: '进入审判阶段？',
-            message: '调查阶段将结束，未收集的证据将无法获取。确定要前往餐车进行审判吗？',
+            message: `调查阶段将结束，未收集的证据将无法获取。确定要前往${trialSceneName}进行审判吗？`,
             confirmText: '进入审判',
             cancelText: '继续调查',
             type: 'warning',
             onConfirm: () => {
               GameState.state.gamePhase = 'trial';
               GameState.state.trialPhase = 'opening';
-              GameState.state.currentScene = 'dining-car';
+              GameState.state.currentScene = trialScene;
               GameState.save();
               playSfx('ui_page');
               // 更新引导系统
@@ -154,7 +184,7 @@ const GameInteractions = (function() {
         } else {
           GameUI.showModal({
             title: '还不能进入审判',
-            message: `还需要收集至少3件证据和询问2个证人。\n当前：证据${GameState.state.collectedEvidence.length}/3，证人${GameState.state.interviewedWitnesses.length}/2`,
+            message: `还需要收集至少${req.minEvidence}件证据和询问${req.minWitnesses}个证人。\n当前：证据${evCount}/${req.minEvidence}，证人${wtCount}/${req.minWitnesses}`,
             confirmText: '我知道了',
             cancelText: '关闭',
             type: 'info',

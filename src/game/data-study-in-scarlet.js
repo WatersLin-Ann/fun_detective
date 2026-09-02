@@ -363,6 +363,11 @@ const CaseData_studyInScarlet = (function() {
     meta: {
       id: 'study-in-scarlet',
       name: '血字的研究',
+      flowType: 'investigation-trial',
+      firstScene: 'crime-scene',
+      trialScene: 'dining-car',
+      trialSceneName: '审判室',
+      trialRequirement: { minEvidence: 3, minWitnesses: 2 },
       description: '福尔摩斯首秀案件。伦敦空屋中发生离奇谋杀，墙上血字"RACHE"隐藏着复仇的真相。通过戒指、脚印、烟灰等线索，福尔摩斯推理出凶手是一名马车夫。',
       difficulty: '简单',
       author: '阿瑟·柯南·道尔',
@@ -374,6 +379,10 @@ const CaseData_studyInScarlet = (function() {
     witnesses,
     dialogs,
     contradictions,
+    trialOpening: [
+      '现在开始审理劳里斯顿花园街谋杀案。受害者伊诺克·德雷伯死于空屋内，墙上留有血字RACHE。',
+      '凶手身份成谜，福尔摩斯先生，请开始你的质询。'
+    ],
     timeline,
     timelineContradictions,
     objectives,

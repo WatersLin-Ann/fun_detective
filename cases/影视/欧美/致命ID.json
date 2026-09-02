@@ -9,7 +9,39 @@
     "年代": "2003年",
     "案件状态": "已破案",
     "一句话简介": "11个陌生人在一场暴风雨中被困在一家汽车旅馆，然后一个接一个被杀害，最后发现所有人都是同一个多重人格障碍患者的不同人格，杀人是人格整合治疗的一部分。",
-    "参考链接": []
+    "参考链接": [
+      {
+        "标题": "维基百科 - 致命ID",
+        "URL": "https://zh.wikipedia.org/wiki/致命ID",
+        "类型": "维基百科"
+      },
+      {
+        "标题": "豆瓣电影 - 搜索《致命ID》",
+        "URL": "https://search.douban.com/movie/subject_search?search_text=%E8%87%B4%E5%91%BDID",
+        "类型": "豆瓣"
+      },
+      {
+        "标题": "IMDb - 搜索 致命ID",
+        "URL": "https://www.imdb.com/find?q=%E8%87%B4%E5%91%BDID",
+        "类型": "IMDb"
+      }
+    ],
+    "推荐视频": [
+      {
+        "标题": "B站搜索 - 《致命ID》电影解说",
+        "URL": "https://search.bilibili.com/all?keyword=%E8%87%B4%E5%91%BDID%20%E8%A7%A3%E8%AF%B4",
+        "来源": "B站",
+        "视频类型": "解说",
+        "简介": "搜索《致命ID》相关的剧情解说、深度分析和影评视频"
+      },
+      {
+        "标题": "YouTube搜索 - 致命ID",
+        "URL": "https://www.youtube.com/results?search_query=%E8%87%B4%E5%91%BDID",
+        "来源": "YouTube",
+        "视频类型": "解说",
+        "简介": "Search YouTube for videos related to 致命ID"
+      }
+    ]
   },
   "故事视图": {
     "故事摘要": "11个陌生人在一场暴风雨中被困在一家汽车旅馆，然后一个接一个被杀害，最后发现所有人都是同一个多重人格障碍患者的不同人格，杀人是人格整合治疗的一部分。",

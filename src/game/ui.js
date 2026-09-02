@@ -49,11 +49,11 @@ const GameUI = (function() {
     `);
     document.body.appendChild(toast);
 
-    // 入场动画
-    requestAnimationFrame(() => {
+    // 入场动画（setTimeout替代rAF，兼容后台标签）
+    setTimeout(() => {
       toast.style.transform = 'translate(-50%, 0)';
       toast.style.opacity = '1';
-    });
+    }, 10);
 
     // 自动消失
     setTimeout(() => {
@@ -130,10 +130,10 @@ const GameUI = (function() {
 
     document.body.appendChild(dialog);
 
-    // 入场动画
-    requestAnimationFrame(() => {
+    // 入场动画（用setTimeout而非rAF，避免后台标签时永久不可见）
+    setTimeout(() => {
       document.getElementById('game-dialog-box').style.transform = 'translateY(0)';
-    });
+    }, 10);
 
     // 打字机效果
     const textEl = document.getElementById('game-dialog-text');
@@ -147,6 +147,9 @@ const GameUI = (function() {
         state.typewriterTimer = setTimeout(typeNext, 30);
       } else {
         state.isTyping = false;
+        // 移除跳过提示
+        const skipHint = document.getElementById('game-dialog-skip-hint');
+        if (skipHint) skipHint.remove();
         // 显示选项
         renderOptions(choices, onComplete);
         if (onComplete) onComplete();
@@ -154,12 +157,29 @@ const GameUI = (function() {
     }
     typeNext();
 
+    // 打字机期间显示跳过提示
+    if (text.length > 10) {
+      const skipHint = document.createElement('div');
+      skipHint.id = 'game-dialog-skip-hint';
+      skipHint.className = 'absolute bottom-2 right-4 text-stone-500 text-xs animate-pulse';
+      skipHint.textContent = '▸ 点击跳过';
+      const dialogBox = document.getElementById('game-dialog-box');
+      if (dialogBox) dialogBox.style.position = 'relative';
+      const textContainer = textEl.parentElement;
+      if (textContainer) {
+        textContainer.style.position = 'relative';
+        textContainer.appendChild(skipHint);
+      }
+    }
+
     // 点击跳过打字机
     textEl.onclick = () => {
       if (state.isTyping) {
         clearTimeout(state.typewriterTimer);
         textEl.textContent = text;
         state.isTyping = false;
+        const skipHint = document.getElementById('game-dialog-skip-hint');
+        if (skipHint) skipHint.remove();
         renderOptions(choices, onComplete);
         if (onComplete) onComplete();
       }
@@ -313,8 +333,8 @@ const GameUI = (function() {
 
     document.body.appendChild(card);
 
-    // 入场动画
-    requestAnimationFrame(() => {
+    // 入场动画（setTimeout替代rAF，兼容后台标签）
+    setTimeout(() => {
       const cardEl = document.getElementById('game-evidence-card');
       cardEl.style.transform = 'scale(1)';
       cardEl.style.opacity = '1';
@@ -417,11 +437,12 @@ const GameUI = (function() {
 
     document.body.appendChild(modal);
 
-    requestAnimationFrame(() => {
+    // 入场动画（setTimeout替代rAF，兼容后台标签）
+    setTimeout(() => {
       const box = document.getElementById('game-modal-box');
       box.style.transform = 'scale(1)';
       box.style.opacity = '1';
-    });
+    }, 10);
 
     window._modalCallbacks = { onConfirm, onCancel };
   }
@@ -468,12 +489,13 @@ const GameUI = (function() {
     const target = document.getElementById('evidence-btn');
     const targetRect = target ? target.getBoundingClientRect() : { left: window.innerWidth - 100, top: 20 };
 
-    requestAnimationFrame(() => {
+    // 飞行动画（setTimeout替代rAF，兼容后台标签）
+    setTimeout(() => {
       flyItem.style.left = targetRect.left + 'px';
       flyItem.style.top = targetRect.top + 'px';
       flyItem.style.transform = 'scale(0.3) rotate(360deg)';
       flyItem.style.opacity = '0.5';
-    });
+    }, 10);
 
     setTimeout(() => {
       flyItem.remove();

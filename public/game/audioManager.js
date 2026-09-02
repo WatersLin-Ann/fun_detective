@@ -6,6 +6,13 @@
  */
 
 const AudioManager = (function() {
+  // ========== 总开关 ==========
+  // 用户尚未提供真实音乐文件前，全局禁用一切声音（含占位合成音）。
+  // 待提供真实音频后，在 audio-config.js 中将 settings.audioEnabled 置为 true 即可。
+  const AUDIO_ENABLED = (typeof window.AudioConfig !== 'undefined')
+    ? !!window.AudioConfig.settings.audioEnabled
+    : false;
+
   // ========== 状态 ==========
   let audioContext = null;
   let masterGain = null;
@@ -21,6 +28,8 @@ const AudioManager = (function() {
 
   // ========== 初始化 ==========
   function init() {
+    // 总开关关闭时不初始化、不创建 AudioContext，保证完全无声
+    if (!AUDIO_ENABLED) return;
     if (isInitialized) return;
     try {
       audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -54,6 +63,7 @@ const AudioManager = (function() {
   // ========== 占位合成音 ==========
   // 生成简单的音调作为占位
   function playTone(frequency, duration, type = 'sine', volume = 0.3, targetGain = null) {
+    if (!AUDIO_ENABLED) return; // 总开关关闭，彻底不发声
     if (!audioContext || isMuted) return;
     ensureContext();
 
@@ -104,6 +114,7 @@ const AudioManager = (function() {
   // ========== BGM 控制 ==========
   // 播放BGM（占位：循环播放简单的氛围音）
   function playBgm(bgmId) {
+    if (!AUDIO_ENABLED) return; // 总开关关闭，不启动BGM循环
     if (!audioContext || isMuted) return;
     ensureContext();
 
@@ -156,6 +167,7 @@ const AudioManager = (function() {
   // ========== SFX 控制 ==========
   // 播放音效
   function playSfx(sfxId) {
+    if (!AUDIO_ENABLED) return; // 总开关关闭，不播放任何音效
     if (!audioContext || isMuted) return;
     ensureContext();
 

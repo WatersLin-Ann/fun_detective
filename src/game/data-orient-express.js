@@ -391,6 +391,11 @@ const CaseData_orientExpress = (function() {
     meta: {
       id: 'orient-express',
       name: '东方快车：推理审判',
+      flowType: 'investigation-trial',
+      firstScene: 'corridor',
+      trialScene: 'dining-car',
+      trialSceneName: '餐车',
+      trialRequirement: { minEvidence: 3, minWitnesses: 2 },
       description: '阿加莎·克里斯蒂经典作品改编。深夜列车上发生谋杀案，12名乘客各怀秘密，你需要通过收集证据、询问证人、关联线索来揭开真相。',
       difficulty: '中等',
       author: '阿加莎·克里斯蒂',
@@ -402,6 +407,10 @@ const CaseData_orientExpress = (function() {
     witnesses,
     dialogs,
     contradictions,
+    trialOpening: [
+      '现在开始审理东方快车谋杀案。受害者塞缪尔·雷切特死于自己的包厢内，身中12刀。',
+      '列车因大雪被困，凶手就在这节车厢的乘客之中。波洛先生，请开始你的质询。'
+    ],
     timeline,
     timelineContradictions,
     objectives,

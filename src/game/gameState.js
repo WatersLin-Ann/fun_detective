@@ -56,10 +56,16 @@ const GameState = (function() {
   const SAVE_KEY = `fun-detective-save-${currentCaseId}`;
 
   // 动态加载案件数据
+  let _isLoadingCase = false;
   function loadCaseData(caseId, callback) {
-    // 先检查是否已加载
+    // 先检查是否已加载正确的案件
     if (window.GameData && window.GameData.meta && window.GameData.meta.id === caseId) {
       callback();
+      return;
+    }
+    // 防止重复加载
+    if (_isLoadingCase) {
+      console.warn('案件数据正在加载中，忽略重复请求');
       return;
     }
     // 从案件配置中查找数据文件
@@ -70,13 +76,24 @@ const GameState = (function() {
       window.location.href = '/fun_detective/game-design/prototype/';
       return;
     }
+    // 清除旧的案件数据，防止污染
+    window.GameData = null;
+    _isLoadingCase = true;
     // 动态创建script标签加载
     const script = document.createElement('script');
-    script.src = caseConfig.dataFile;
+    script.src = caseConfig.dataFile + '?v=' + Date.now(); // 防缓存
     script.onload = () => {
-      callback();
+      _isLoadingCase = false;
+      // 验证加载的案件ID是否匹配
+      if (window.GameData && window.GameData.meta && window.GameData.meta.id === caseId) {
+        callback();
+      } else {
+        console.error('案件数据ID不匹配:', window.GameData?.meta?.id, '期望:', caseId);
+        alert('案件数据加载异常，请刷新页面');
+      }
     };
     script.onerror = () => {
+      _isLoadingCase = false;
       console.error('案件数据加载失败:', caseConfig.dataFile);
       alert('案件数据加载失败');
     };
@@ -163,7 +180,28 @@ const GameState = (function() {
 
   // 获取游戏数据
   function getGameData() {
-    return { gameScenes, gameEvidence, gameWitnesses, gameDialogs, gameContradictions };
+    const gd = window.GameData || {};
+    // 返回完整案件数据，同时保留 game* 别名兼容现有代码
+    return {
+      // 原始字段名
+      ...gd,
+      // game* 别名（兼容现有调用方）
+      gameScenes: gd.scenes || gameScenes,
+      gameEvidence: gd.evidence || gameEvidence,
+      gameWitnesses: gd.witnesses || gameWitnesses,
+      gameDialogs: gd.dialogs || gameDialogs,
+      gameContradictions: gd.contradictions || gameContradictions,
+      gameTimeline: gd.timeline,
+      gameTimelineContradictions: gd.timelineContradictions,
+      gameObjectives: gd.objectives,
+      gameEndings: gd.endings,
+      gameAchievements: gd.achievements,
+      gameNoteKeywords: gd.noteKeywords,
+      gamePresetLinks: gd.presetLinks,
+      gameWitnessColors: gd.witnessColors,
+      gameTrialOpening: gd.trialOpening,
+      gameMeta: gd.meta
+    };
   }
 
   // 获取状态

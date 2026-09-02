@@ -5,11 +5,11 @@
  * 难度：简单
  */
 
-const GameData = (function() {
+const CaseData_phoenixWright = (function() {
   // ========== 基础信息 ==========
   const meta = {
     id: 'phoenix-wright-1',
-    title: '逆转裁判：最初的逆转',
+    name: '逆转裁判：最初的逆转',
     type: '游戏',
     region: '日本',
     difficulty: '简单',
@@ -17,30 +17,44 @@ const GameData = (function() {
     detective: '成步堂龙一',
     victim: '高日美佳',
     defendant: '矢张政志',
-    realCulprit: '山野星雄'
+    realCulprit: '山野星雄',
+    flowType: 'courtroom-only',
+    firstScene: 'courtroom',
+    trialScene: 'courtroom',
+    trialSceneName: '法庭',
+    trialRequirement: { minEvidence: 0, minWitnesses: 0 }
   };
 
   // ========== 场景 ==========
-  const scenes = {
-    intro: {
+  const scenes = [
+    {
       id: 'intro',
-      name: '开场',
+      name: '法院走廊',
       description: '法院走廊。你是成步堂龙一，一名新手律师。今天是你第一次出庭辩护。',
-      background: 'court-hall'
+      background: 'linear-gradient(180deg, #4a5568 0%, #2d3748 50%, #1a202c 100%)',
+      sceneType: 'office',
+      interactables: [],
+      exits: [{ to: 'courtroom', label: '进入法庭' }]
     },
-    courtroom: {
+    {
       id: 'courtroom',
       name: '法庭',
       description: '庄严的法庭。法官坐在高位，检察官在对面，被告席上是你的童年朋友矢张政志。',
-      background: 'courtroom'
+      background: 'linear-gradient(180deg, #5c3d1e 0%, #3d2914 50%, #2a1a0a 100%)',
+      sceneType: 'dining',
+      interactables: [],
+      exits: []
     },
-    witness: {
+    {
       id: 'witness',
       name: '证人席',
       description: '证人山野星雄站在证人席上，神情紧张但故作镇定。',
-      background: 'witness-stand'
+      background: 'linear-gradient(180deg, #4a5568 0%, #2d3748 50%, #1a202c 100%)',
+      sceneType: 'office',
+      interactables: [],
+      exits: [{ to: 'courtroom', label: '返回法庭' }]
     }
-  };
+  ];
 
   // ========== 证据 ==========
   const evidence = [
@@ -48,49 +62,49 @@ const GameData = (function() {
       id: 'ev-thinker',
       name: '思考者摆件',
       description: '一个做成思考者姿势的时钟摆件。案发时放在死者公寓的桌子上。底部有血迹。',
-      scene: 'courtroom',
+      foundIn: 'courtroom',
       icon: '🕰️',
-      detail: '这个摆件其实是一个时钟，按压头部会报时。案发时停在2:00。'
+      keyInfo: '这个摆件其实是一个时钟，按压头部会报时。案发时停在2:00。'
     },
     {
       id: 'ev-badge',
       name: '律师徽章',
       description: '成步堂龙一的律师徽章，金色的天平图案。',
-      scene: 'intro',
+      foundIn: 'intro',
       icon: '⚖️',
-      detail: '新手律师的象征。今天第一次在法庭上使用。'
+      keyInfo: '新手律师的象征。今天第一次在法庭上使用。'
     },
     {
       id: 'ev-autopsy',
       name: '解剖记录',
       description: '死者高日美佳，24岁女性。死亡时间推测为7月31日下午1:00-2:00。死因：钝器击打头部。',
-      scene: 'courtroom',
+      foundIn: 'courtroom',
       icon: '📋',
-      detail: '凶器被认为是思考者摆件。死者体内检测出少量安眠药成分。'
+      keyInfo: '凶器被认为是思考者摆件。死者体内检测出少量安眠药成分。'
     },
     {
       id: 'ev-photo',
       name: '现场照片',
       description: '案发现场照片。死者倒在地上，思考者摆件在旁边，窗户开着。',
-      scene: 'courtroom',
+      foundIn: 'courtroom',
       icon: '📷',
-      detail: '注意：照片中思考者摆件的位置与证人描述不符。'
+      keyInfo: '注意：照片中思考者摆件的位置与证人描述不符。'
     },
     {
       id: 'ev-blackout',
       name: '停电记录',
       description: '案发公寓楼7月31日下午1:00-3:00因检修停电。',
-      scene: 'courtroom',
+      foundIn: 'courtroom',
       icon: '⚡',
-      detail: '停电期间，电子时钟会停止运行。这是关键证据！'
+      keyInfo: '停电期间，电子时钟会停止运行。这是关键证据！'
     },
     {
       id: 'ev-list',
       name: '失物清单',
       description: '死者公寓的失物清单。丢失物品：一个思考者时钟（与凶器同款）。',
-      scene: 'courtroom',
+      foundIn: 'courtroom',
       icon: '📝',
-      detail: '死者此前丢失了一个同样的思考者时钟。凶手可能用这个作为凶器。'
+      keyInfo: '死者此前丢失了一个同样的思考者时钟。凶手可能用这个作为凶器。'
     }
   ];
 
@@ -103,6 +117,7 @@ const GameData = (function() {
       description: '报纸推销员，自称案发时在推销报纸。神情紧张，眼神闪烁。',
       color: '#ef4444',
       initialTestimony: '那天下午1点左右，我在那栋公寓推销报纸。我看到被告从房间里冲出来，神色慌张。我绝对没有看错！',
+      followUpTestimony: '大概下午1点左右吧，我记得很清楚。我在1楼，抬头看到2楼的房间门开着，被告冲了出来。我绝对没有看错！',
       contradiction: {
         evidenceId: 'ev-blackout',
         revealedText: '山野说他在1点看到被告，但1点到3点公寓正在停电！电梯无法使用，他不可能在1楼看到2楼的情况。他在说谎！',
@@ -116,6 +131,7 @@ const GameData = (function() {
       description: '成步堂的童年朋友，被指控杀害女友。性格冲动但内心善良。',
       color: '#3b82f6',
       initialTestimony: '我那天确实去了美佳家，但我们只是吵架了！我走的时候她还活着！我没有杀她！',
+      followUpTestimony: '我发现她好像在跟别的男人交往...但我没有杀她！我走的时候她还活着！大概中午12点半吧，我很生气，摔门就走了。',
       contradiction: null
     },
     {
@@ -125,6 +141,7 @@ const GameData = (function() {
       description: '经验丰富的老法官，主持法庭审判。严肃但公正。',
       color: '#fbbf24',
       initialTestimony: '辩护律师，请开始你的询问。记住，法庭上证据至上。',
+      followUpTestimony: null,
       contradiction: null
     }
   ];
@@ -132,11 +149,18 @@ const GameData = (function() {
   // ========== 对话 ==========
   const dialogs = {
     intro: [
-      { speaker: '千寻老师', color: '#8b5cf6', text: '成步堂，今天是你第一次出庭。紧张吗？' },
-      { speaker: '成步堂', color: '#3b82f6', text: '有一点...但我相信矢张是无辜的。' },
-      { speaker: '千寻老师', color: '#8b5cf6', text: '记住三个原则：第一，相信委托人；第二，证据至上；第三，绝境中也要逆转思维。' },
-      { speaker: '成步堂', color: '#3b82f6', text: '我明白了。走吧，法庭在等着我们。' }
+      '千寻老师：成步堂，今天是你第一次出庭。紧张吗？',
+      '成步堂：有一点...但我相信矢张是无辜的。',
+      '千寻老师：记住三个原则：第一，相信委托人；第二，证据至上；第三，绝境中也要逆转思维。',
+      '成步堂：我明白了。走吧，法庭在等着我们。'
     ],
+    investigationStart: [
+      '法官：现在开庭。审理被告人矢张政志涉嫌杀害高日美佳一案。',
+      '检察官：控方主张，被告因感情纠纷，于7月31日下午闯入死者公寓，用钝器击打头部致死。',
+      '法官：辩护律师，请开始你的询问。记住，法庭上证据至上。',
+      '成步堂：（深吸一口气）我准备好了。'
+    ],
+    // 证人详细对话记录（参考数据，引擎使用witness.initialTestimony/followUpTestimony）
     'wit-yama': [
       { speaker: '山野星雄', color: '#ef4444', text: '我那天在推销报纸，看到被告从房间里跑出来。' },
       { speaker: '成步堂', color: '#3b82f6', text: '（追问）你说的"那天"具体是什么时间？' },
@@ -263,6 +287,12 @@ const GameData = (function() {
     'wit-judge': '#fbbf24'
   };
 
+  const trialOpening = [
+    '现在开始审理被告人矢张政志涉嫌杀害高日美佳一案。',
+    '控方主张，被告因感情纠纷，于7月31日下午闯入死者公寓，用钝器击打头部致死。',
+    '辩护律师成步堂龙一，请开始你的询问。记住，法庭上证据至上。'
+  ];
+
   return {
     meta,
     scenes,
@@ -270,6 +300,7 @@ const GameData = (function() {
     witnesses,
     dialogs,
     contradictions,
+    trialOpening,
     presetLinks,
     timeline,
     timelineContradictions,
@@ -281,4 +312,5 @@ const GameData = (function() {
   };
 })();
 
-window.GameData = GameData;
+window.CaseData_phoenixWright = CaseData_phoenixWright;
+window.GameData = CaseData_phoenixWright;

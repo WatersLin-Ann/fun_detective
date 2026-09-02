@@ -6,6 +6,15 @@ export interface ReferenceLink {
   类型?: string;
 }
 
+export interface RelatedVideo {
+  标题: string;
+  URL: string;
+  来源: 'B站' | 'YouTube' | '其他';
+  时长?: string;
+  简介?: string;
+  视频类型?: '解说' | '纪录片' | '预告片' | '实况' | '评测' | '其他';
+}
+
 export interface BasicInfo {
   案件名称: string;
   来源类型: string;
@@ -17,6 +26,7 @@ export interface BasicInfo {
   案件状态: string;
   一句话简介: string;
   参考链接?: ReferenceLink[];
+  推荐视频?: RelatedVideo[];
 }
 
 export interface StoryView {

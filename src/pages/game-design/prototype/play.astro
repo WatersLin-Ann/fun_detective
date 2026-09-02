@@ -13,7 +13,7 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
     <div class="bg-stone-800 p-3 flex items-center justify-between">
       <div class="flex items-center gap-3">
         <a href="/fun_detective/game-design/prototype" class="text-stone-400 hover:text-white text-sm">← 返回</a>
-        <span class="font-bold">东方快车：推理审判</span>
+        <span id="case-title" class="font-bold">推理游戏</span>
       </div>
       <div class="flex items-center gap-4 text-sm">
         <span id="phase-indicator" class="text-stone-300">开场</span>
@@ -58,11 +58,7 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
       <div id="investigation-section" class="hidden">
         <div class="mb-4">
           <h2 class="text-xl font-bold mb-2">🔍 调查阶段</h2>
-          <p class="text-sm text-stone-400">点击场景中的物品和人物进行互动。收集至少3件证据、询问至少2个证人后，可前往餐车进行审判。</p>
-          <div class="mt-2 flex gap-4 text-sm">
-            <span>已收集证据: <span id="inv-evidence-count" class="text-accent-400 font-bold">0</span>/3</span>
-            <span>已询问证人: <span id="inv-witness-count" class="text-accent-400 font-bold">0</span>/2</span>
-          </div>
+          <p class="text-sm text-stone-400">点击场景中的物品和人物进行互动。收集证据、询问证人后，可前往餐车进行审判。</p>
         </div>
         <div id="game-scene-container"></div>
       </div>

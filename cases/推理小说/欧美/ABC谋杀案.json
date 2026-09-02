@@ -9,7 +9,34 @@
     "年代": "黄金时代（1920-1950）",
     "案件状态": "已破案",
     "一句话简介": "波洛遭遇按字母顺序行凶的连环杀手，受害者身边都放着一本ABC铁路指南。",
-    "参考链接": []
+    "参考链接": [
+      {
+        "标题": "维基百科 - ABC谋杀案",
+        "URL": "https://zh.wikipedia.org/wiki/ABC谋杀案",
+        "类型": "维基百科"
+      },
+      {
+        "标题": "豆瓣读书 - 搜索《ABC谋杀案》",
+        "URL": "https://search.douban.com/book/subject_search?search_text=ABC%E8%B0%8B%E6%9D%80%E6%A1%88",
+        "类型": "豆瓣"
+      }
+    ],
+    "推荐视频": [
+      {
+        "标题": "B站搜索 - 《ABC谋杀案》作品解说",
+        "URL": "https://search.bilibili.com/all?keyword=ABC%E8%B0%8B%E6%9D%80%E6%A1%88%20%E8%A7%A3%E8%AF%B4",
+        "来源": "B站",
+        "视频类型": "解说",
+        "简介": "搜索《ABC谋杀案》相关的作品解读、剧情分析和作者介绍视频"
+      },
+      {
+        "标题": "YouTube搜索 - ABC谋杀案",
+        "URL": "https://www.youtube.com/results?search_query=ABC%E8%B0%8B%E6%9D%80%E6%A1%88",
+        "来源": "YouTube",
+        "视频类型": "解说",
+        "简介": "Search YouTube for videos related to ABC谋杀案"
+      }
+    ]
   },
   "故事视图": {
     "故事摘要": "波洛遭遇按字母顺序行凶的连环杀手，受害者身边都放着一本ABC铁路指南。",

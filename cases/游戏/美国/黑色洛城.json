@@ -16,7 +16,23 @@
         "类型": "B站"
       }
     ],
-    "大洲": "北美"
+    "大洲": "北美",
+    "推荐视频": [
+      {
+        "标题": "B站搜索 - 《黑色洛城》游戏实况",
+        "URL": "https://search.bilibili.com/all?keyword=%E9%BB%91%E8%89%B2%E6%B4%9B%E5%9F%8E%20%E5%AE%9E%E5%86%B5",
+        "来源": "B站",
+        "视频类型": "实况",
+        "简介": "搜索《黑色洛城》相关的游戏实况、攻略流程和评测视频"
+      },
+      {
+        "标题": "YouTube搜索 - 黑色洛城",
+        "URL": "https://www.youtube.com/results?search_query=%E9%BB%91%E8%89%B2%E6%B4%9B%E5%9F%8E",
+        "来源": "YouTube",
+        "视频类型": "实况",
+        "简介": "Search YouTube for videos related to 黑色洛城"
+      }
+    ]
   },
   "故事视图": {
     "故事摘要": "",

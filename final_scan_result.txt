@@ -1,0 +1,10 @@
+Total cases: 202
+With reference links: 202 (100%)
+Without reference links: 0 (0%)
+With video recommendations: 202 (100%)
+
+=== By category ===
+影视: ref=33/33 (100%), video=33/33 (100%)
+推理小说: ref=83/83 (100%), video=83/83 (100%)
+游戏: ref=39/39 (100%), video=39/39 (100%)
+真实案件: ref=47/47 (100%), video=47/47 (100%)

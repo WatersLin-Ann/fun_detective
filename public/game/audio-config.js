@@ -19,11 +19,12 @@
 const AudioConfig = {
   // ========== 全局设置 ==========
   settings: {
-    masterVolume: 0.7,
+    audioEnabled: false,    // 【总开关】用户提供真实音乐文件前，全局禁用一切声音（含占位合成音）
+    masterVolume: 0,        // 默认静音（待用户提供真实音乐文件后开启）
     bgmVolume: 0.4,
     sfxVolume: 0.8,
     bgmFadeDuration: 1.0,  // BGM切换淡入淡出时长（秒）
-    autoPlayBgm: true      // 场景切换自动播放BGM
+    autoPlayBgm: false     // 默认不自动播放BGM（待用户提供真实音乐文件后开启）
   },
 
   // ========== BGM 配置 ==========

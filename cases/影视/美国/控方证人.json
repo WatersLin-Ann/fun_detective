@@ -21,7 +21,23 @@
         "类型": "豆瓣"
       }
     ],
-    "大洲": "北美"
+    "大洲": "北美",
+    "推荐视频": [
+      {
+        "标题": "B站搜索 - 《控方证人》电影解说",
+        "URL": "https://search.bilibili.com/all?keyword=%E6%8E%A7%E6%96%B9%E8%AF%81%E4%BA%BA%20%E8%A7%A3%E8%AF%B4",
+        "来源": "B站",
+        "视频类型": "解说",
+        "简介": "搜索《控方证人》相关的剧情解说、深度分析和影评视频"
+      },
+      {
+        "标题": "YouTube搜索 - 控方证人",
+        "URL": "https://www.youtube.com/results?search_query=%E6%8E%A7%E6%96%B9%E8%AF%81%E4%BA%BA",
+        "来源": "YouTube",
+        "视频类型": "解说",
+        "简介": "Search YouTube for videos related to 控方证人"
+      }
+    ]
   },
   "故事视图": {
     "故事摘要": "1950年代伦敦，美国人Leonard Vole被指控谋杀了富有的寡妇Emily French。所有证据都指向他：他在案发当晚拜访了French夫人，他急需钱，他的妻子Christine甚至作为控方证人出庭指证他。但老律师Wilfrid Robarts相信Leonard无罪，为他辩护。庭审中，Robarts发现Christine在说谎，她的证词被推翻。最终Leonard被判无罪。但结局反转：Leonard确实是凶手，Christine知道他有罪，故意作为控方证人出庭，让自己的证词被推翻，从而让丈夫脱罪。",

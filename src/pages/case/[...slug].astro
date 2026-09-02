@@ -24,6 +24,7 @@ const hasGameDesign = Boolean(caseData.sourceType === '游戏' || (游戏设计 
 const hasAdaptationSuggestions = Boolean(设计视图.游戏化改编建议 && 设计视图.游戏化改编建议.length > 0);
 const hasGameTab = hasGameDesign || hasAdaptationSuggestions;
 const hasReferenceLinks = Boolean(基本信息.参考链接 && 基本信息.参考链接.length > 0);
+const hasRelatedVideos = Boolean(基本信息.推荐视频 && 基本信息.推荐视频.length > 0);
 const hasClueChain = Boolean(设计视图.线索链 && 设计视图.线索链.length > 0);
 
 // 线索链按出现时机排序
@@ -90,6 +91,13 @@ const linkTypeIcon: Record<string, string> = {
   'B站': '📺',
   '官方网站': '🌐',
   '其他': '🔗',
+};
+
+// 视频来源图标
+const videoSourceIcon: Record<string, string> = {
+  'B站': '📺',
+  'YouTube': '▶️',
+  '其他': '🎬',
 };
 ---
 
@@ -221,6 +229,38 @@ const linkTypeIcon: Record<string, string> = {
                 </div>
                 {link.类型 && <span class="tag tag-primary text-xs">{link.类型}</span>}
                 <span class="text-stone-400">↗</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <!-- 相关视频推荐 -->
+      {hasRelatedVideos && (
+        <div class="card p-6 mt-8">
+          <h2 class="text-xl font-bold mb-4 text-primary-800">🎬 相关视频推荐</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {基本信息.推荐视频.map((video) => (
+              <a
+                href={video.URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="block p-4 rounded-lg border border-stone-200 hover:border-primary-400 hover:bg-primary-50 transition-colors group"
+              >
+                <div class="flex items-start gap-3 mb-2">
+                  <span class="text-2xl flex-shrink-0">{videoSourceIcon[video.来源] || '🎬'}</span>
+                  <div class="flex-1 min-w-0">
+                    <div class="font-medium text-stone-800 group-hover:text-primary-700 transition-colors line-clamp-2">{video.标题}</div>
+                  </div>
+                </div>
+                {video.简介 && (
+                  <p class="text-sm text-stone-500 line-clamp-2 mb-2 ml-9">{video.简介}</p>
+                )}
+                <div class="flex items-center gap-2 ml-9">
+                  {video.来源 && <span class="tag tag-primary text-xs">{video.来源}</span>}
+                  {video.视频类型 && <span class="tag tag-accent text-xs">{video.视频类型}</span>}
+                  {video.时长 && <span class="text-xs text-stone-400">{video.时长}</span>}
+                </div>
               </a>
             ))}
           </div>
