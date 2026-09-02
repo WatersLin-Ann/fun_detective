@@ -148,7 +148,7 @@ const GuideUI = (function() {
         completed = state.notebookOpened === true;
         break;
       case 'find_contradiction':
-        completed = (state.foundContradictions || []).length >= obj.target;
+        completed = (state.contradictionsFound || []).length >= obj.target;
         break;
       case 'enter_trial':
         completed = state.gamePhase === 'trial';
@@ -194,7 +194,7 @@ const GuideUI = (function() {
         progress = `${state.interviewedWitnesses.length}/${obj.target}`;
         break;
       case 'find_contradiction':
-        progress = `${(state.foundContradictions || []).length}/${obj.target}`;
+        progress = `${(state.contradictionsFound || []).length}/${obj.target}`;
         break;
       case 'present_evidence':
         progress = `${state.evidencePresented || 0}/${obj.target}`;

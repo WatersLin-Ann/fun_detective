@@ -25,6 +25,17 @@ const GameCases = [
     dataFile: '/fun_detective/game/data-study-in-scarlet.js',
     status: 'available',
     cover: '🔍'
+  },
+  {
+    id: 'phoenix-wright-1',
+    name: '逆转裁判：最初的逆转',
+    description: '成步堂龙一首次出庭。童年朋友矢张政志被指控杀害女友，你需要在法庭上戳穿证人的谎言，找出真凶，实现逆转！',
+    difficulty: '简单',
+    estimatedTime: '15-20分钟',
+    tags: ['游戏', '法庭推理', '逆转'],
+    dataFile: '/fun_detective/game/data-phoenix-wright.js',
+    status: 'available',
+    cover: '⚖️'
   }
   // 后续案件在此添加
 ];

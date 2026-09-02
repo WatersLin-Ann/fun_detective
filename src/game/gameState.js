@@ -48,7 +48,8 @@ const GameState = (function() {
     gameStartTime: Date.now(),  // 游戏开始时间
     achievementsUnlocked: [],   // 已解锁成就ID
     endingReached: null,        // 达成的结局ID
-    evidencePresented: 0        // 审判中出示证据次数
+    evidencePresented: 0,       // 审判中出示证据次数
+    notebookOpened: false       // 笔记是否已打开（用于目标系统）
   };
 
   // 存档key（包含案件ID，实现存档隔离）
