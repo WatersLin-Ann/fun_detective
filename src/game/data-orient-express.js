@@ -245,6 +245,19 @@ const CaseData_orientExpress = (function() {
     { id: 'tc-oe-002', event1: 'tl-oe-007', event2: 'tl-oe-006', description: '上校说01:30和玛丽在走廊交谈，但玛丽说她01:20就已经睡着了，两人证词时间冲突。', confidence: 15 }
   ];
 
+
+  // ========== 笔记关键词配置 ==========
+  const noteKeywords = [
+    { id: 'kw-oe-001', keyword: '12人', aliases: ['十二人', '12乘客', '十二乘客'], category: '推理', unlockType: 'dialog', description: '12人与陪审团的联系', unlockContent: { speaker: '波洛', text: '你注意到了吗？车厢里正好有12名乘客，而陪审团也正好是12人...这不是巧合，他们在执行自己的"审判"。', confidence: 10 } },
+    { id: 'kw-oe-002', keyword: '复仇', aliases: ['报仇', '报复'], category: '推理', unlockType: 'dialog', description: '复仇动机', unlockContent: { speaker: '波洛', text: '这不是简单的谋杀，而是一场精心策划的复仇。所有人都与阿姆斯特朗家有着某种联系。', confidence: 10 } },
+    { id: 'kw-oe-003', keyword: '阿姆斯特朗', aliases: ['Armstrong', '阿姆斯特朗家'], category: '线索', unlockType: 'dialog', description: '阿姆斯特朗绑架案', unlockContent: { speaker: '波洛', text: '阿姆斯特朗家的悲剧是这一切的根源。小黛西的死让多少人心碎，又让多少人走上了复仇之路。', confidence: 15 } },
+    { id: 'kw-oe-004', keyword: '陪审团', aliases: ['12人陪审团', '十二人陪审团'], category: '推理', unlockType: 'confidence', description: '陪审团式的处决', unlockContent: { speaker: '波洛', text: '12个人，每人一刀，这就是他们的"陪审团裁决"。', confidence: 10 } },
+    { id: 'kw-oe-005', keyword: '怀表', aliases: ['手表', '钟表'], category: '线索', unlockType: 'dialog', description: '停止的怀表', unlockContent: { speaker: '波洛', text: '怀表停在1:15，这是凶手故意设置的时间，用来混淆真正的死亡时间。', confidence: 5 } },
+    { id: 'kw-oe-006', keyword: '手帕', aliases: ['手绢'], category: '线索', unlockType: 'dialog', description: '绣着H的手帕', unlockContent: { speaker: '波洛', text: '手帕上的H在俄文中是N，这指向了公主娜塔莉亚。但她真的是凶手吗？', confidence: 5 } },
+    { id: 'kw-oe-007', keyword: '列车员', aliases: ['皮埃尔', '乘务员'], category: '推理', unlockType: 'dialog', description: '列车员的身份', unlockContent: { speaker: '波洛', text: '列车员皮埃尔是阿姆斯特朗家的管家，他也是复仇计划的一员。', confidence: 10 } },
+    { id: 'kw-oe-008', keyword: '雪', aliases: ['大雪', '雪地'], category: '线索', unlockType: 'confidence', description: '大雪封路', unlockContent: { speaker: '波洛', text: '大雪让列车被困，也让凶手无法逃走。但雪地上没有脚印，说明凶手还在列车上。', confidence: 5 } }
+  ];
+
   // 证人颜色映射
   const witnessColors = {
     conductor: "#3b82f6",
@@ -317,6 +330,7 @@ const CaseData_orientExpress = (function() {
     contradictions,
     timeline,
     timelineContradictions,
+    noteKeywords,
     presetLinks,
     witnessColors,
     getWitnessColor: (id) => witnessColors[id] || "#94a3b8"

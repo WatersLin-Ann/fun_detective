@@ -97,6 +97,15 @@ const NotebookUI = (function() {
   function renderNotebook(container) {
     const notebook = PlayerData.getNotebook();
 
+    // 计算关键词状态
+    const caseData = window.GameData || {};
+    const allKeywords = caseData.noteKeywords || [];
+    const state = window.GameState ? GameState.state : (window._gameState || {});
+    const discoveredKwIds = state.discoveredKeywords || [];
+    const discoveredKeywords = allKeywords.filter(kw => discoveredKwIds.includes(kw.id));
+    const discoveredKwCount = discoveredKeywords.length;
+    const totalKwCount = allKeywords.length;
+
     container.innerHTML = `
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <!-- 线索栏 -->
@@ -145,8 +154,24 @@ const NotebookUI = (function() {
         </div>
       </div>
 
-      <div class="mt-4 p-3 bg-stone-800/50 rounded-lg text-xs text-stone-400 border border-stone-700">
-        💡 提示：在笔记中写下特定关键词（如"12人"、"复仇"、"阿姆斯特朗"）可能会解锁隐藏的对话选项！
+      <!-- 已解锁关键词 -->
+      <div class="mt-4 p-3 bg-stone-800/50 rounded-lg border border-stone-700">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-bold text-amber-400">🔑 已解锁关键词</span>
+          <span class="text-xs text-stone-400">${discoveredKwCount}/${totalKwCount}</span>
+        </div>
+        ${discoveredKwCount > 0 ? `
+          <div class="flex flex-wrap gap-2">
+            ${discoveredKeywords.map(kw => `
+              <div class="px-2 py-1 bg-amber-900/30 border border-amber-700 rounded text-xs">
+                <span class="text-amber-300 font-bold">${kw.keyword}</span>
+                <span class="text-stone-400 ml-1">${kw.description}</span>
+              </div>
+            `).join('')}
+          </div>
+        ` : `
+          <p class="text-xs text-stone-500">在笔记中写下推理关键词，可能解锁隐藏内容...</p>
+        `}
       </div>
     `;
   }
@@ -169,8 +194,11 @@ const NotebookUI = (function() {
   function addItem(type) {
     const input = document.getElementById(`new-${type}-input`);
     if (input && input.value.trim()) {
-      PlayerData.addNotebookItem(type, input.value.trim());
+      const text = input.value.trim();
+      PlayerData.addNotebookItem(type, text);
       input.value = '';
+      // 检测笔记关键词
+      checkKeywords(text);
       renderContent();
     } else if (input) {
       // 空值时高亮输入框提示
@@ -180,6 +208,49 @@ const NotebookUI = (function() {
         input.classList.remove('border-red-500', 'ring-2', 'ring-red-500/30');
       }, 1500);
     }
+  }
+
+  // 检测笔记关键词
+  function checkKeywords(text) {
+    const caseData = window.GameData || {};
+    const keywords = caseData.noteKeywords || [];
+    const state = window.GameState ? GameState.state : (window._gameState || {});
+    const discovered = state.discoveredKeywords || [];
+
+    keywords.forEach(kw => {
+      if (discovered.includes(kw.id)) return;
+      // 检测关键词和别名
+      const allKeywords = [kw.keyword, ...(kw.aliases || [])];
+      const found = allKeywords.some(k => text.toLowerCase().includes(k.toLowerCase()));
+      if (found) {
+        // 解锁关键词
+        if (window.GameState) {
+          GameState.state.discoveredKeywords.push(kw.id);
+          GameState.save();
+        }
+        // 触发解锁反馈
+        if (kw.unlockType === 'dialog' && kw.unlockContent) {
+          if (window.GameUI) {
+            GameUI.showDialog({
+              speaker: kw.unlockContent.speaker || '系统',
+              color: '#fbbf24',
+              text: `💡 发现关键词「${kw.keyword}」！\n\n${kw.unlockContent.text}`
+            });
+          }
+          if (kw.unlockContent.confidence) {
+            state.confidence = Math.min(100, state.confidence + kw.unlockContent.confidence);
+            if (window.GameState) GameState.save();
+          }
+        } else if (kw.unlockType === 'confidence' && kw.unlockContent) {
+          state.confidence = Math.min(100, state.confidence + (kw.unlockContent.confidence || 5));
+          if (window.GameState) GameState.save();
+          if (window.GameUI) {
+            GameUI.showToast(`发现关键词「${kw.keyword}」！信心值 +${kw.unlockContent.confidence || 5}`, 'success', 2500);
+          }
+        }
+        if (window.AudioManager) AudioManager.playSfx('collect_reveal');
+      }
+    });
   }
 
   function toggleItem(type, itemId) {

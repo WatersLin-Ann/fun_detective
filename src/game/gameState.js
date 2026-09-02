@@ -36,7 +36,9 @@ const GameState = (function() {
     objectionActive: false,  // 异议动画是否激活
     // 时间线系统
     discoveredTimeline: [],  // 已发现的时间线事件ID
-    timelineContradictionsFound: []  // 已发现的时间线矛盾ID
+    timelineContradictionsFound: [],  // 已发现的时间线矛盾ID
+    // 笔记关键词系统
+    discoveredKeywords: []  // 已发现的关键词ID
   };
 
   // 存档key（包含案件ID，实现存档隔离）

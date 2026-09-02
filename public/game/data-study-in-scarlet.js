@@ -266,6 +266,17 @@ const CaseData_studyInScarlet = (function() {
     { id: 'tc-sis-002', event1: 'tl-sis-006', event2: 'tl-sis-005', description: '警察08:00才发现尸体，但尸检显示死亡时间约在23:00-00:00，中间8个小时无人发现，说明现场偏僻。', confidence: 10 }
   ];
 
+
+  // ========== 笔记关键词配置 ==========
+  const noteKeywords = [
+    { id: 'kw-sis-001', keyword: 'RACHE', aliases: ['rache', '复仇'], category: '推理', unlockType: 'dialog', description: '血字的含义', unlockContent: { speaker: '福尔摩斯', text: '"RACHE"在德语中是"复仇"的意思，不是什么人名Rachel。凶手在现场留下了复仇的宣言。', confidence: 15 } },
+    { id: 'kw-sis-002', keyword: '马车夫', aliases: ['车夫', '马车'], category: '推理', unlockType: 'dialog', description: '马车夫的身份', unlockContent: { speaker: '福尔摩斯', text: '凶手是一名马车夫，他利用职业之便接近受害者。私人马车的痕迹和路人的证词都指向这一点。', confidence: 10 } },
+    { id: 'kw-sis-003', keyword: '戒指', aliases: ['金戒指', '女式戒指'], category: '线索', unlockType: 'dialog', description: '戒指的诱饵', unlockContent: { speaker: '福尔摩斯', text: '女式戒指是凶手故意留下的诱饵，用来引诱与受害者相关的人出现。这是一个精心设计的圈套。', confidence: 10 } },
+    { id: 'kw-sis-004', keyword: '毒杀', aliases: ['毒药', '氰化物'], category: '推理', unlockType: 'dialog', description: '毒杀的手法', unlockContent: { speaker: '福尔摩斯', text: '死者嘴唇有杏仁味，这是氰化物中毒的特征。凶手用毒药丸杀人，自己也服了一颗，但他选了无毒的那颗。', confidence: 10 } },
+    { id: 'kw-sis-005', keyword: '雪茄', aliases: ['烟灰', '印度雪茄'], category: '线索', unlockType: 'confidence', description: '雪茄烟灰', unlockContent: { speaker: '福尔摩斯', text: '现场的印度雪茄烟灰属于凶手，这说明凶手有一定经济实力，且抽特定品牌的雪茄。', confidence: 5 } },
+    { id: 'kw-sis-006', keyword: '复仇', aliases: ['报仇', '报复'], category: '推理', unlockType: 'dialog', description: '复仇的动机', unlockContent: { speaker: '福尔摩斯', text: '这是一场跨越多年的复仇。凶手追踪受害者从美国到伦敦，只为了给死去的爱人报仇。', confidence: 10 } }
+  ];
+
   // ========== 证人颜色映射 ==========
   const witnessColors = {
     lestrade: "#3b82f6",
@@ -291,6 +302,7 @@ const CaseData_studyInScarlet = (function() {
     contradictions,
     timeline,
     timelineContradictions,
+    noteKeywords,
     presetLinks,
     witnessColors,
     getWitnessColor: (id) => witnessColors[id] || "#94a3b8"
