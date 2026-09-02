@@ -5,9 +5,11 @@
   "scripts": {
     "dev": "astro dev --host 0.0.0.0",
     "start": "astro dev --host 0.0.0.0",
-    "build": "astro build",
+    "build": "node scripts/validate-case-data.cjs && astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "validate:cases": "node scripts/validate-case-data.cjs",
+    "sync:game": "node scripts/sync-game-js.js"
   },
   "dependencies": {
     "astro": "^7.2.10",
