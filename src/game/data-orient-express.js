@@ -1,9 +1,10 @@
 /**
- * 东方快车谋杀案 - 游戏数据
- * 包含：场景、证据、证人、对话、矛盾点
+ * 案件数据：东方快车谋杀案
+ * 通用案件数据格式，支持多案件架构
+ * 包含：元信息、场景、证据、证人、对话、矛盾点、预设关联
  */
 
-const GameData = (function() {
+const CaseData_orientExpress = (function() {
   // 场景数据
   const scenes = [
     {
@@ -235,15 +236,72 @@ const GameData = (function() {
     countess: "#06b6d4"
   };
 
+  // 预设证据关联（推理游戏核心）
+  const presetLinks = [
+    {
+      id: 'link-watch-conductor',
+      from: 'watch', to: 'conductor',
+      fromType: 'evidence', toType: 'witness',
+      title: '时间矛盾',
+      conclusion: '怀表停在1:15，而列车员说1:15听到动静却以为是赫伯德夫人。时间完全吻合，这不是巧合。',
+      confidence: 20
+    },
+    {
+      id: 'link-handkerchief-hubbard',
+      from: 'handkerchief', to: 'mrs-hubbard',
+      fromType: 'evidence', toType: 'witness',
+      title: '手帕的H字母',
+      conclusion: '现场手帕绣着字母"H"，而赫伯德夫人(Hubbard)的姓氏首字母正是H。这块手帕可能属于她。',
+      confidence: 15
+    },
+    {
+      id: 'link-ash-mary',
+      from: 'ash', to: 'mary',
+      fromType: 'evidence', toType: 'witness',
+      title: '香烟灰的秘密',
+      conclusion: '现场有两种烟灰，受害者只抽雪茄。玛丽抽香烟，而她说自己睡得很沉——那香烟灰是怎么来的？',
+      confidence: 20
+    },
+    {
+      id: 'link-handkerchief-princess',
+      from: 'handkerchief', to: 'princess',
+      fromType: 'evidence', toType: 'witness',
+      title: '俄文的H',
+      conclusion: '手帕上的"H"在俄文中对应"N"，而公主的教名娜塔莉亚(Natalia)首字母正是N。这块手帕的真正主人可能是公主。',
+      confidence: 25
+    },
+    {
+      id: 'link-window-body',
+      from: 'window', to: 'body',
+      fromType: 'evidence', toType: 'evidence',
+      title: '伪造的逃走路线',
+      conclusion: '窗户大开但雪地上没有脚印，说明凶手没有从窗户逃走。窗户是故意打开的，用来伪造外人作案的假象。',
+      confidence: 15
+    }
+  ];
+
   return {
+    // 案件元信息
+    meta: {
+      id: 'orient-express',
+      name: '东方快车：推理审判',
+      description: '阿加莎·克里斯蒂经典作品改编。深夜列车上发生谋杀案，12名乘客各怀秘密，你需要通过收集证据、询问证人、关联线索来揭开真相。',
+      difficulty: '中等',
+      author: '阿加莎·克里斯蒂',
+      estimatedTime: '20-30分钟',
+      tags: ['推理小说', '封闭空间', '多人作案']
+    },
     scenes,
     evidence,
     witnesses,
     dialogs,
     contradictions,
+    presetLinks,
     witnessColors,
     getWitnessColor: (id) => witnessColors[id] || "#94a3b8"
   };
 })();
 
-window.GameData = GameData;
+window.CaseData_orientExpress = CaseData_orientExpress;
+// 兼容旧代码
+window.GameData = CaseData_orientExpress;

@@ -5,13 +5,24 @@
  */
 
 const PlayerData = (function() {
-  const STORAGE_KEY = 'fun-detective-player-data';
-  const CURRENT_CASE = 'orient-express'; // 当前案件ID
+  let currentCaseId = 'orient-express'; // 当前案件ID，可动态设置
+  let STORAGE_KEY = 'fun-detective-player-data-orient-express';
+
+  // 设置当前案件ID（存档隔离）
+  function setCaseId(caseId) {
+    currentCaseId = caseId || 'orient-express';
+    STORAGE_KEY = `fun-detective-player-data-${currentCaseId}`;
+  }
+
+  // 获取当前案件ID
+  function getCaseId() {
+    return currentCaseId;
+  }
 
   // 默认数据结构
   function getDefaultData() {
     return {
-      caseId: CURRENT_CASE,
+      caseId: currentCaseId,
       lastSaved: Date.now(),
       evidenceNotes: {},      // 证据标记 { evidenceId: { note, tags, rating } }
       characterNotes: {},     // 人物档案 { characterId: { suspicion, note, relations } }
@@ -229,7 +240,7 @@ const PlayerData = (function() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `侦探笔记_${CURRENT_CASE}_${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `侦探笔记_${currentCaseId}_${new Date().toISOString().slice(0, 10)}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -269,7 +280,7 @@ const PlayerData = (function() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `侦探笔记_${CURRENT_CASE}_${new Date().toISOString().slice(0, 10)}.txt`;
+    a.download = `侦探笔记_${currentCaseId}_${new Date().toISOString().slice(0, 10)}.txt`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -309,6 +320,9 @@ const PlayerData = (function() {
 
   // ========== 公共API ==========
   return {
+    // 案件管理
+    setCaseId,
+    getCaseId,
     // 持久化
     load,
     save,

@@ -1,123 +1,71 @@
 ---
-import BaseLayout from '@layouts/BaseLayout.astro';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
 ---
 
-<BaseLayout title="可玩原型 - 东方快车推理审判" description="基于推理审判模板的可交互推理游戏原型">
-  <div class="container-page py-12">
-    <!-- 面包屑 -->
-    <nav class="text-sm text-stone-500 mb-6">
-      <a href="/fun_detective/game-design" class="hover:text-primary-600">游戏设计</a>
-      <span class="mx-2">/</span>
-      <span class="text-stone-700">可玩原型</span>
-    </nav>
-
-    <!-- Hero区域 -->
-    <div class="bg-gradient-to-br from-primary-900 to-primary-950 text-white rounded-2xl p-8 md:p-12 mb-8">
-      <div class="max-w-3xl">
-        <span class="tag tag-accent mb-4 inline-block">可玩原型</span>
-        <h1 class="text-4xl md:text-5xl font-bold mb-4">东方快车：推理审判</h1>
-        <p class="text-xl text-primary-100 mb-6">
-          基于「推理审判模板」制作的可交互推理游戏原型。扮演侦探波洛，在东方快车上调查谋杀案，收集证据，揭露证词矛盾，最终揭开真相。
-        </p>
-        <div class="flex flex-wrap gap-4">
-          <a
-            href="/fun_detective/game-design/prototype/play"
-            class="px-8 py-3 bg-accent-500 text-white font-bold rounded-lg hover:bg-accent-600 transition-colors inline-block"
-          >
-            🎮 开始游戏
-          </a>
-          <button
-            id="continue-btn"
-            class="px-8 py-3 bg-white/20 text-white font-bold rounded-lg hover:bg-white/30 transition-colors hidden"
-          >
-            📂 继续游戏
-          </button>
-        </div>
-      </div>
+<BaseLayout title="案件选择 - Fun Detective" description="选择一个案件开始你的推理之旅">
+  <div class="container-page py-8">
+    <!-- 页面标题 -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-white mb-2">🔍 案件选择</h1>
+      <p class="text-stone-400">选择一个案件，开始你的推理之旅</p>
     </div>
 
-    <!-- 游戏信息 -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-      <div class="card p-6">
-        <div class="text-3xl mb-3">📖</div>
-        <h3 class="font-bold text-lg mb-2">改编自经典案例</h3>
-        <p class="text-sm text-stone-600">
-          基于阿加莎·克里斯蒂的《东方快车谋杀案》改编，12名乘客，12刀，每个人都有秘密。
-        </p>
-      </div>
-      <div class="card p-6">
-        <div class="text-3xl mb-3">🎯</div>
-        <h3 class="font-bold text-lg mb-2">核心玩法</h3>
-        <p class="text-sm text-stone-600">
-          调查取证 → 询问证人 → 出示证据指出矛盾 → 揭露真相。体验完整的推理审判流程。
-        </p>
-      </div>
-      <div class="card p-6">
-        <div class="text-3xl mb-3">⚖️</div>
-        <h3 class="font-bold text-lg mb-2">多结局设计</h3>
-        <p class="text-sm text-stone-600">
-          两个结局：揭露真相或法外容情。你的选择决定最终结局，信心值影响评价。
-        </p>
-      </div>
+    <!-- 案件列表 -->
+    <div id="cases-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- 案件卡片由JS动态渲染 -->
     </div>
 
-    <!-- 玩法说明 -->
-    <div class="card p-8 mb-8">
-      <h2 class="text-2xl font-bold mb-6 text-primary-800">📋 玩法说明</h2>
-      <div class="space-y-4">
-        <div class="flex gap-4">
-          <div class="w-10 h-10 bg-primary-100 text-primary-700 rounded-full flex items-center justify-center font-bold flex-shrink-0">1</div>
-          <div>
-            <h4 class="font-bold mb-1">调查阶段</h4>
-            <p class="text-sm text-stone-600">在列车的不同场景中探索，点击发光的物品收集证据，点击人物进行对话。收集至少3件证据和3个证人证词后可进入审判。</p>
-          </div>
-        </div>
-        <div class="flex gap-4">
-          <div class="w-10 h-10 bg-primary-100 text-primary-700 rounded-full flex items-center justify-center font-bold flex-shrink-0">2</div>
-          <div>
-            <h4 class="font-bold mb-1">审判阶段</h4>
-            <p class="text-sm text-stone-600">在餐车询问证人，点击"追问"获取更多信息。当发现证词与证据矛盾时，点击"出示证据"并选择对应的证据。</p>
-          </div>
-        </div>
-        <div class="flex gap-4">
-          <div class="w-10 h-10 bg-primary-100 text-primary-700 rounded-full flex items-center justify-center font-bold flex-shrink-0">3</div>
-          <div>
-            <h4 class="font-bold mb-1">真相阶段</h4>
-            <p class="text-sm text-stone-600">揭露所有矛盾点后，进入最终选择。根据你的信心值和选择，进入不同的结局。</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 设计思路 -->
-    <div class="card p-8">
-      <h2 class="text-2xl font-bold mb-6 text-primary-800">🛠️ 设计思路</h2>
-      <p class="text-stone-600 mb-4">
-        本原型是「推理审判模板」的实际验证。模板定义的4个阶段（案件发生→证据收集→法庭辩论→真相揭露）在游戏中完整实现：
-      </p>
-      <ul class="space-y-2 text-sm text-stone-600">
-        <li>• <strong>案件发生</strong>：开场文字叙述建立背景，玩家了解案件概况</li>
-        <li>• <strong>证据收集</strong>：场景探索机制，玩家自由收集证据和证词</li>
-        <li>• <strong>法庭辩论</strong>：审判面板，证人证词与证据的矛盾指证</li>
-        <li>• <strong>真相揭露</strong>：多结局选择，玩家决定最终走向</li>
-      </ul>
-      <p class="text-stone-600 mt-4">
-        游戏进度自动保存在本地，可随时继续。这是一个MVP原型，验证了模板的可行性和可玩性。
-      </p>
+    <!-- 即将推出提示 -->
+    <div class="mt-12 p-6 bg-stone-800/50 rounded-xl border border-stone-700">
+      <h3 class="text-lg font-bold text-stone-300 mb-2">📚 更多案件即将推出</h3>
+      <p class="text-stone-400 text-sm">我们正在持续扩充案件库，包括更多推理小说经典、真实案件改编和原创案件。如果你有想玩的案件，欢迎反馈！</p>
     </div>
   </div>
 
-  <script>
-    // 检查是否有存档
-    const saved = localStorage.getItem('fun-detective-prototype-save');
-    if (saved) {
-      const continueBtn = document.getElementById('continue-btn');
-      if (continueBtn) {
-        continueBtn.classList.remove('hidden');
-        continueBtn.addEventListener('click', () => {
-          window.location.href = '/fun_detective/game-design/prototype/play?continue=1';
-        });
-      }
+  <!-- 引入案件配置 -->
+  <script is:inline src="/fun_detective/game/cases/index.js"></script>
+
+  <script is:inline>
+    // 渲染案件列表
+    function renderCases() {
+      const container = document.getElementById('cases-container');
+      if (!container || !window.GameCases) return;
+
+      container.innerHTML = window.GameCases.map(c => `
+        <div class="case-card bg-stone-800 rounded-xl overflow-hidden border border-stone-700 hover:border-amber-500/50 transition-all cursor-pointer group"
+             onclick="startCase('${c.id}')">
+          <!-- 封面区域 -->
+          <div class="h-32 bg-gradient-to-br from-stone-700 to-stone-900 flex items-center justify-center text-5xl group-hover:scale-105 transition-transform">
+            ${c.cover || '📁'}
+          </div>
+          <!-- 信息区域 -->
+          <div class="p-5">
+            <div class="flex items-start justify-between mb-2">
+              <h3 class="text-lg font-bold text-white group-hover:text-amber-400 transition-colors">${c.name}</h3>
+              <span class="text-xs px-2 py-1 rounded-full ${
+                c.difficulty === '简单' ? 'bg-green-900/50 text-green-400' :
+                c.difficulty === '中等' ? 'bg-amber-900/50 text-amber-400' :
+                'bg-red-900/50 text-red-400'
+              }">${c.difficulty}</span>
+            </div>
+            <p class="text-stone-400 text-sm mb-3 line-clamp-3">${c.description}</p>
+            <div class="flex items-center justify-between text-xs text-stone-500">
+              <span>⏱ ${c.estimatedTime || '未知'}</span>
+              <div class="flex gap-1">
+                ${(c.tags || []).slice(0, 2).map(t => `<span class="px-2 py-0.5 bg-stone-700 rounded">${t}</span>`).join('')}
+              </div>
+            </div>
+          </div>
+        </div>
+      `).join('');
     }
+
+    // 开始案件
+    function startCase(caseId) {
+      window.location.href = `/fun_detective/game-design/prototype/play?case=${caseId}`;
+    }
+
+    // 初始化
+    renderCases();
   </script>
 </BaseLayout>

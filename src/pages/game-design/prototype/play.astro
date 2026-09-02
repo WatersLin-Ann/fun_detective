@@ -91,8 +91,8 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
     <div id="dialog-container"></div>
   </div>
 
-  <!-- 引入游戏数据（必须在内联脚本之前加载） -->
-  <script is:inline src="/fun_detective/game/data-orient-express.js"></script>
+  <!-- 引入案件配置（必须在动态加载之前） -->
+  <script is:inline src="/fun_detective/game/cases/index.js"></script>
   <!-- 引入游戏UI工具模块 -->
   <script is:inline src="/fun_detective/game/ui.js"></script>
   <!-- 引入玩家数据与笔记系统 -->
@@ -102,17 +102,43 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
   <script is:inline src="/fun_detective/game/evidence-board.js"></script>
 
   <script is:inline>
-    // 游戏数据（从外部模块加载）
-    const gameScenes = GameData.scenes;
-    const gameEvidence = GameData.evidence;
-    const gameWitnesses = GameData.witnesses;
-    const gameDialogs = GameData.dialogs;
-    const gameContradictions = GameData.contradictions;
+    // 获取案件ID
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentCaseId = urlParams.get('case') || 'orient-express';
 
-        // 暴露游戏数据到全局，供笔记系统和证据板使用
-    window._gameEvidence = gameEvidence;
-    window._gameWitnesses = gameWitnesses;
-    window._gameData = GameData;
+    // 动态加载案件数据
+    function loadCaseData(caseId, callback) {
+      // 先检查是否已加载
+      if (window.GameData && window.GameData.meta && window.GameData.meta.id === caseId) {
+        callback();
+        return;
+      }
+      // 从案件配置中查找数据文件
+      const caseConfig = (window.GameCases || []).find(c => c.id === caseId);
+      if (!caseConfig) {
+        console.error('未找到案件配置:', caseId);
+        alert('案件不存在');
+        window.location.href = '/fun_detective/game-design/prototype/';
+        return;
+      }
+      // 动态创建script标签加载
+      const script = document.createElement('script');
+      script.src = caseConfig.dataFile;
+      script.onload = () => {
+        // 数据文件设置了window.GameData，也设置了window.CaseData_xxx
+        callback();
+      };
+      script.onerror = () => {
+        console.error('案件数据加载失败:', caseConfig.dataFile);
+        alert('案件数据加载失败');
+      };
+      document.head.appendChild(script);
+    }
+
+    // 游戏数据（动态加载后赋值）
+    let gameScenes, gameEvidence, gameWitnesses, gameDialogs, gameContradictions;
+
+        // 游戏数据在init中动态赋值并暴露
 
     // 游戏状态
     let state = {
@@ -137,24 +163,48 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
     // 暴露游戏状态到全局（必须在state定义之后，避免TDZ错误）
     window._gameState = state;
 
+    // 存档key（包含案件ID，实现存档隔离）
+    const SAVE_KEY = `fun-detective-save-${currentCaseId}`;
+
     // 初始化
     function init() {
+      // 从已加载的案件数据中获取
+      const caseData = window.GameData;
+      if (!caseData) {
+        console.error('案件数据未加载');
+        return;
+      }
+      gameScenes = caseData.scenes;
+      gameEvidence = caseData.evidence;
+      gameWitnesses = caseData.witnesses;
+      gameDialogs = caseData.dialogs;
+      gameContradictions = caseData.contradictions;
+
+      // 暴露游戏数据到全局
+      window._gameEvidence = gameEvidence;
+      window._gameWitnesses = gameWitnesses;
+      window._gameData = caseData;
+
+      // 设置玩家数据的案件ID（存档隔离）
+      if (window.PlayerData && PlayerData.setCaseId) {
+        PlayerData.setCaseId(currentCaseId);
+      }
+
       // 检查是否继续游戏
-      const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get('continue') === '1') {
-        const saved = localStorage.getItem('fun-detective-prototype-save');
+        const saved = localStorage.getItem(SAVE_KEY);
         if (saved) {
           state = JSON.parse(saved);
         }
       } else {
-        localStorage.removeItem('fun-detective-prototype-save');
+        localStorage.removeItem(SAVE_KEY);
       }
       render();
     }
 
     // 保存
     function save() {
-      localStorage.setItem('fun-detective-prototype-save', JSON.stringify(state));
+      localStorage.setItem(SAVE_KEY, JSON.stringify(state));
     }
 
     // 渲染
@@ -751,6 +801,9 @@ import { gameScenes, gameEvidence, gameWitnesses, gameDialogs } from '@data/prot
     });
 
     // 启动
-    init();
+    // 加载案件数据后初始化
+    loadCaseData(currentCaseId, () => {
+      init();
+    });
   </script>
 </BaseLayout>

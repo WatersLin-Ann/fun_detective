@@ -4,64 +4,11 @@
  */
 
 const EvidenceBoard = (function() {
-  // 预设的成功关联（证据ID + 证人ID → 推理结论）
-  const presetLinks = [
-    {
-      id: 'link-watch-conductor',
-      from: 'watch',
-      to: 'conductor',
-      fromType: 'evidence',
-      toType: 'witness',
-      title: '时间矛盾',
-      conclusion: '怀表停在1:15，而列车员说1:15听到动静却以为是赫伯德夫人。时间完全吻合，这不是巧合。',
-      confidence: 20,
-      noteCategory: '推理'
-    },
-    {
-      id: 'link-handkerchief-hubbard',
-      from: 'handkerchief',
-      to: 'mrs-hubbard',
-      fromType: 'evidence',
-      toType: 'witness',
-      title: '手帕的H字母',
-      conclusion: '现场手帕绣着字母"H"，而赫伯德夫人(Hubbard)的姓氏首字母正是H。这块手帕可能属于她。',
-      confidence: 15,
-      noteCategory: '推理'
-    },
-    {
-      id: 'link-ash-mary',
-      from: 'ash',
-      to: 'mary',
-      fromType: 'evidence',
-      toType: 'witness',
-      title: '香烟灰的秘密',
-      conclusion: '现场有两种烟灰，受害者只抽雪茄。玛丽抽香烟，而她说自己睡得很沉——那香烟灰是怎么来的？',
-      confidence: 20,
-      noteCategory: '推理'
-    },
-    {
-      id: 'link-handkerchief-pincess',
-      from: 'handkerchief',
-      to: 'princess',
-      fromType: 'evidence',
-      toType: 'witness',
-      title: '俄文的H',
-      conclusion: '手帕上的"H"在俄文中对应"N"，而公主的教名娜塔莉亚(Natalia)首字母正是N。这块手帕的真正主人可能是公主。',
-      confidence: 25,
-      noteCategory: '推理'
-    },
-    {
-      id: 'link-window-body',
-      from: 'window',
-      to: 'body',
-      fromType: 'evidence',
-      toType: 'evidence',
-      title: '伪造的逃走路线',
-      conclusion: '窗户大开但雪地上没有脚印，说明凶手没有从窗户逃走。窗户是故意打开的，用来伪造外人作案的假象。',
-      confidence: 15,
-      noteCategory: '推理'
-    }
-  ];
+  // 预设的成功关联（从案件数据读取，支持多案件）
+  function loadPresetLinks() {
+    return (window.GameData && window.GameData.presetLinks) || [];
+  }
+  const presetLinks = loadPresetLinks();
 
   // 状态
   let selectedFirst = null; // {id, type, element}
