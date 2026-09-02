@@ -474,7 +474,6 @@ const GameInteractions = (function() {
     };
 
   return {
-    handleSceneClick,
     addDialogueHistory,
     setWitnessReaction,
     toggleAudio,
