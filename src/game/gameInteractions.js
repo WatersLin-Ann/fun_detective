@@ -67,6 +67,10 @@ const GameInteractions = (function() {
             GameUI.showToast(`收集到证据：${ev.name}`, 'success');
             // 自动添加到笔记线索
             PlayerData.addNotebookItem('clues', `【证据】${ev.name}：${ev.description}`);
+            // 自动收集该证据的时间线索
+            if (window.TimelineUI) {
+              TimelineUI.autoDiscoverBySource('证据', ev.id);
+            }
             // 播放收集动画
             const rect = event.target.getBoundingClientRect();
             GameUI.playCollectAnimation(rect.left, rect.top, ev.name);
@@ -149,6 +153,10 @@ const GameInteractions = (function() {
         }
       }
       GameState.state.currentScene = sceneId;
+      // 自动收集该场景的时间线索
+      if (window.TimelineUI) {
+        TimelineUI.autoDiscoverBySource('场景', sceneId);
+      }
       GameRender.render();
     };
 
@@ -164,6 +172,10 @@ const GameInteractions = (function() {
       GameState.state.witnessStates[witnessId].questioned = true;
       GameState.state.witnessStates[witnessId].emotion = 'confident';
       GameState.save();
+      // 自动收集该证人的时间线索
+      if (window.TimelineUI) {
+        TimelineUI.autoDiscoverBySource('证人', witnessId);
+      }
       GameRender.render();
     };
 

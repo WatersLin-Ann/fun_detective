@@ -249,6 +249,23 @@ const CaseData_studyInScarlet = (function() {
     }
   ];
 
+
+  // ========== 时间线数据 ==========
+  const timeline = [
+    { id: 'tl-sis-001', time: '18:00', title: '锥伯到达伦敦', description: '死者伊瑙克·锥伯到达伦敦，入住当地酒店。', source: '证据', sourceId: 'body', category: '行程' },
+    { id: 'tl-sis-002', time: '20:00', title: '锥伯在酒馆', description: '锥伯在酒馆喝酒，与一名男子发生争吵。', source: '证人', sourceId: 'passerby', category: '证词' },
+    { id: 'tl-sis-003', time: '22:00', title: '锥伯乘坐马车', description: '锥伯乘坐一辆私人马车前往花园街方向。', source: '证据', sourceId: 'carriage-tracks', category: '物证' },
+    { id: 'tl-sis-004', time: '23:00', title: '路人看到高个子', description: '路人看到一个高个子男人从花园街空屋出来，走路摇摇晃晃。', source: '证人', sourceId: 'passerby', category: '证词' },
+    { id: 'tl-sis-005', time: '23:30', title: '马车离开', description: '私人马车离开花园街，车轮痕迹显示是从东边来的。', source: '证据', sourceId: 'carriage-tracks', category: '物证' },
+    { id: 'tl-sis-006', time: '08:00', title: '发现尸体', description: '警察接到报案，在空屋中发现锥伯的尸体。', source: '证人', sourceId: 'lestrade', category: '证词' }
+  ];
+
+  // 时间线矛盾
+  const timelineContradictions = [
+    { id: 'tc-sis-001', event1: 'tl-sis-004', event2: 'tl-sis-005', description: '路人说23:00看到高个子从空屋出来，但马车23:30才离开，中间有半小时的空白，凶手在这段时间做了什么？', confidence: 15 },
+    { id: 'tc-sis-002', event1: 'tl-sis-006', event2: 'tl-sis-005', description: '警察08:00才发现尸体，但尸检显示死亡时间约在23:00-00:00，中间8个小时无人发现，说明现场偏僻。', confidence: 10 }
+  ];
+
   // ========== 证人颜色映射 ==========
   const witnessColors = {
     lestrade: "#3b82f6",
@@ -272,6 +289,8 @@ const CaseData_studyInScarlet = (function() {
     witnesses,
     dialogs,
     contradictions,
+    timeline,
+    timelineContradictions,
     presetLinks,
     witnessColors,
     getWitnessColor: (id) => witnessColors[id] || "#94a3b8"

@@ -226,6 +226,25 @@ const CaseData_orientExpress = (function() {
     { id: "c4", witnessId: "princess", evidenceId: "handkerchief", description: "手帕与公主的真实关联", revealed: false }
   ];
 
+
+  // ========== 时间线数据 ==========
+  const timeline = [
+    { id: 'tl-oe-001', time: '22:00', title: '列车发车', description: '东方快车从贝尔格莱德站发车，开始前往加来的旅程。', source: '场景', sourceId: 'intro', category: '行程' },
+    { id: 'tl-oe-002', time: '23:00', title: '列车员开始巡逻', description: '列车员皮埃尔开始夜间巡逻，检查各包厢情况。', source: '证人', sourceId: 'conductor', category: '证词' },
+    { id: 'tl-oe-003', time: '00:10', title: '赫伯德夫人按铃', description: '赫伯德夫人按铃呼叫列车员，说有人在她的包厢里。', source: '证人', sourceId: 'mrs-hubbard', category: '证词' },
+    { id: 'tl-oe-004', time: '00:20', title: '列车因大雪停车', description: '列车因前方大雪覆盖轨道，被迫停在南斯拉夫荒野中。', source: '场景', sourceId: 'corridor', category: '行程' },
+    { id: 'tl-oe-005', time: '01:15', title: '怀表停止', description: '现场发现的怀表停在1:15，推测这是谋杀发生的时间。', source: '证据', sourceId: 'watch', category: '物证' },
+    { id: 'tl-oe-006', time: '01:20', title: '公主女仆按铃', description: '公主的女仆按铃要水，说公主睡不着。', source: '证人', sourceId: 'princess', category: '证词' },
+    { id: 'tl-oe-007', time: '01:30', title: '上校与玛丽在走廊', description: '上校说他和玛丽在走廊交谈了约10分钟。', source: '证人', sourceId: 'colonel', category: '证词' },
+    { id: 'tl-oe-008', time: '02:00', title: '列车员听到声音', description: '列车员说他在2点左右听到赫伯德夫人包厢有声音。', source: '证人', sourceId: 'conductor', category: '证词' }
+  ];
+
+  // 时间线矛盾
+  const timelineContradictions = [
+    { id: 'tc-oe-001', event1: 'tl-oe-003', event2: 'tl-oe-002', description: '赫伯德夫人说00:10有人在她包厢并按铃，但列车员说23:00开始巡逻后00:10在其他车厢，两人说法矛盾。', confidence: 15 },
+    { id: 'tc-oe-002', event1: 'tl-oe-007', event2: 'tl-oe-006', description: '上校说01:30和玛丽在走廊交谈，但玛丽说她01:20就已经睡着了，两人证词时间冲突。', confidence: 15 }
+  ];
+
   // 证人颜色映射
   const witnessColors = {
     conductor: "#3b82f6",
@@ -296,6 +315,8 @@ const CaseData_orientExpress = (function() {
     witnesses,
     dialogs,
     contradictions,
+    timeline,
+    timelineContradictions,
     presetLinks,
     witnessColors,
     getWitnessColor: (id) => witnessColors[id] || "#94a3b8"
