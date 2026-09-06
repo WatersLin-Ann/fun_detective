@@ -68,6 +68,38 @@ function validateCase(filePath) {
     }
   }
 
+  // ========== objectives 校验（flowType 兼容性） ==========
+  if (data.objectives && Array.isArray(data.objectives)) {
+    if (meta && meta.flowType === 'courtroom-only') {
+      // courtroom-only 案件：所有目标的 phase 不能是 investigation
+      data.objectives.forEach((obj, i) => {
+        if (obj.phase === 'investigation') {
+          errors.push(`objectives[${i}](${obj.id || '?'}) phase 为 investigation，但 flowType 是 courtroom-only，纯法庭案件不应有调查阶段目标`);
+        }
+      });
+    }
+    if (meta && meta.flowType === 'investigation-trial') {
+      // investigation-trial 案件：至少有一个目标的 phase 是 investigation
+      const hasInvestigationObj = data.objectives.some(obj => obj.phase === 'investigation');
+      if (!hasInvestigationObj) {
+        warnings.push('investigation-trial 案件没有任何 phase=investigation 的目标，调查阶段可能缺少目标引导');
+      }
+    }
+  } else if (meta && meta.flowType) {
+    warnings.push('缺少 objectives 数组，目标系统将无法使用');
+  }
+
+  // ========== trialRequirement 校验 ==========
+  if (meta && meta.trialRequirement) {
+    const req = meta.trialRequirement;
+    if (req.requireRelation === undefined && req.requireContradiction === undefined) {
+      warnings.push('trialRequirement 缺少主门槛条件（requireRelation 或 requireContradiction），当前仅使用计数门槛，玩家可能凑数进入审判');
+    }
+    if (req.requireRelation === false && req.requireContradiction === false) {
+      warnings.push('trialRequirement 的主门槛条件均为 false，推进门槛退化为纯计数');
+    }
+  }
+
   // ========== scenes 校验 ==========
   if (!data.scenes) {
     errors.push('缺少 scenes');

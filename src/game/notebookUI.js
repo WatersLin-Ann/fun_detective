@@ -35,6 +35,9 @@ const NotebookUI = (function() {
     const overlay = document.createElement('div');
     overlay.id = 'notebook-overlay';
     overlay.className = 'fixed inset-0 z-[95] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4';
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
+    overlay.setAttribute('aria-label', '推理笔记');
     overlay.onclick = (e) => {
       if (e.target.id === 'notebook-overlay') remove();
     };

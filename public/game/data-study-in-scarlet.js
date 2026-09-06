@@ -367,7 +367,18 @@ const CaseData_studyInScarlet = (function() {
       firstScene: 'crime-scene',
       trialScene: 'dining-car',
       trialSceneName: '审判室',
-      trialRequirement: { minEvidence: 3, minWitnesses: 2 },
+      trialRequirement: {
+        minEvidence: 3,
+        minWitnesses: 2,
+        requireRelation: false,
+        requireContradiction: true,
+        relationHint: '在线索关联板中建立至少1条正确关联',
+        contradictionHint: '在证人证词中发现至少1个矛盾（追问证人后点击「异议！」）'
+      },
+      mainLoop: {
+        type: 'contradiction',
+        hint: '询问证人并追问，发现证词中的矛盾，找到矛盾后可进入审判'
+      },
       description: '福尔摩斯首秀案件。伦敦空屋中发生离奇谋杀，墙上血字"RACHE"隐藏着复仇的真相。通过戒指、脚印、烟灰等线索，福尔摩斯推理出凶手是一名马车夫。',
       difficulty: '简单',
       author: '阿瑟·柯南·道尔',

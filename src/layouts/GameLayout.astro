@@ -1,0 +1,21 @@
+---
+/**
+ * GameLayout —— 游戏专用布局
+ * 无主站 header/footer，深色沉浸背景，全屏游戏体验
+ * 用于 play.astro 等游戏页面
+ */
+---
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{Astro.props.title ?? 'Fun Detective'}</title>
+    {Astro.props.description && <meta name="description" content={Astro.props.description} />}
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body style="margin: 0; padding: 0; background: #0d0d12; min-height: 100vh;">
+    <slot />
+  </body>
+</html>

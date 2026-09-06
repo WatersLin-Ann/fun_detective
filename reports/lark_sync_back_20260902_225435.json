@@ -1,0 +1,14 @@
+{
+  "sync_time": "2026-09-02 22:54:35",
+  "lark_total": 57,
+  "matched": 56,
+  "success": 56,
+  "failed": 0,
+  "fail_details": [],
+  "unmatched_lark": [],
+  "unmatched_local_count": 132,
+  "updated_fields": [
+    "参考链接",
+    "推荐视频"
+  ]
+}

@@ -5,11 +5,15 @@
   "scripts": {
     "dev": "astro dev --host 0.0.0.0",
     "start": "astro dev --host 0.0.0.0",
-    "build": "node scripts/validate-case-data.cjs && astro build",
+    "build": "node scripts/validate-case-data.cjs && astro build && node scripts/smoke-test.cjs --dist dist",
     "preview": "astro preview",
     "astro": "astro",
     "validate:cases": "node scripts/validate-case-data.cjs",
-    "sync:game": "node scripts/sync-game-js.js"
+    "sync:game": "node scripts/sync-game-js.js",
+    "test:smoke": "node scripts/smoke-test.cjs",
+    "test:visual": "node scripts/visual-regression.cjs",
+    "test:keyboard": "node scripts/keyboard-test.cjs",
+    "test:all": "node scripts/smoke-test.cjs && node scripts/validate-case-data.cjs"
   },
   "dependencies": {
     "astro": "^7.2.10",
@@ -17,6 +21,7 @@
   },
   "devDependencies": {
     "@astrojs/tailwind": "^5.1.0",
+    "puppeteer": "^25.10.0",
     "tailwindcss": "^3.4.0",
     "typescript": "^5.6.0"
   }

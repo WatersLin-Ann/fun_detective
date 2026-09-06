@@ -395,7 +395,18 @@ const CaseData_orientExpress = (function() {
       firstScene: 'corridor',
       trialScene: 'dining-car',
       trialSceneName: '餐车',
-      trialRequirement: { minEvidence: 3, minWitnesses: 2 },
+      trialRequirement: {
+        minEvidence: 3,
+        minWitnesses: 2,
+        requireRelation: true,
+        requireContradiction: false,
+        relationHint: '在线索关联板中建立至少1条正确关联（收集≥2条证据后解锁关联板）',
+        contradictionHint: '在证人证词中发现至少1个矛盾'
+      },
+      mainLoop: {
+        type: 'relation',
+        hint: '收集线索后在线索关联板中建立关联，找到关键关联后可进入审判'
+      },
       description: '阿加莎·克里斯蒂经典作品改编。深夜列车上发生谋杀案，12名乘客各怀秘密，你需要通过收集证据、询问证人、关联线索来揭开真相。',
       difficulty: '中等',
       author: '阿加莎·克里斯蒂',

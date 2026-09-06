@@ -5,10 +5,10 @@
 
 const EvidenceBoard = (function() {
   // 预设的成功关联（从案件数据读取，支持多案件）
+  // 注意：不能在模块加载时缓存，因为案件数据是异步加载的
   function loadPresetLinks() {
     return (window.GameData && window.GameData.presetLinks) || [];
   }
-  const presetLinks = loadPresetLinks();
 
   // 状态
   let selectedFirst = null; // {id, type, element}
@@ -43,6 +43,9 @@ const EvidenceBoard = (function() {
     boardOverlay = document.createElement('div');
     boardOverlay.id = 'evidence-board-overlay';
     boardOverlay.className = 'fixed inset-0 z-[95] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4';
+    boardOverlay.setAttribute('role', 'dialog');
+    boardOverlay.setAttribute('aria-modal', 'true');
+    boardOverlay.setAttribute('aria-label', '线索关联板');
     boardOverlay.onclick = (e) => {
       if (e.target === boardOverlay) closeBoard();
     };
@@ -56,7 +59,7 @@ const EvidenceBoard = (function() {
         <!-- 头部 -->
         <div class="flex items-center justify-between px-6 py-4 bg-stone-900/50 border-b border-stone-700">
           <div>
-            <h2 class="text-xl font-bold text-white">🔗 证据关联板</h2>
+            <h2 class="text-xl font-bold text-white flex items-center gap-2"><span style="color: var(--game-accent, #f59e0b);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>证据关联板</h2>
             <p class="text-xs text-stone-400 mt-1">选择两个物品/人物进行关联，发现隐藏的矛盾点</p>
           </div>
           <div class="flex items-center gap-3">
@@ -124,12 +127,13 @@ const EvidenceBoard = (function() {
    */
   function renderEvidenceCards(evidenceList) {
     return evidenceList.map(ev => `
-      <div class="evidence-card cursor-pointer p-3 rounded-lg border-2 border-stone-600 bg-stone-700/50 hover:border-amber-500 hover:bg-stone-700 transition-all"
-           data-id="${ev.id}" data-type="evidence" onclick="EvidenceBoard.selectItem('${ev.id}', 'evidence', this)">
-        <div class="text-2xl mb-1">🔎</div>
+      <button class="evidence-card text-left p-3 rounded-lg border-2 border-stone-600 bg-stone-700/50 hover:border-amber-500 hover:bg-stone-700 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+           data-id="${ev.id}" data-type="evidence" onclick="EvidenceBoard.selectItem('${ev.id}', 'evidence', this)"
+           aria-pressed="false" aria-label="证据：${ev.name}">
+        <div class="text-amber-400 mb-1"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
         <div class="text-sm font-bold text-white truncate">${ev.name}</div>
         <div class="text-xs text-stone-400 mt-1 line-clamp-2">${ev.description.substring(0, 30)}...</div>
-      </div>
+      </button>
     `).join('');
   }
 
@@ -138,12 +142,13 @@ const EvidenceBoard = (function() {
    */
   function renderWitnessCards(witnessList) {
     return witnessList.map(w => `
-      <div class="witness-card cursor-pointer p-3 rounded-lg border-2 border-stone-600 bg-stone-700/50 hover:border-amber-500 hover:bg-stone-700 transition-all"
-           data-id="${w.id}" data-type="witness" onclick="EvidenceBoard.selectItem('${w.id}', 'witness', this)">
+      <button class="witness-card text-left p-3 rounded-lg border-2 border-stone-600 bg-stone-700/50 hover:border-amber-500 hover:bg-stone-700 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+           data-id="${w.id}" data-type="witness" onclick="EvidenceBoard.selectItem('${w.id}', 'witness', this)"
+           aria-pressed="false" aria-label="证人：${w.name}">
         <div class="text-2xl mb-1">${w.avatar || '👤'}</div>
         <div class="text-sm font-bold truncate" style="color: ${w.color || '#fff'}">${w.name}</div>
         <div class="text-xs text-stone-400 mt-1 line-clamp-2">${w.description.substring(0, 25)}...</div>
-      </div>
+      </button>
     `).join('');
   }
 
@@ -211,6 +216,7 @@ const EvidenceBoard = (function() {
       selectedFirst = { id, type, element };
       element.classList.remove('border-stone-600');
       element.classList.add('border-amber-500', 'bg-amber-900/30', 'ring-2', 'ring-amber-500/50');
+      element.setAttribute('aria-pressed', 'true');
       updateHint(`已选择：${getItemName(id, type)}，请选择第二个进行关联...`);
       return;
     }
@@ -233,6 +239,7 @@ const EvidenceBoard = (function() {
     if (selectedFirst && selectedFirst.element) {
       selectedFirst.element.classList.remove('border-amber-500', 'bg-amber-900/30', 'ring-2', 'ring-amber-500/50');
       selectedFirst.element.classList.add('border-stone-600');
+      selectedFirst.element.setAttribute('aria-pressed', 'false');
     }
     selectedFirst = null;
     updateHint('请点击选择第一个证据或证人...');
@@ -251,7 +258,7 @@ const EvidenceBoard = (function() {
    */
   function tryLink(first, second) {
     // 查找预设连线（顺序无关）
-    const preset = presetLinks.find(p =>
+    const preset = loadPresetLinks().find(p =>
       (p.from === first.id && p.to === second.id) ||
       (p.from === second.id && p.to === first.id)
     );
@@ -270,7 +277,7 @@ const EvidenceBoard = (function() {
    */
   function handleSuccessLink(preset) {
     // 检查是否已经建立过
-    const playerLinks = (window.PlayerData && PlayerData.getState().evidenceLinks) || [];
+    const playerLinks = (window.PlayerData && PlayerData.getEvidenceLinks()) || [];
     const exists = playerLinks.find(l => l.presetId === preset.id);
 
     if (exists) {
@@ -405,7 +412,7 @@ const EvidenceBoard = (function() {
    * 获取预设连线（供外部使用）
    */
   function getPresetLinks() {
-    return presetLinks;
+    return loadPresetLinks();
   }
 
   return {

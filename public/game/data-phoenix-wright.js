@@ -22,7 +22,18 @@ const CaseData_phoenixWright = (function() {
     firstScene: 'courtroom',
     trialScene: 'courtroom',
     trialSceneName: '法庭',
-    trialRequirement: { minEvidence: 0, minWitnesses: 0 }
+    trialRequirement: {
+      minEvidence: 0,
+      minWitnesses: 0,
+      requireRelation: false,
+      requireContradiction: true,
+      relationHint: '在线索关联板中建立至少1条正确关联',
+      contradictionHint: '在证人证词中发现至少1个矛盾'
+    },
+    mainLoop: {
+      type: 'courtroom',
+      hint: '阅读证词，追问细节，发现矛盾时点击「异议！」并出示证据反驳'
+    }
   };
 
   // ========== 场景 ==========
@@ -248,15 +259,14 @@ const CaseData_phoenixWright = (function() {
     { id: 'kw-pw-006', keyword: '安眠药', aliases: ['药', '昏睡'], category: '线索', unlockType: 'dialog', description: '安眠药的作用', unlockContent: { speaker: '成步堂', text: '死者体内有安眠药！凶手可能先让死者昏睡，然后再作案。这说明凶手是熟人，能让死者放下戒心。', confidence: 15 } }
   ];
 
-  // ========== 游戏目标 ==========
+  // ========== 游戏目标（按 courtroom-only 纯法庭流程配置） ==========
   const objectives = [
-    { id: 'obj-pw-001', phase: 'investigation', title: '了解案件概况', description: '阅读开场对话，了解案件背景', type: 'collect_evidence', target: 2, hint: '点击场景中的物品收集证据' },
-    { id: 'obj-pw-002', phase: 'investigation', title: '收集关键证据', description: '收集法庭上的所有证据', type: 'collect_evidence', target: 5, hint: '在法庭场景中收集证据' },
-    { id: 'obj-pw-003', phase: 'investigation', title: '询问证人', description: '询问山野星雄和矢张政志', type: 'interview_witness', target: 2, hint: '点击证人卡片与他们对话' },
-    { id: 'obj-pw-004', phase: 'investigation', title: '整理推理笔记', description: '打开笔记，记录你的推理', type: 'open_notebook', target: 1, hint: '点击顶部"笔记"按钮' },
-    { id: 'obj-pw-005', phase: 'investigation', title: '进入审判', description: '准备好后进入审判阶段', type: 'enter_trial', target: 1, hint: '点击"进入审判"按钮' },
-    { id: 'obj-pw-006', phase: 'trial', title: '质询证人', description: '在审判中质询山野星雄', type: 'question_all_witnesses', target: 1, hint: '点击证人进行质询' },
-    { id: 'obj-pw-007', phase: 'trial', title: '出示证据', description: '在质询中出示关键证据', type: 'present_evidence', target: 2, hint: '点击"出示证据"按钮' }
+    { id: 'read-case', phase: 'intro', title: '阅读案情摘要', description: '了解案件背景和控方主张', type: 'phase', hint: '点击「继续」阅读开场对话' },
+    { id: 'question-yama', phase: 'trial', title: '质询山野星雄', description: '询问第一位证人，追问细节', type: 'witness', witnessId: 'wit-yama', hint: '在证人选择界面点击山野星雄' },
+    { id: 'find-contradiction', phase: 'trial', title: '发现证词矛盾', description: '在山野的证词中找到矛盾点', type: 'contradiction', hint: '追问后点击「异议！」，出示正确证据' },
+    { id: 'present-evidence', phase: 'trial', title: '出示关键证物', description: '用停电记录反驳山野的证词', type: 'evidence', evidenceId: 'ev-blackout', hint: '异议时选择「停电记录」出示' },
+    { id: 'question-yahari', phase: 'trial', title: '询问被告矢张', description: '了解被告视角的时间线', type: 'witness', witnessId: 'wit-yahari', hint: '在证人选择界面点击矢张政志' },
+    { id: 'closing', phase: 'trial', title: '完成总结陈词', description: '指出真凶，完成辩护', type: 'phase', hint: '询问所有证人后点击「进入总结陈词」' }
   ];
 
   // ========== 结局配置 ==========

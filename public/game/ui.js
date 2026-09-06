@@ -12,6 +12,29 @@ const GameUI = (function() {
     typewriterTimer: null,
     dialogRemoveTimer: null,
   };
+  let _escBound = false;
+  let _lastFocusedElement = null;
+
+  // ========== SVG 图标库（替换 emoji，统一视觉风格） ==========
+  const icons = {
+    evidence: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>',
+    notebook: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
+    timeline: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+    relation: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
+    help: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+    reset: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>',
+    exit: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>',
+    more: '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>',
+    search: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+    door: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/></svg>',
+    check: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+    info: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
+    success: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+    warning: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+    error: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+    eye: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
+    eyeOff: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'
+  };
 
   // ========== 工具函数 ==========
   function createElement(html) {
@@ -34,16 +57,16 @@ const GameUI = (function() {
       warning: 'bg-yellow-600',
       error: 'bg-red-600',
     };
-    const icons = {
-      info: 'ℹ️',
-      success: '✅',
-      warning: '⚠️',
-      error: '❌',
+    const icons_svg = {
+      info: icons.info,
+      success: icons.success,
+      warning: icons.warning,
+      error: icons.error,
     };
 
     const toast = createElement(`
-      <div class="fixed top-20 left-1/2 -translate-x-1/2 z-[100] ${colors[type]} text-white px-6 py-3 rounded-lg shadow-2xl flex items-center gap-2 transform translate-y-[-20px] opacity-0 transition-all duration-300">
-        <span>${icons[type]}</span>
+      <div class="fixed top-20 left-1/2 -translate-x-1/2 z-[100] ${colors[type]} text-white px-6 py-3 rounded-lg shadow-2xl flex items-center gap-2 transform translate-y-[-20px] opacity-0 transition-all duration-300" role="status" aria-live="polite">
+        <span class="flex items-center">${icons_svg[type]}</span>
         <span class="font-medium">${escapeHtml(message)}</span>
       </div>
     `);
@@ -101,8 +124,8 @@ const GameUI = (function() {
     if (oldOverlay) oldOverlay.remove();
 
     const dialog = createElement(`
-      <div id="game-dialog-overlay" class="fixed inset-0 z-[90] flex items-end justify-center bg-black/40 backdrop-blur-sm" onclick="GameUI._handleDialogOverlayClick(event)">
-        <div class="w-full max-w-3xl bg-stone-800 rounded-t-2xl shadow-2xl border-t border-stone-600 overflow-hidden transform translate-y-full transition-transform duration-300" id="game-dialog-box">
+      <div id="game-dialog-overlay" class="fixed inset-0 z-[90] flex items-end justify-center bg-black/40 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="对话" onclick="GameUI._handleDialogOverlayClick(event)">
+        <div class="w-full max-w-3xl bg-stone-800 rounded-t-2xl shadow-2xl border-t border-stone-600 overflow-hidden transform translate-y-full transition-transform duration-300" id="game-dialog-box" data-tour="dialog">
           <!-- 历史记录面板 -->
           <div id="game-dialog-history" class="hidden max-h-48 overflow-y-auto bg-stone-900/80 p-4 border-b border-stone-700">
             <div class="text-xs text-stone-400 mb-2">对话历史</div>
@@ -294,18 +317,22 @@ const GameUI = (function() {
   function showEvidenceCard(evidence, onCollect = null) {
     removeEvidenceCard();
 
+    // 记录触发元素，关闭后恢复焦点
+    _lastFocusedElement = document.activeElement;
+
     const card = createElement(`
-      <div id="game-evidence-overlay" class="fixed inset-0 z-[90] flex items-center justify-center bg-black/60 backdrop-blur-sm" onclick="GameUI._handleEvidenceOverlayClick(event)">
+      <div id="game-evidence-overlay" class="fixed inset-0 z-[90] flex items-center justify-center bg-black/60 backdrop-blur-sm" onclick="GameUI._handleEvidenceOverlayClick(event)" role="dialog" aria-modal="true" aria-labelledby="evidence-card-title">
         <div class="w-full max-w-md bg-stone-800 rounded-2xl shadow-2xl border border-stone-600 overflow-hidden transform scale-95 opacity-0 transition-all duration-300" id="game-evidence-card">
           <!-- 卡片头部 -->
-          <div class="bg-gradient-to-r from-amber-900/50 to-stone-800 p-4 border-b border-stone-600">
+          <div class="bg-gradient-to-r from-amber-900/50 to-stone-800 p-4 border-b border-stone-600 flex items-start justify-between">
             <div class="flex items-center gap-3">
               <div class="w-12 h-12 bg-amber-600/30 rounded-lg flex items-center justify-center text-2xl">🔍</div>
               <div>
-                <h3 class="font-bold text-lg text-amber-400">${escapeHtml(evidence.name)}</h3>
+                <h3 id="evidence-card-title" class="font-bold text-lg text-amber-400">${escapeHtml(evidence.name)}</h3>
                 <p class="text-xs text-stone-400">发现于：${escapeHtml(evidence.foundIn || '犯罪现场')}</p>
               </div>
             </div>
+            <button onclick="GameUI.removeEvidenceCard()" class="text-stone-400 hover:text-white text-xl w-8 h-8 flex items-center justify-center rounded hover:bg-stone-700 transition-colors" aria-label="关闭证据详情" style="min-height:32px;">×</button>
           </div>
           <!-- 观察到的事实 -->
           <div class="p-4">
@@ -336,8 +363,13 @@ const GameUI = (function() {
     // 入场动画（setTimeout替代rAF，兼容后台标签）
     setTimeout(() => {
       const cardEl = document.getElementById('game-evidence-card');
-      cardEl.style.transform = 'scale(1)';
-      cardEl.style.opacity = '1';
+      if (cardEl) {
+        cardEl.style.transform = 'scale(1)';
+        cardEl.style.opacity = '1';
+        // 初始焦点到关闭按钮
+        const closeBtn = cardEl.querySelector('button[aria-label="关闭证据详情"]');
+        if (closeBtn) closeBtn.focus();
+      }
     });
 
     // 存储回调
@@ -407,19 +439,19 @@ const GameUI = (function() {
       danger: 'bg-red-600 hover:bg-red-500',
       info: 'bg-blue-600 hover:bg-blue-500',
     };
-    const icons = {
-      warning: '⚠️',
-      danger: '🚨',
-      info: 'ℹ️',
+    const modalIcons = {
+      warning: icons.warning,
+      danger: icons.error,
+      info: icons.info,
     };
 
     removeModal();
 
     const modal = createElement(`
-      <div id="game-modal-overlay" class="fixed inset-0 z-[95] flex items-center justify-center bg-black/60 backdrop-blur-sm" onclick="GameUI._handleModalOverlayClick(event)">
+      <div id="game-modal-overlay" class="fixed inset-0 z-[95] flex items-center justify-center bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="确认对话框" onclick="GameUI._handleModalOverlayClick(event)">
         <div class="w-full max-w-sm bg-stone-800 rounded-2xl shadow-2xl border border-stone-600 overflow-hidden transform scale-95 opacity-0 transition-all duration-200" id="game-modal-box">
           <div class="p-6 text-center">
-            <div class="text-4xl mb-4">${icons[type]}</div>
+            <div class="mb-4 flex justify-center text-amber-400">${modalIcons[type] || icons.info}</div>
             <h3 class="font-bold text-xl mb-2">${escapeHtml(title)}</h3>
             <p class="text-stone-400 text-sm">${escapeHtml(message)}</p>
           </div>
@@ -468,6 +500,91 @@ const GameUI = (function() {
   function removeModal() {
     const overlay = document.getElementById('game-modal-overlay');
     if (overlay) overlay.remove();
+  }
+
+  // ========== 更多菜单 ==========
+  function toggleMoreMenu() {
+    const menu = document.getElementById('more-menu');
+    if (!menu) return;
+    if (menu.classList.contains('hidden')) {
+      openMoreMenu();
+    } else {
+      closeMoreMenu();
+    }
+  }
+
+  function openMoreMenu() {
+    const menu = document.getElementById('more-menu');
+    if (menu) {
+      menu.classList.remove('hidden');
+      // 点击外部关闭
+      setTimeout(() => {
+        document.addEventListener('click', _outsideMoreMenuClick, { once: true });
+      }, 10);
+    }
+  }
+
+  function closeMoreMenu() {
+    const menu = document.getElementById('more-menu');
+    if (menu) menu.classList.add('hidden');
+    document.removeEventListener('click', _outsideMoreMenuClick);
+  }
+
+  function _outsideMoreMenuClick(e) {
+    const menu = document.getElementById('more-menu');
+    const moreBtn = document.getElementById('more-btn');
+    if (menu && !menu.contains(e.target) && moreBtn && !moreBtn.contains(e.target)) {
+      closeMoreMenu();
+    }
+  }
+
+  // ========== 无障碍：焦点管理与 Esc 处理 ==========
+  function openOverlay(overlayId, focusSelector) {
+    _lastFocusedElement = document.activeElement;
+    const overlay = document.getElementById(overlayId);
+    if (!overlay) return;
+    overlay.classList.remove('hidden');
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
+    setTimeout(() => {
+      const focusEl = overlay.querySelector(focusSelector || 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+      if (focusEl) focusEl.focus();
+    }, 50);
+  }
+
+  function closeOverlay(overlayId) {
+    const overlay = document.getElementById(overlayId);
+    if (overlay) overlay.classList.add('hidden');
+    if (_lastFocusedElement && typeof _lastFocusedElement.focus === 'function') {
+      _lastFocusedElement.focus();
+    }
+  }
+
+  function handleEscKey(e) {
+    if (e.key !== 'Escape') return;
+    const overlays = [
+      { id: 'game-modal-overlay', close: () => GameUI.cancelModal() },
+      { id: 'notebook-overlay', close: () => { if (window.NotebookUI) NotebookUI.close(); } },
+      { id: 'evidence-board-overlay', close: () => { if (window.EvidenceBoard) EvidenceBoard.closeBoard(); } },
+      { id: 'game-evidence-overlay', close: () => GameUI.removeEvidenceCard() },
+      { id: 'timeline-overlay', close: () => { if (window.TimelineUI) TimelineUI.close(); } },
+      { id: 'tutorial-overlay', close: () => { if (window.GuideUI) GuideUI.closeTutorial(); } },
+      { id: 'more-menu', close: () => GameUI.closeMoreMenu() },
+      { id: 'game-dialog-overlay', close: () => GameUI.removeDialog() }
+    ];
+    for (const ov of overlays) {
+      const el = document.getElementById(ov.id);
+      if (el && !el.classList.contains('hidden')) {
+        ov.close();
+        e.preventDefault();
+        return;
+      }
+    }
+  }
+
+  if (!_escBound) {
+    document.addEventListener('keydown', handleEscKey);
+    _escBound = true;
   }
 
   // ========== 收集动画 ==========
@@ -526,6 +643,13 @@ const GameUI = (function() {
     removeModal,
     _handleModalOverlayClick,
     playCollectAnimation,
+    toggleMoreMenu,
+    openMoreMenu,
+    closeMoreMenu,
+    openOverlay,
+    closeOverlay,
+    handleEscKey,
+    icons,
     getDialogHistory: () => state.dialogHistory,
     clearDialogHistory: () => { state.dialogHistory = []; },
   };

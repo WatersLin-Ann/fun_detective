@@ -57,9 +57,71 @@ const GameState = (function() {
 
   // 动态加载案件数据
   let _isLoadingCase = false;
+  let _loadTimeout = null;
+
+  // 显示加载态
+  function showLoading(caseName) {
+    const loading = document.getElementById('game-loading');
+    const errorPanel = document.getElementById('game-error');
+    if (loading) {
+      loading.style.display = 'flex';
+    }
+    if (errorPanel) {
+      errorPanel.style.display = 'none';
+      errorPanel.classList.add('hidden');
+    }
+    const nameEl = document.getElementById('loading-case-name');
+    if (nameEl && caseName) {
+      nameEl.textContent = `正在准备案件：${caseName}…`;
+    }
+  }
+
+  // 隐藏加载态
+  function hideLoading() {
+    const loading = document.getElementById('game-loading');
+    if (loading) {
+      loading.style.opacity = '0';
+      loading.style.transition = 'opacity 0.3s ease';
+      setTimeout(() => { loading.style.display = 'none'; loading.style.opacity = '1'; }, 300);
+    }
+  }
+
+  // 显示错误面板
+  function showErrorPanel(message) {
+    const loading = document.getElementById('game-loading');
+    const errorPanel = document.getElementById('game-error');
+    const msgEl = document.getElementById('error-message');
+    if (loading) loading.style.display = 'none';
+    if (errorPanel) {
+      errorPanel.classList.remove('hidden');
+      errorPanel.style.display = 'flex';
+    }
+    if (msgEl) msgEl.textContent = message || '未知错误';
+  }
+
+  // 绑定错误面板按钮（只绑定一次）
+  let _errorButtonsBound = false;
+  function bindErrorButtons(caseId, callback) {
+    if (_errorButtonsBound) return;
+    const retryBtn = document.getElementById('error-retry');
+    const backBtn = document.getElementById('error-back');
+    if (retryBtn) {
+      retryBtn.addEventListener('click', () => {
+        loadCaseData(caseId, callback);
+      });
+    }
+    if (backBtn) {
+      backBtn.addEventListener('click', () => {
+        window.location.href = '/fun_detective/game-design/prototype/';
+      });
+    }
+    _errorButtonsBound = true;
+  }
+
   function loadCaseData(caseId, callback) {
     // 先检查是否已加载正确的案件
     if (window.GameData && window.GameData.meta && window.GameData.meta.id === caseId) {
+      hideLoading();
       callback();
       return;
     }
@@ -68,34 +130,58 @@ const GameState = (function() {
       console.warn('案件数据正在加载中，忽略重复请求');
       return;
     }
+
+    // 绑定错误面板按钮
+    bindErrorButtons(caseId, callback);
+
     // 从案件配置中查找数据文件
     const caseConfig = (window.GameCases || []).find(c => c.id === caseId);
     if (!caseConfig) {
       console.error('未找到案件配置:', caseId);
-      alert('案件不存在');
-      window.location.href = '/fun_detective/game-design/prototype/';
+      showErrorPanel(`未找到案件「${caseId}」，请返回案件列表重新选择。`);
       return;
     }
+
+    // 显示加载态
+    showLoading(caseConfig.name);
+
     // 清除旧的案件数据，防止污染
     window.GameData = null;
     _isLoadingCase = true;
+
+    // 8秒加载超时保护
+    if (_loadTimeout) clearTimeout(_loadTimeout);
+    _loadTimeout = setTimeout(() => {
+      if (_isLoadingCase) {
+        _isLoadingCase = false;
+        console.error('案件数据加载超时:', caseConfig.dataFile);
+        showErrorPanel('加载超时，请检查网络连接后重试。');
+      }
+    }, 8000);
+
     // 动态创建script标签加载
     const script = document.createElement('script');
     script.src = caseConfig.dataFile + '?v=' + Date.now(); // 防缓存
     script.onload = () => {
+      if (_loadTimeout) { clearTimeout(_loadTimeout); _loadTimeout = null; }
       _isLoadingCase = false;
       // 验证加载的案件ID是否匹配
       if (window.GameData && window.GameData.meta && window.GameData.meta.id === caseId) {
-        callback();
+        // 确保 loading 至少显示 300ms 避免闪烁
+        setTimeout(() => {
+          hideLoading();
+          callback();
+        }, 300);
       } else {
         console.error('案件数据ID不匹配:', window.GameData?.meta?.id, '期望:', caseId);
-        alert('案件数据加载异常，请刷新页面');
+        showErrorPanel('案件数据异常，请刷新页面重试。');
       }
     };
     script.onerror = () => {
+      if (_loadTimeout) { clearTimeout(_loadTimeout); _loadTimeout = null; }
       _isLoadingCase = false;
       console.error('案件数据加载失败:', caseConfig.dataFile);
-      alert('案件数据加载失败');
+      showErrorPanel(`案件数据加载失败：${caseConfig.dataFile}。请检查网络后重试。`);
     };
     document.head.appendChild(script);
   }
@@ -134,14 +220,22 @@ const GameState = (function() {
       }
     }
 
-    // 检查是否继续游戏
-    if (urlParams.get('continue') === '1') {
-      const saved = localStorage.getItem(SAVE_KEY);
-      if (saved) {
-        state = JSON.parse(saved);
-      }
-    } else {
+    // 检查存档：默认保留，显示继续/重新开始选择
+    const hasSave = !!localStorage.getItem(SAVE_KEY);
+    const forceReset = urlParams.get('reset') === '1';
+    if (urlParams.get('continue') === '1' && hasSave) {
+      // 明确选择继续
+      state = JSON.parse(localStorage.getItem(SAVE_KEY));
+      state.pendingSaveChoice = false;
+    } else if (forceReset) {
+      // 明确选择重新开始
       localStorage.removeItem(SAVE_KEY);
+      state.pendingSaveChoice = false;
+    } else if (hasSave) {
+      // 有存档但未明确选择，暂停并等待用户选择
+      state.pendingSaveChoice = true;
+    } else {
+      state.pendingSaveChoice = false;
     }
 
     // 初始化证人状态（兼容旧存档）
@@ -175,7 +269,54 @@ const GameState = (function() {
 
   // 保存
   function save() {
-    localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+    if (!state.pendingSaveChoice) {
+      localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+    }
+  }
+
+  // 获取存档摘要信息
+  function getSaveInfo() {
+    const saved = localStorage.getItem(SAVE_KEY);
+    if (!saved) return null;
+    try {
+      const data = JSON.parse(saved);
+      return {
+        gamePhase: data.gamePhase || 'intro',
+        currentScene: data.currentScene || 'intro',
+        collectedEvidence: data.collectedEvidence || [],
+        interviewedWitnesses: data.interviewedWitnesses || [],
+        dialogIndex: data.dialogIndex || 0
+      };
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // 继续存档
+  function continueSavedGame() {
+    const saved = localStorage.getItem(SAVE_KEY);
+    if (saved) {
+      state = JSON.parse(saved);
+    }
+    state.pendingSaveChoice = false;
+    window._gameState = state;
+    if (window.GameRender) GameRender.render();
+  }
+
+  // 重置存档（重新开始）
+  function resetSavedGame() {
+    localStorage.removeItem(SAVE_KEY);
+    state.pendingSaveChoice = false;
+    // 重置到初始状态
+    state.gamePhase = 'intro';
+    state.currentScene = 'intro';
+    state.collectedEvidence = [];
+    state.interviewedWitnesses = [];
+    state.contradictionsFound = [];
+    state.dialogIndex = 0;
+    state.confidence = 100;
+    window._gameState = state;
+    if (window.GameRender) GameRender.render();
   }
 
   // 获取游戏数据
@@ -223,7 +364,13 @@ const GameState = (function() {
     save,
     getGameData,
     getState,
-    setState
+    setState,
+    showLoading,
+    hideLoading,
+    showErrorPanel,
+    getSaveInfo,
+    continueSavedGame,
+    resetSavedGame
   };
 })();
 

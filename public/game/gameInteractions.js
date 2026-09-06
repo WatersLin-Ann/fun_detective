@@ -157,9 +157,18 @@ const GameInteractions = (function() {
       const req = meta.trialRequirement || { minEvidence: 3, minWitnesses: 2 };
       const evCount = GameState.state.collectedEvidence.length;
       const wtCount = GameState.state.interviewedWitnesses.length;
+      const relationCount = (window.EvidenceBoard && EvidenceBoard.countCorrectLinks) ? EvidenceBoard.countCorrectLinks() : 0;
+      const contradictionCount = (GameState.state.contradictionsFound || []).length;
 
       if (sceneId === trialScene && GameState.state.gamePhase === 'investigation') {
-        if (evCount >= req.minEvidence && wtCount >= req.minWitnesses) {
+        // 构建未满足条件列表
+        const missing = [];
+        if (evCount < req.minEvidence) missing.push(`证据 ${evCount}/${req.minEvidence}`);
+        if (wtCount < req.minWitnesses) missing.push(`证人 ${wtCount}/${req.minWitnesses}`);
+        if (req.requireRelation && relationCount < 1) missing.push(req.relationHint || '需要建立至少1条线索关联');
+        if (req.requireContradiction && contradictionCount < 1) missing.push(req.contradictionHint || '需要发现至少1个证词矛盾');
+
+        if (missing.length === 0) {
           GameUI.showModal({
             title: '进入审判阶段？',
             message: `调查阶段将结束，未收集的证据将无法获取。确定要前往${trialSceneName}进行审判吗？`,
@@ -172,7 +181,6 @@ const GameInteractions = (function() {
               GameState.state.currentScene = trialScene;
               GameState.save();
               playSfx('ui_page');
-              // 更新引导系统
               if (window.GuideUI) {
                 GuideUI.updateLastAction();
                 GuideUI.checkObjectives();
@@ -184,7 +192,7 @@ const GameInteractions = (function() {
         } else {
           GameUI.showModal({
             title: '还不能进入审判',
-            message: `还需要收集至少${req.minEvidence}件证据和询问${req.minWitnesses}个证人。\n当前：证据${evCount}/${req.minEvidence}，证人${wtCount}/${req.minWitnesses}`,
+            message: `进入审判前还需要完成：\n\n${missing.map(m => '• ' + m).join('\n')}`,
             confirmText: '我知道了',
             cancelText: '关闭',
             type: 'info',
@@ -365,15 +373,29 @@ const GameInteractions = (function() {
       });
     };
 
-    // 证据栏按钮
-    document.getElementById('evidence-btn')?.addEventListener('click', () => {
+    // 证据栏切换（顶栏按钮 onclick 调用）
+    function toggleEvidenceBar() {
       GameState.state.showEvidenceBar = !GameState.state.showEvidenceBar;
       GameState.state.evidenceMode = 'view';
       GameRender.render();
-    });
+    }
 
-    // 重置按钮
-    document.getElementById('reset-btn')?.addEventListener('click', () => {
+    // 退出游戏确认
+    function confirmExit() {
+      GameUI.showModal({
+        title: '退出游戏？',
+        message: '当前进度已自动保存。确定要返回案件列表吗？',
+        confirmText: '退出',
+        cancelText: '继续游戏',
+        type: 'warning',
+        onConfirm: () => {
+          window.location.href = '/fun_detective/game-design/prototype/';
+        }
+      });
+    }
+
+    // 重置游戏进度
+    function resetGame() {
       GameUI.showModal({
         title: '重置游戏？',
         message: '所有进度将丢失，确定要重置吗？',
@@ -381,25 +403,13 @@ const GameInteractions = (function() {
         cancelText: '取消',
         type: 'danger',
         onConfirm: () => {
-        localStorage.removeItem('fun-detective-prototype-save');
-        state = {
-          currentScene: 'intro',
-          gamePhase: 'intro',
-          collectedEvidence: [],
-          interviewedWitnesses: [],
-          contradictionsFound: [],
-          confidence: 100,
-          choices: {},
-          dialogIndex: 0,
-          currentWitness: null,
-          showEvidenceBar: false,
-          selectedEvidence: null,
-          evidenceMode: 'view',
-        };
-        GameRender.render();
+          const saveKey = `fun-detective-save-${GameState.currentCaseId}`;
+          localStorage.removeItem(saveKey);
+          localStorage.removeItem(`fun-detective-tutorial-${GameState.currentCaseId}`);
+          window.location.reload();
         }
       });
-    });
+    }
 
     // 开场继续按钮
     document.getElementById('intro-continue')?.addEventListener('click', () => {
@@ -408,7 +418,8 @@ const GameInteractions = (function() {
 
     // 结局重新开始
     document.getElementById('ending-restart')?.addEventListener('click', () => {
-      localStorage.removeItem('fun-detective-prototype-save');
+      const saveKey = `fun-detective-save-${GameState.currentCaseId}`;
+      localStorage.removeItem(saveKey);
       window.location.reload();
     });
 
@@ -429,13 +440,8 @@ const GameInteractions = (function() {
       if (window.AudioManager) AudioManager.playSfx(sfxId);
     }
 
-    // 加载案件数据后初始化
-    const _urlParams = new URLSearchParams(window.location.search);
-    const _caseId = _urlParams.get('case') || 'orient-express';
-    GameState.loadCaseData(_caseId, () => {
-      GameState.init();
-    });
-  
+    // 注意：游戏初始化由 play.astro 内联脚本调用 GameState.loadCaseData 完成
+    // 此处不再重复初始化，避免双重加载
 
     // 开始质询
     window.__startQuestioning = function() {
@@ -478,6 +484,9 @@ const GameInteractions = (function() {
     setWitnessReaction,
     toggleAudio,
     playSfx,
+    toggleEvidenceBar,
+    confirmExit,
+    resetGame,
     witnessColors
   };
   // 注意：__startQuestioning/__object/__goToClosing通过window.__xxx暴露

@@ -5,6 +5,16 @@
  */
 
 const GameRender = (function() {
+  // HTML 转义工具（防止 XSS，用于用户可控数据）
+  function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
   // 证人颜色映射（统一管理，消除重复）
   const witnessColors = {
     conductor: "#3b82f6",
@@ -45,6 +55,12 @@ const GameRender = (function() {
     function render() {
       updateTopBar();
 
+      // 存档选择：有存档且未明确选择时，先显示继续/重新开始
+      if (GameState.state.pendingSaveChoice) {
+        showSaveChoiceModal();
+        return;
+      }
+
       // 根据游戏阶段播放BGM
       if (window.AudioManager && window.AudioConfig && AudioConfig.settings.autoPlayBgm) {
         const bgmId = AudioConfig.phaseBgmMap[GameState.state.gamePhase] || 'investigation';
@@ -73,24 +89,104 @@ const GameRender = (function() {
 
     function updateTopBar() {
       const phaseNames = { intro: '开场', investigation: '调查', trial: '审判', ending: '结局' };
-      document.getElementById('phase-indicator').textContent = phaseNames[GameState.state.gamePhase] || '';
-      document.getElementById('confidence-display').textContent = `信心值: ${GameState.state.confidence}`;
+      const phase = GameState.state.gamePhase;
+      document.getElementById('phase-indicator').textContent = phaseNames[phase] || '';
+      document.getElementById('confidence-display').textContent = `信心: ${GameState.state.confidence}`;
       document.getElementById('evidence-count').textContent = GameState.state.collectedEvidence.length;
+
       // 动态设置案件标题
       const caseTitleEl = document.getElementById('case-title');
       const caseName = window.GameData?.meta?.name || window.GameData?.meta?.title || '推理游戏';
       if (caseTitleEl) {
         caseTitleEl.textContent = caseName;
       }
+
+      // 设置案件主题色（data-case 属性驱动 CSS 变量覆盖）
+      const caseId = window.GameData?.meta?.id;
+      if (caseId) {
+        document.documentElement.setAttribute('data-case', caseId);
+      }
+
       // 动态设置浏览器标签页标题
       if (document.title !== `${caseName} | Fun Detective`) {
         document.title = `${caseName} | Fun Detective`;
       }
-      // 音频总开关关闭时（用户尚未提供真实音乐），隐藏音量按钮
-      const audioBtn = document.getElementById('audio-toggle-btn');
-      if (audioBtn) {
-        const audioEnabled = window.AudioConfig?.settings?.audioEnabled === true;
-        audioBtn.style.display = audioEnabled ? '' : 'none';
+
+      // ========== 工具解锁逻辑 ==========
+      const evidenceBtn = document.getElementById('evidence-btn');
+      const relationBtn = document.getElementById('relation-btn');
+      const timelineBtn = document.getElementById('timeline-btn');
+      const moreRelation = document.getElementById('more-relation');
+      const moreTimeline = document.getElementById('more-timeline');
+      const confidenceDisplay = document.getElementById('confidence-display');
+
+      const evCount = GameState.state.collectedEvidence.length;
+      const timelineCount = (GameState.state.discoveredTimeline || []).length;
+
+      // 开场阶段：隐藏证据按钮（无证据可查），信心值隐藏
+      if (phase === 'intro') {
+        if (evidenceBtn) evidenceBtn.style.display = 'none';
+        if (confidenceDisplay) confidenceDisplay.style.display = 'none';
+      } else {
+        if (evidenceBtn) evidenceBtn.style.display = '';
+        if (confidenceDisplay) confidenceDisplay.style.display = '';
+      }
+
+      // 关联按钮：收集≥2条证据后从更多菜单提升到顶栏
+      const relationUnlocked = evCount >= 2;
+      if (relationBtn) {
+        relationBtn.classList.toggle('hidden', !relationUnlocked);
+        relationBtn.style.display = relationUnlocked ? '' : 'none';
+      }
+      if (moreRelation) moreRelation.style.display = relationUnlocked ? 'flex' : 'none';
+
+      // 时间线按钮：发现时间线内容后提升到顶栏
+      const timelineUnlocked = timelineCount > 0;
+      if (timelineBtn) {
+        timelineBtn.classList.toggle('hidden', !timelineUnlocked);
+        timelineBtn.style.display = timelineUnlocked ? '' : 'none';
+      }
+      if (moreTimeline) moreTimeline.style.display = timelineUnlocked ? 'flex' : 'none';
+
+      // 审判阶段：证词进度显示在副标题
+      if (phase === 'trial') {
+        const questionedCount = Object.values(GameState.state.witnessStates || {}).filter(w => w.questioned).length;
+        const totalWitnesses = (window.GameData?.witnesses || []).length;
+        const phaseEl = document.getElementById('phase-indicator');
+        if (phaseEl && totalWitnesses > 0) {
+          phaseEl.textContent = `审判 ${questionedCount}/${totalWitnesses}证人`;
+        }
+      }
+    }
+
+    // 存档选择模态框
+    function showSaveChoiceModal() {
+      const saved = GameState.getSaveInfo();
+      const phaseText = { intro: '开场', investigation: '调查', trial: '审判', ending: '结局' }[saved.gamePhase] || saved.gamePhase;
+      const evidenceText = `${saved.collectedEvidence?.length || 0} 条证据`;
+      const witnessText = `${saved.interviewedWitnesses?.length || 0} 名证人`;
+
+      if (window.GameUI) {
+        GameUI.showModal({
+          title: '发现存档',
+          content: `
+            <p class="text-stone-300 mb-3">你有一个未完成的调查进度：</p>
+            <div class="bg-stone-700/50 rounded-lg p-3 mb-4 text-sm">
+              <div class="text-stone-400">阶段：<span class="text-white">${phaseText}</span></div>
+              <div class="text-stone-400">已收集：<span class="text-white">${evidenceText}，${witnessText}</span></div>
+            </div>
+            <p class="text-stone-400 text-xs">选择"继续"将恢复进度；选择"重新开始"将清除存档。</p>
+          `,
+          confirmText: '继续游戏',
+          cancelText: '重新开始',
+          type: 'info',
+          onConfirm: () => {
+            GameState.continueSavedGame();
+          },
+          onCancel: () => {
+            GameState.resetSavedGame();
+          }
+        });
       }
     }
 
@@ -112,19 +208,49 @@ const GameRender = (function() {
         text = typeof text === 'object' ? (text.text || text.content || JSON.stringify(text)) : String(text);
       }
       document.getElementById('intro-text').textContent = text || '';
-      
+
+      // 开场进度显示
+      const totalIntro = (dialogs.intro?.length || 6) + (dialogs.investigationStart?.length || 6);
+      const currentIdx = Math.min(GameState.state.dialogIndex + 1, totalIntro);
+      const progressEl = document.getElementById('intro-progress');
+      if (progressEl) {
+        progressEl.textContent = `开场 ${currentIdx}/${totalIntro}`;
+      }
+
       const btn = document.getElementById('intro-continue');
-      if (GameState.state.dialogIndex >= 11) {
+      if (GameState.state.dialogIndex >= totalIntro - 1) {
         btn.textContent = '开始调查';
       } else {
         btn.textContent = '继续';
       }
     }
 
+    // 跳过开场
+    function skipIntro() {
+      const dialogs = GameState.getGameData().gameDialogs;
+      const totalIntro = (dialogs?.intro?.length || 6) + (dialogs?.investigationStart?.length || 6);
+      GameState.state.dialogIndex = totalIntro;
+      // 直接进入调查阶段
+      window.__introContinue();
+    }
+
     // 调查阶段渲染
     function renderInvestigation() {
       document.getElementById('investigation-section').classList.remove('hidden');
-      
+
+      // 动态设置调查阶段提示文案（按案件主题）
+      const meta = window.GameData?.meta || {};
+      const trialSceneName = meta.trialSceneName || '审判室';
+      const mainLoopHint = meta.mainLoop?.hint || '';
+      const hintEl = document.getElementById('investigation-hint');
+      if (hintEl) {
+        if (mainLoopHint) {
+          hintEl.textContent = mainLoopHint;
+        } else {
+          hintEl.textContent = `点击场景中的物品和人物进行互动。收集证据、询问证人后，可前往${trialSceneName}进行审判。`;
+        }
+      }
+
       // 防御性检查：场景数据必须是数组
       const scenes = GameState.getGameData().gameScenes;
       if (!Array.isArray(scenes)) {
@@ -150,7 +276,7 @@ const GameRender = (function() {
       const scene = scenes.find(s => s.id === GameState.state.currentScene);
       if (!scene) {
         console.error('未找到场景:', GameState.state.currentScene, '可用场景:', scenes.map(s => s.id));
-        document.getElementById('game-scene-container').innerHTML = '<div class="text-red-400 p-4">场景未找到: ' + GameState.state.currentScene + '</div>';
+        document.getElementById('game-scene-container').innerHTML = '<div class="text-red-400 p-4">场景未找到: ' + escapeHtml(GameState.state.currentScene) + '</div>';
         return;
       }
 
@@ -184,32 +310,68 @@ const GameRender = (function() {
         return `<svg width="${size}" height="${size * 1.4}" viewBox="0 0 100 140" class="drop-shadow-lg"><circle cx="50" cy="25" r="18" fill="none" stroke="${color}" stroke-width="3"/><text x="50" y="28" text-anchor="middle" font-size="10" fill="${color}">● ●</text><text x="50" y="38" text-anchor="middle" font-size="8" fill="${color}">—</text><line x1="50" y1="43" x2="50" y2="90" stroke="${color}" stroke-width="3"/><line x1="50" y1="55" x2="25" y2="75" stroke="${color}" stroke-width="3"/><line x1="50" y1="55" x2="75" y2="75" stroke="${color}" stroke-width="3"/><line x1="50" y1="90" x2="35" y2="125" stroke="${color}" stroke-width="3"/><line x1="50" y1="90" x2="65" y2="125" stroke="${color}" stroke-width="3"/></svg>`;
       }
       
+      // 首次进入场景追踪（模块级，会话内有效）
+      if (!renderInvestigation._visitedScenes) renderInvestigation._visitedScenes = new Set();
+      const isFirstVisit = !renderInvestigation._visitedScenes.has(scene.id);
+      if (isFirstVisit) renderInvestigation._visitedScenes.add(scene.id);
+
+      // 可调查物显示开关状态（sessionStorage）
+      const hotspotsHidden = sessionStorage.getItem('fun-detective-hotspots-hidden') === '1';
+
+      // 计算场景内调查进度
+      const totalItems = scene.interactables.length;
+      const completedItems = scene.interactables.filter(item =>
+        (item.evidenceId && GameState.state.collectedEvidence.includes(item.evidenceId)) ||
+        (item.witnessId && GameState.state.interviewedWitnesses.includes(item.witnessId))
+      ).length;
+
       container.innerHTML = `
         <div class="game-scene relative w-full h-[420px] rounded-xl overflow-hidden shadow-inner" style="background: ${bgGradient}">
           ${sceneDecor}
-          <div class="absolute top-4 left-4 bg-black/60 text-white px-4 py-2 rounded-lg backdrop-blur-sm">
-            <h3 class="font-bold text-sm">${scene.name}</h3>
+          <!-- 场景标题 + 调查进度 + 可调查物开关 -->
+          <div class="absolute top-4 left-4 right-4 flex items-start justify-between">
+            <div class="bg-black/60 text-white px-4 py-2 rounded-lg backdrop-blur-sm">
+              <h3 class="font-bold text-sm">${scene.name}</h3>
+              <p class="text-xs text-stone-300 mt-0.5">可调查 ${completedItems}/${totalItems}</p>
+            </div>
+            <button id="toggle-hotspots" onclick="GameRender.toggleHotspots()" class="game-button bg-black/60 text-white px-3 py-2 rounded-lg backdrop-blur-sm text-sm flex items-center gap-1" style="min-height: 44px;" aria-label="${hotspotsHidden ? '显示可调查物' : '隐藏可调查物'}" title="${hotspotsHidden ? '显示可调查物' : '隐藏可调查物'}">
+              ${hotspotsHidden ? '👁️‍🗨️' : '👁️'} ${hotspotsHidden ? '显示' : '隐藏'}热点
+            </button>
           </div>
           <div class="absolute bottom-4 left-4 right-4 bg-black/70 text-white p-4 rounded-lg backdrop-blur-sm">
             <p class="text-sm leading-relaxed">${scene.description}</p>
           </div>
+          <div id="scene-interactables" data-tour="interactables" class="absolute inset-0 ${hotspotsHidden ? 'hotspots-dimmed' : ''}">
           ${scene.interactables.map(item => {
             const isCollected = item.evidenceId && GameState.state.collectedEvidence.includes(item.evidenceId);
             const isInterviewed = item.witnessId && GameState.state.interviewedWitnesses.includes(item.witnessId);
+            const isDone = isCollected || isInterviewed;
             const itemColor = item.color || (item.type === 'witness' ? '#3b82f6' : item.type === 'evidence' ? '#eab308' : '#78716c');
+            // 首次进入场景时，未完成的热点有脉冲提示
+            const pulseClass = (isFirstVisit && !isDone) ? 'hotspot-pulse' : '';
             if (item.type === 'witness') {
-              return `<button class="absolute interactable group" style="left: ${item.position.x}%; top: ${item.position.y}%; transform: translate(-50%, -50%)" onclick="window.__interact('${item.id}', {left: event.clientX, top: event.clientY})"><div class="relative transition-all duration-300 ${isInterviewed ? 'opacity-60' : 'hover:scale-110'}">${stickFigure(itemColor)}${isInterviewed ? '<div class="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-white text-xs">✓</div>' : ''}</div><div class="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap bg-black/80 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">${item.name}${isInterviewed ? ' (已询问)' : ''}</div></button>`;
+              return `<button class="absolute interactable" style="left: ${item.position.x}%; top: ${item.position.y}%; transform: translate(-50%, -50%); min-width: 56px; min-height: 72px;" onclick="window.__interact('${item.id}', {left: event.clientX, top: event.clientY})" aria-label="询问${item.name}"><div class="relative transition-all duration-300 ${isInterviewed ? 'opacity-60' : 'hover:scale-110'} ${pulseClass}">${stickFigure(itemColor)}${isInterviewed ? '<div class="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-white text-xs">✓</div>' : ''}</div><div class="absolute -bottom-7 left-1/2 -translate-x-1/2 whitespace-nowrap bg-black/85 text-white text-xs px-2 py-1 rounded">${item.name}${isInterviewed ? ' ✓' : ''}</div></button>`;
             } else {
-              const icon = item.type === 'evidence' ? (isCollected ? '✅' : '🔍') : '🚪';
+              const iconSvg = item.type === 'evidence'
+                ? (isCollected ? `<span style="color:#22c55e">${GameUI.icons.check}</span>` : GameUI.icons.search)
+                : GameUI.icons.door;
               const bgColor = item.type === 'evidence' ? 'bg-yellow-500/80' : 'bg-stone-500/80';
-              return `<button class="absolute interactable group" style="left: ${item.position.x}%; top: ${item.position.y}%; transform: translate(-50%, -50%)" onclick="window.__interact('${item.id}', {left: event.clientX, top: event.clientY})"><div class="w-12 h-12 rounded-full flex items-center justify-center text-2xl transition-all duration-300 ${bgColor} ${isCollected ? 'opacity-40 scale-90' : 'hover:scale-110'}">${icon}</div><div class="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap bg-black/80 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">${item.name}${isCollected ? ' (已收集)' : ''}</div></button>`;
+              return `<button class="absolute interactable" style="left: ${item.position.x}%; top: ${item.position.y}%; transform: translate(-50%, -50%); min-width: 56px; min-height: 56px;" onclick="window.__interact('${item.id}', {left: event.clientX, top: event.clientY})" aria-label="调查${item.name}"><div class="w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 ${bgColor} ${isCollected ? 'opacity-40 scale-90' : 'hover:scale-110'} ${pulseClass}">${iconSvg}</div><div class="absolute -bottom-7 left-1/2 -translate-x-1/2 whitespace-nowrap bg-black/85 text-white text-xs px-2 py-1 rounded">${item.name}${isCollected ? ' ✓' : ''}</div></button>`;
             }
           }).join('')}
-          <div class="absolute top-4 right-4 flex flex-col gap-2">
-            ${scene.exits.map(exit => `<button class="bg-white/90 hover:bg-white text-stone-800 px-4 py-2 rounded-lg text-sm font-medium shadow-lg transition-all hover:scale-105" onclick="window.__exit('${exit.to}')">${exit.label} →</button>`).join('')}
+          </div>
+          <div class="absolute top-20 right-4 flex flex-col gap-2">
+            ${scene.exits.map(exit => `<button class="bg-white/90 hover:bg-white text-stone-800 px-4 py-2 rounded-lg text-sm font-medium shadow-lg transition-all hover:scale-105 game-button" style="min-height: 44px;" onclick="window.__exit('${exit.to}')">${exit.label} →</button>`).join('')}
           </div>
         </div>
       `;
+    }
+
+    // 切换可调查物显示/隐藏
+    function toggleHotspots() {
+      const current = sessionStorage.getItem('fun-detective-hotspots-hidden') === '1';
+      sessionStorage.setItem('fun-detective-hotspots-hidden', current ? '0' : '1');
+      render();
     }
 
     // 审判阶段渲染（多阶段：开场/质询/总结/判决）
@@ -250,12 +412,14 @@ const GameRender = (function() {
       ).join('');
       panelContainer.innerHTML = `
         <div class="bg-stone-800 rounded-xl p-8 text-center">
-          <div class="text-6xl mb-4">⚖️</div>
+          <div class="mb-4 flex justify-center" style="color: var(--game-accent, #f59e0b);">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M8.5 12h7"/><path d="M5 12l-2 5a2.5 2.5 0 0 0 5 0L6 12"/><path d="M19 12l-2 5a2.5 2.5 0 0 0 5 0l-2-5"/><path d="M8 21h8"/></svg>
+          </div>
           <h2 class="text-2xl font-bold mb-4">审判开始</h2>
           <div class="bg-stone-900/50 rounded-lg p-6 mb-6 text-left max-w-2xl mx-auto">
             ${openingHtml}
             <p class="text-stone-400 text-sm">
-              提示：询问每位证人，通过追问获取更多信息，发现矛盾时点击"异议！"并出示证据反驳。
+              ${caseData.meta?.mainLoop?.hint || '提示：询问每位证人，通过追问获取更多信息，发现矛盾时点击"异议！"并出示证据反驳。'}
             </p>
           </div>
           <button onclick="window.__startQuestioning()" class="px-8 py-3 bg-amber-600 hover:bg-amber-500 rounded-lg font-bold text-lg transition-all hover:scale-105">
@@ -499,6 +663,8 @@ const GameRender = (function() {
     renderTrial,
     renderEnding,
     renderEvidenceBar,
+    toggleHotspots,
+    skipIntro,
     stickFigure,
     stickFigureWithExpr,
     getWitnessColor,
