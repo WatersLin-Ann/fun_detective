@@ -163,6 +163,52 @@ function validateCase(filePath) {
     warnings.push('contradictions 不是数组，审判阶段可能无法使用异议功能');
   }
 
+  // ========== timeline 校验 ==========
+  if (data.timeline !== undefined) {
+    if (!Array.isArray(data.timeline)) {
+      errors.push('timeline 必须是数组');
+    } else {
+      const timelineIds = new Set();
+      data.timeline.forEach((ev, i) => {
+        if (!ev.id) {
+          errors.push(`timeline[${i}].id 缺失`);
+        } else {
+          if (timelineIds.has(ev.id)) {
+            errors.push(`timeline[${i}].id 重复: ${ev.id}`);
+          }
+          timelineIds.add(ev.id);
+        }
+        if (!ev.time) errors.push(`timeline[${i}](${ev.id || '?'}).time 缺失`);
+        if (!ev.title) errors.push(`timeline[${i}](${ev.id || '?'}).title 缺失`);
+        if (!ev.source) warnings.push(`timeline[${i}](${ev.id || '?'}) 缺少 source 字段，可追溯性不足`);
+      });
+
+      // 时间线矛盾引用完整性校验
+      if (data.timelineContradictions !== undefined) {
+        if (!Array.isArray(data.timelineContradictions)) {
+          errors.push('timelineContradictions 必须是数组');
+        } else {
+          data.timelineContradictions.forEach((tc, i) => {
+            if (!tc.id) errors.push(`timelineContradictions[${i}].id 缺失`);
+            if (!tc.event1) {
+              errors.push(`timelineContradictions[${i}](${tc.id || '?'}).event1 缺失`);
+            } else if (!timelineIds.has(tc.event1)) {
+              errors.push(`timelineContradictions[${i}](${tc.id || '?'}) event1 引用不存在的时间线事件: ${tc.event1}`);
+            }
+            if (!tc.event2) {
+              errors.push(`timelineContradictions[${i}](${tc.id || '?'}).event2 缺失`);
+            } else if (!timelineIds.has(tc.event2)) {
+              errors.push(`timelineContradictions[${i}](${tc.id || '?'}) event2 引用不存在的时间线事件: ${tc.event2}`);
+            }
+            if (tc.event1 && tc.event2 && tc.event1 === tc.event2) {
+              errors.push(`timelineContradictions[${i}](${tc.id || '?'}) event1 与 event2 相同: ${tc.event1}`);
+            }
+          });
+        }
+      }
+    }
+  }
+
   // ========== trialOpening 校验 ==========
   if (data.trialOpening && !Array.isArray(data.trialOpening)) {
     errors.push('trialOpening 必须是字符串数组');

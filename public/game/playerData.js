@@ -227,6 +227,19 @@ const PlayerData = (function() {
     return load().evidenceLinks;
   }
 
+  // 标记关联为已排除（竞争假设机制）
+  function markLinkExcluded(presetId) {
+    const data = load();
+    const link = data.evidenceLinks.find(l => l.presetId === presetId);
+    if (link) {
+      link.excluded = true;
+      link.excludedAt = Date.now();
+      save(data);
+      return true;
+    }
+    return false;
+  }
+
   function clearEvidenceLinks() {
     const data = load();
     data.evidenceLinks = [];
@@ -350,6 +363,7 @@ const PlayerData = (function() {
     addEvidenceLink,
     getEvidenceLinks,
     clearEvidenceLinks,
+    markLinkExcluded,
     // 导出导入
     exportData,
     exportAsText,

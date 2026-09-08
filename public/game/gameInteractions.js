@@ -472,6 +472,21 @@ const GameInteractions = (function() {
 
     // 进入总结陈词
     window.__goToClosing = function() {
+      const st = GameState.state;
+      const gameWitnesses = GameState.getGameData().gameWitnesses || [];
+      const questionedCount = Object.values(st.witnessStates || {}).filter(w => w.questioned).length;
+      const contradictionCount = (st.contradictionsFound || []).length;
+      const minContradictions = window.GameData?.meta?.minContradictions || 1;
+
+      if (questionedCount < gameWitnesses.length) {
+        if (window.GameUI) GameUI.showToast(`还需询问 ${gameWitnesses.length - questionedCount} 名证人`);
+        return;
+      }
+      if (contradictionCount < minContradictions) {
+        if (window.GameUI) GameUI.showToast(`还需发现 ${minContradictions - contradictionCount} 条矛盾才能进入总结陈词`);
+        return;
+      }
+
       GameState.state.trialPhase = 'closing';
       GameState.state.currentWitness = null;
       GameState.save();

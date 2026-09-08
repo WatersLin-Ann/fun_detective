@@ -215,6 +215,18 @@ const GuideUI = (function() {
       case 'find_contradiction':
         completed = (state.contradictionsFound || []).length >= obj.target;
         break;
+      case 'find_relation':
+        // 建立关联假设：统计正确且未被排除的证据关联数量
+        try {
+          const links = (typeof PlayerData !== 'undefined' && PlayerData.getEvidenceLinks)
+            ? PlayerData.getEvidenceLinks()
+            : (window.PlayerData ? window.PlayerData.getEvidenceLinks() : []);
+          const correctActive = (links || []).filter(l => l.isCorrect && !l.excluded).length;
+          completed = correctActive >= obj.target;
+        } catch (e) {
+          completed = false;
+        }
+        break;
       case 'enter_trial':
         completed = state.gamePhase === 'trial';
         break;
@@ -285,6 +297,17 @@ const GuideUI = (function() {
         break;
       case 'find_contradiction':
         progress = `${(state.contradictionsFound || []).length}/${obj.target}`;
+        break;
+      case 'find_relation':
+        try {
+          const links = (typeof PlayerData !== 'undefined' && PlayerData.getEvidenceLinks)
+            ? PlayerData.getEvidenceLinks()
+            : (window.PlayerData ? window.PlayerData.getEvidenceLinks() : []);
+          const correctActive = (links || []).filter(l => l.isCorrect && !l.excluded).length;
+          progress = `${correctActive}/${obj.target}`;
+        } catch (e) {
+          progress = `0/${obj.target}`;
+        }
         break;
       case 'present_evidence':
         progress = `${state.evidencePresented || 0}/${obj.target}`;

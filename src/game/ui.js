@@ -138,7 +138,7 @@ const GameUI = (function() {
             </div>
             <div class="flex items-center gap-2">
               ${showHistory ? `<button onclick="GameUI.toggleDialogHistory()" class="text-xs text-stone-400 hover:text-white px-2 py-1 rounded hover:bg-stone-700">历史 (${state.dialogHistory.length})</button>` : ''}
-              <button onclick="GameUI.removeDialog()" class="text-stone-400 hover:text-white text-xl leading-none">×</button>
+              <button onclick="GameUI.removeDialog()" class="text-stone-400 hover:text-white text-xl w-11 h-11 flex items-center justify-center rounded hover:bg-stone-700 transition-colors" aria-label="关闭对话" style="min-height:44px;">×</button>
             </div>
           </div>
           <!-- 对话内容 -->
@@ -332,7 +332,7 @@ const GameUI = (function() {
                 <p class="text-xs text-stone-400">发现于：${escapeHtml(evidence.foundIn || '犯罪现场')}</p>
               </div>
             </div>
-            <button onclick="GameUI.removeEvidenceCard()" class="text-stone-400 hover:text-white text-xl w-8 h-8 flex items-center justify-center rounded hover:bg-stone-700 transition-colors" aria-label="关闭证据详情" style="min-height:32px;">×</button>
+            <button onclick="GameUI.removeEvidenceCard()" class="text-stone-400 hover:text-white text-xl w-11 h-11 flex items-center justify-center rounded hover:bg-stone-700 transition-colors" aria-label="关闭证据详情" style="min-height:44px;">×</button>
           </div>
           <!-- 观察到的事实 -->
           <div class="p-4">
@@ -427,11 +427,13 @@ const GameUI = (function() {
     const {
       title = '确认',
       message = '',
+      content = null,  // 富文本内容（不转义），优先于 message
       confirmText = '确认',
       cancelText = '取消',
       onConfirm = null,
       onCancel = null,
       type = 'warning',
+      hideCancel = false,
     } = options;
 
     const colors = {
@@ -453,13 +455,13 @@ const GameUI = (function() {
           <div class="p-6 text-center">
             <div class="mb-4 flex justify-center text-amber-400">${modalIcons[type] || icons.info}</div>
             <h3 class="font-bold text-xl mb-2">${escapeHtml(title)}</h3>
-            <p class="text-stone-400 text-sm">${escapeHtml(message)}</p>
+            ${content ? `<div class="text-left">${content}</div>` : `<p class="text-stone-400 text-sm">${escapeHtml(message)}</p>`}
           </div>
           <div class="flex gap-2 px-6 pb-6">
-            <button onclick="GameUI.cancelModal()" class="flex-1 px-4 py-2 bg-stone-700 hover:bg-stone-600 rounded-lg transition-colors">
+            ${hideCancel ? '' : `<button onclick="GameUI.cancelModal()" class="flex-1 px-4 py-2 bg-stone-700 hover:bg-stone-600 rounded-lg transition-colors">
               ${escapeHtml(cancelText)}
-            </button>
-            <button onclick="GameUI.confirmModal()" class="flex-1 px-4 py-2 ${colors[type]} rounded-lg font-bold transition-colors">
+            </button>`}
+            <button onclick="GameUI.confirmModal()" class="${hideCancel ? 'flex-1' : 'flex-1'} px-4 py-2 ${colors[type]} rounded-lg font-bold transition-colors">
               ${escapeHtml(confirmText)}
             </button>
           </div>
@@ -570,7 +572,13 @@ const GameUI = (function() {
       { id: 'timeline-overlay', close: () => { if (window.TimelineUI) TimelineUI.close(); } },
       { id: 'tutorial-overlay', close: () => { if (window.GuideUI) GuideUI.closeTutorial(); } },
       { id: 'more-menu', close: () => GameUI.closeMoreMenu() },
-      { id: 'game-dialog-overlay', close: () => GameUI.removeDialog() }
+      { id: 'game-dialog-overlay', close: () => GameUI.removeDialog() },
+      { id: 'objection-overlay', close: () => {
+        // 异议遮罩：Esc 可提前关闭动画
+        if (window.GameState) GameState.state.objectionActive = false;
+        if (window.GameRender) GameRender.render();
+      } }
+      // 注意：ending-overlay 是终局界面，不允许 Esc 取消，只能通过按钮离开
     ];
     for (const ov of overlays) {
       const el = document.getElementById(ov.id);

@@ -68,7 +68,7 @@ const NotebookUI = (function() {
             <button onclick="NotebookUI.exportText()" class="text-xs px-3 py-1.5 bg-stone-700 hover:bg-stone-600 rounded-lg transition-colors" title="导出为文本">
               📄 文本
             </button>
-            <button onclick="NotebookUI.remove()" class="text-stone-400 hover:text-white text-2xl leading-none ml-2">×</button>
+            <button onclick="NotebookUI.remove()" class="text-stone-400 hover:text-white text-2xl w-11 h-11 flex items-center justify-center rounded hover:bg-stone-700 transition-colors ml-2" aria-label="关闭笔记" style="min-height:44px;">×</button>
           </div>
         </div>
 
@@ -200,7 +200,7 @@ const NotebookUI = (function() {
           <input type="checkbox" ${item.done ? 'checked' : ''} onchange="NotebookUI.toggleItem('${type}', '${item.id}')" class="mt-1 cursor-pointer">
         ` : ''}
         <span class="flex-1 text-sm ${item.done ? 'line-through' : ''}">${escapeHtml(item.text)}</span>
-        <button onclick="NotebookUI.deleteItem('${type}', '${item.id}')" class="opacity-0 group-hover:opacity-100 text-stone-500 hover:text-red-400 transition-opacity text-xs">×</button>
+        <button onclick="NotebookUI.deleteItem('${type}', '${item.id}')" class="text-stone-500 hover:text-red-400 transition-colors text-sm w-11 h-11 flex items-center justify-center rounded hover:bg-stone-700 flex-shrink-0" aria-label="删除这条笔记">×</button>
       </div>
     `).join('');
   }

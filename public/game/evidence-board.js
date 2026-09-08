@@ -64,7 +64,7 @@ const EvidenceBoard = (function() {
           </div>
           <div class="flex items-center gap-3">
             <span class="text-xs text-stone-400">已发现关联 <span class="text-amber-400 font-bold">${countCorrectLinks()}</span></span>
-            <button onclick="EvidenceBoard.closeBoard()" class="text-stone-400 hover:text-white text-2xl leading-none w-8 h-8 flex items-center justify-center rounded hover:bg-stone-700">×</button>
+            <button onclick="EvidenceBoard.closeBoard()" class="text-stone-400 hover:text-white text-2xl w-11 h-11 flex items-center justify-center rounded hover:bg-stone-700 transition-colors" aria-label="关闭关联板" style="min-height:44px;">×</button>
           </div>
         </div>
 
@@ -264,6 +264,24 @@ const EvidenceBoard = (function() {
     );
 
     if (preset) {
+      // 检查前置关联要求（竞争假设机制）
+      if (preset.requiresLink) {
+        const playerLinks = (window.PlayerData && PlayerData.getEvidenceLinks()) || [];
+        const hasPrerequisite = playerLinks.some(l => l.presetId === preset.requiresLink);
+        if (!hasPrerequisite) {
+          // 前置关联未建立，显示提示而非直接成功
+          if (window.GameUI) {
+            GameUI.showModal({
+              title: '🔍 需要更多线索',
+              message: `这个结论需要先建立初步假设。请先尝试关联手帕与赫伯德夫人，建立初步假设后再验证这个方向。`,
+              confirmText: '我知道了',
+              hideCancel: true,
+              type: 'info'
+            });
+          }
+          return;
+        }
+      }
       // 成功关联
       handleSuccessLink(preset);
     } else {
@@ -302,6 +320,10 @@ const EvidenceBoard = (function() {
 
     if (window.PlayerData) {
       PlayerData.addEvidenceLink(linkData);
+      // 竞争假设：如果当前关联排除了另一个关联，标记被排除的关联
+      if (preset.excludesLink && window.PlayerData && typeof PlayerData.markLinkExcluded === 'function') {
+        PlayerData.markLinkExcluded(preset.excludesLink);
+      }
       // 增加信心值
       if (window._gameState) {
         window._gameState.confidence = Math.min(100, window._gameState.confidence + preset.confidence);
@@ -310,20 +332,21 @@ const EvidenceBoard = (function() {
       if (window.NotebookUI && typeof NotebookUI.addItem === 'function') {
         NotebookUI.addItem('推理', `【${preset.title}】${preset.conclusion}`);
       }
+      // 触发目标系统检查（find_relation 类型目标）
+      if (window.GuideUI && typeof GuideUI.checkObjectives === 'function') {
+        GuideUI.checkObjectives();
+      }
     }
 
-    // 显示成功结果
-    showResultModal('success', preset);
-
-    // 刷新证据板
-    setTimeout(() => {
+    // 显示成功结果，确认后刷新证据板
+    showResultModal('success', preset, () => {
       closeBoard();
       openBoard();
-    }, 1500);
+    });
   }
 
   /**
-   * 处理自定义关联（失败但保存）
+   * 处理自定义关联（失败但保存）——给出可解释的反证
    */
   function handleCustomLink(first, second) {
     const linkData = {
@@ -339,14 +362,53 @@ const EvidenceBoard = (function() {
       PlayerData.addEvidenceLink(linkData);
     }
 
-    showResultModal('fail', null, first, second);
+    // 根据组合类型给出可解释的反馈，而非笼统的"没有关联"
+    const firstName = getItemName(first.id, first.type);
+    const secondName = getItemName(second.id, second.type);
+    let hint = '';
+
+    if (first.type === 'evidence' && second.type === 'evidence') {
+      hint = `「${firstName}」和「${secondName}」都是物证，但它们之间没有直接的因果关系。试试把物证与证人关联，或者检查它们是否指向同一个时间点。`;
+    } else if (first.type === 'witness' && second.type === 'witness') {
+      hint = `「${firstName}」和「${secondName}」的证词目前没有发现直接矛盾。仔细对比他们的证词细节，或者用物证来检验其中一人的说法。`;
+    } else {
+      const evidenceItem = first.type === 'evidence' ? first : second;
+      const witnessItem = first.type === 'witness' ? first : second;
+      hint = `「${evidenceItem ? getItemName(evidenceItem.id, evidenceItem.type) : ''}」不能直接证明「${witnessItem ? getItemName(witnessItem.id, witnessItem.type) : ''}」的说法。也许需要先收集更多证据，或者这条线索指向另一个人。`;
+    }
+
+    if (window.GameUI) {
+      GameUI.showModal({
+        title: '🤔 暂时没有发现直接关联',
+        content: `
+          <p class="text-stone-300 leading-relaxed text-sm">${hint}</p>
+          <p class="text-stone-500 text-xs mt-3">这条组合已保存为你的自定义笔记，也许后续发现新线索后会产生联系。</p>
+        `,
+        confirmText: '继续推理',
+        hideCancel: true,
+        type: 'info'
+      });
+    }
   }
 
   /**
    * 显示结果模态框
+   * @param {string} type - success | already | fail
+   * @param {object} preset - 预设关联数据
+   * @param {Function|object} onConfirmOrFirst - 成功时为回调函数，失败时为 first 对象
+   * @param {object} second - 失败时的 second 对象
    */
-  function showResultModal(type, preset, first, second) {
+  function showResultModal(type, preset, onConfirmOrFirst, second) {
     let title, content, icon, color;
+    let onConfirm = null;
+    let first = null;
+
+    // 参数适配：success/already 时第三个参数是回调；fail 时第三个参数是 first
+    if (type === 'fail') {
+      first = onConfirmOrFirst;
+    } else {
+      onConfirm = onConfirmOrFirst;
+    }
 
     if (type === 'success') {
       icon = '🎉';
@@ -384,7 +446,8 @@ const EvidenceBoard = (function() {
         title: `${icon} ${title}`,
         content: content,
         confirmText: '继续推理',
-        onConfirm: () => {}
+        hideCancel: true,
+        onConfirm: onConfirm || (() => {})
       });
     }
   }

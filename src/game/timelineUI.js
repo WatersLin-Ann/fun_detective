@@ -51,12 +51,13 @@ const TimelineUI = (function() {
     const caseData = window.GameData || {};
     const contradictions = caseData.timelineContradictions || [];
     let found = 0;
+    let pending = 0; // 有矛盾但事件未全部发现
 
     contradictions.forEach(cont => {
       if (state.timelineContradictionsFound.includes(cont.id)) return;
-      // 两个事件都已发现才能检测矛盾
-      if (state.discoveredTimeline.includes(cont.event1) &&
-          state.discoveredTimeline.includes(cont.event2)) {
+      const e1Found = state.discoveredTimeline.includes(cont.event1);
+      const e2Found = state.discoveredTimeline.includes(cont.event2);
+      if (e1Found && e2Found) {
         state.timelineContradictionsFound.push(cont.id);
         state.confidence = Math.min(100, state.confidence + cont.confidence);
         found++;
@@ -68,8 +69,19 @@ const TimelineUI = (function() {
         if (window.PlayerData) {
           PlayerData.addNotebookItem('reasonings', `【时间线矛盾】${cont.description}`);
         }
+      } else {
+        pending++;
       }
     });
+
+    // 无新发现时给明确反馈
+    if (found === 0) {
+      if (pending > 0) {
+        if (window.GameUI) GameUI.showToast(`还有 ${pending} 条矛盾待验证，需先发现更多时间线事件`, 'warning', 3000);
+      } else {
+        if (window.GameUI) GameUI.showToast('所有时间线矛盾已发现', 'info', 2500);
+      }
+    }
 
     GameState.save();
     return found;
@@ -154,7 +166,8 @@ const TimelineUI = (function() {
                 </div>
                 <h4 class="font-bold text-sm text-white mb-1">${event.title}</h4>
                 <p class="text-xs text-stone-400">${event.description}</p>
-                <p class="text-xs text-stone-500 mt-1">来源：${event.source}</p>
+                ${event.quote ? `<p class="text-xs text-stone-500 mt-2 italic border-l-2 border-stone-600 pl-2">"${event.quote}"</p>` : ''}
+                <p class="text-xs text-stone-500 mt-1">来源：${event.source}${event.sourceId ? `（${event.sourceId}）` : ''}</p>
               </div>
             </div>
           `;

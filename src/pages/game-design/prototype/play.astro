@@ -251,6 +251,9 @@ import GameLayout from '@layouts/GameLayout.astro';
       .game-scene { height: 320px !important; }
       .game-scene .absolute.bottom-4 { bottom: 0.5rem; left: 0.5rem; right: 0.5rem; padding: 0.75rem; }
       .game-scene .absolute.bottom-4 p { font-size: 0.75rem; line-height: 1.4; }
+      /* 移动端：场景出口移到底部，避免遮挡人物标签 */
+      .game-scene .scene-exits { top: auto !important; bottom: 5rem !important; right: 0.5rem !important; flex-direction: row !important; flex-wrap: wrap; gap: 0.25rem !important; }
+      .game-scene .scene-exits button { padding: 0.25rem 0.5rem; font-size: 0.7rem; min-height: 36px; }
       #more-menu { left: 0.5rem; right: 0.5rem; min-width: auto; }
       #game-dialog-box { max-width: 100%; border-radius: 1rem 1rem 0 0; }
       /* 弹层按钮触控尺寸 */
@@ -262,6 +265,21 @@ import GameLayout from '@layouts/GameLayout.astro';
       #evidence-btn { padding: 0 0.35rem; font-size: 0.7rem; }
       #relation-btn, #timeline-btn { padding: 0 0.3rem; font-size: 0.7rem; }
       .game-scene { height: 280px !important; }
+    }
+    /* 可访问性：正文最小字号（仅作用于明确的正文文本容器，不覆盖标题/数值/状态层级） */
+    #game-dialog-text,
+    #intro-text,
+    #ending-description,
+    #investigation-hint,
+    .game-scene .scene-description p {
+      font-size: max(0.875rem, 14px);
+    }
+    /* 状态指示：图标+文字，不依赖颜色 alone */
+    .status-indicator { display: inline-flex; align-items: center; gap: 0.25rem; }
+    /* 焦点可见性 */
+    button:focus-visible, a:focus-visible {
+      outline: 2px solid #f59e0b;
+      outline-offset: 2px;
     }
   </style>
 

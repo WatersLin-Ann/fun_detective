@@ -5,7 +5,7 @@
  */
 
 const EndingUI = (function() {
-  // 计算结局评级
+  // 计算结局评级（基于核心论证链完成度 + 矛盾发现 + 信心值）
   function calculateEnding() {
     const state = GameState.state;
     const caseData = window.GameData || {};
@@ -16,14 +16,49 @@ const EndingUI = (function() {
       return endings.find(e => e.grade === 'D') || endings[endings.length - 1];
     }
 
-    // 根据信心值计算评级
+    // 计算核心论证链完成度
+    const playerLinks = (window.PlayerData && PlayerData.getEvidenceLinks()) || [];
+    const correctLinks = playerLinks.filter(l => l.isCorrect && !l.excluded);
+    const coreLinkIds = caseData.meta?.coreLinkIds || [];
+    const coreLinksCompleted = coreLinkIds.filter(id => correctLinks.some(l => l.presetId === id)).length;
+    const coreCompletionRate = coreLinkIds.length > 0 ? coreLinksCompleted / coreLinkIds.length : 0;
+
+    // 矛盾发现数
+    const contradictionCount = (state.contradictionsFound || []).length;
+    const minContradictions = caseData.meta?.minContradictions || 1;
+
+    // 信心值
     const confidence = state.confidence || 0;
-    for (const ending of endings) {
-      if (confidence >= ending.minConfidence) {
-        return ending;
-      }
+
+    // 综合评分：核心链40% + 矛盾30% + 信心30%
+    const contradictionRate = Math.min(1, contradictionCount / Math.max(minContradictions, 1));
+    const confidenceRate = confidence / 100;
+    const compositeScore = (coreCompletionRate * 0.4) + (contradictionRate * 0.3) + (confidenceRate * 0.3);
+
+    // 评级规则
+    let grade;
+    if (coreCompletionRate >= 1.0 && contradictionCount >= minContradictions && compositeScore >= 0.85) {
+      grade = 'S';
+    } else if (coreCompletionRate >= 0.66 && contradictionCount >= 1 && compositeScore >= 0.7) {
+      grade = 'A';
+    } else if (coreCompletionRate >= 0.33 && compositeScore >= 0.5) {
+      grade = 'B';
+    } else if (compositeScore >= 0.3) {
+      grade = 'C';
+    } else {
+      grade = 'D';
     }
-    return endings[endings.length - 1];
+
+    // 存储评级详情用于显示
+    state._gradeDetail = {
+      coreLinksCompleted,
+      coreLinkTotal: coreLinkIds.length,
+      contradictionCount,
+      confidence,
+      compositeScore: Math.round(compositeScore * 100)
+    };
+
+    return endings.find(e => e.grade === grade) || endings[endings.length - 1];
   }
 
   // 检查成就解锁
@@ -110,6 +145,17 @@ const EndingUI = (function() {
     if (overlay) overlay.classList.remove('hidden');
   }
 
+  // 根据最终选择渲染后日谈
+  function renderChoiceEpilogue() {
+    const choice = GameState.state.choices?.['final-choice'];
+    if (!choice) return '';
+    const epilogues = {
+      reveal: `<div class="mt-3 pt-3 border-t border-stone-700"><p class="text-xs text-stone-500 mb-1">你的选择：将真相告知警方</p><p class="text-stone-400 text-sm">你向警方如实报告了12人共同作案的事实。正义得到了伸张，但那些失去亲人的乘客们将面临法律的审判。波洛在笔记本上写下："法律不容情，但情亦非罪。"</p></div>`,
+      conceal: `<div class="mt-3 pt-3 border-t border-stone-700"><p class="text-xs text-stone-500 mb-1">你的选择：向警方隐瞒真相</p><p class="text-stone-400 text-sm">你告诉警方凶手已从窗户逃走，大雪掩盖了痕迹。12名乘客向你表达了无声的感谢。波洛的内心或许永远不会平静——他第一次让法律让位于人情。</p></div>`
+    };
+    return epilogues[choice] || '';
+  }
+
   // 渲染结局页面
   function renderEnding(ending, newAchievements) {
     const state = GameState.state;
@@ -143,6 +189,7 @@ const EndingUI = (function() {
 
       <div class="bg-stone-900/50 rounded-lg p-4 mb-4">
         <p class="text-stone-300 text-sm leading-relaxed">${ending.description}</p>
+        ${renderChoiceEpilogue()}
         <p class="text-amber-400 text-sm mt-3 italic">"${ending.detectiveComment}"</p>
       </div>
 
@@ -194,11 +241,22 @@ const EndingUI = (function() {
 
   // 重新开始
   function replay() {
+    // 隐藏结局浮层
     const overlay = document.getElementById('ending-overlay');
     if (overlay) overlay.classList.add('hidden');
-    GameState.reset();
-    GameState.init();
-    if (window.GameRender) GameRender.render();
+    // 清除证据栏等残留状态
+    if (window.GameState) {
+      GameState.state.showEvidenceBar = false;
+      GameState.state.evidenceMode = 'view';
+      GameState.state.selectedEvidence = null;
+    }
+    // 调用已存在的重置 API（清除存档 + 重置 state + 重新渲染到开场）
+    if (window.GameState && typeof GameState.resetSavedGame === 'function') {
+      GameState.resetSavedGame();
+    } else {
+      // 兜底：直接重载页面
+      window.location.reload();
+    }
   }
 
   // 返回案件选择

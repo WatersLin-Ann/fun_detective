@@ -229,20 +229,19 @@ const CaseData_orientExpress = (function() {
 
   // ========== 时间线数据 ==========
   const timeline = [
-    { id: 'tl-oe-001', time: '22:00', title: '列车发车', description: '东方快车从贝尔格莱德站发车，开始前往加来的旅程。', source: '场景', sourceId: 'intro', category: '行程' },
-    { id: 'tl-oe-002', time: '23:00', title: '列车员开始巡逻', description: '列车员皮埃尔开始夜间巡逻，检查各包厢情况。', source: '证人', sourceId: 'conductor', category: '证词' },
-    { id: 'tl-oe-003', time: '00:10', title: '赫伯德夫人按铃', description: '赫伯德夫人按铃呼叫列车员，说有人在她的包厢里。', source: '证人', sourceId: 'mrs-hubbard', category: '证词' },
-    { id: 'tl-oe-004', time: '00:20', title: '列车因大雪停车', description: '列车因前方大雪覆盖轨道，被迫停在南斯拉夫荒野中。', source: '场景', sourceId: 'corridor', category: '行程' },
-    { id: 'tl-oe-005', time: '01:15', title: '怀表停止', description: '现场发现的怀表停在1:15，推测这是谋杀发生的时间。', source: '证据', sourceId: 'watch', category: '物证' },
-    { id: 'tl-oe-006', time: '01:20', title: '公主女仆按铃', description: '公主的女仆按铃要水，说公主睡不着。', source: '证人', sourceId: 'princess', category: '证词' },
-    { id: 'tl-oe-007', time: '01:30', title: '上校与玛丽在走廊', description: '上校说他和玛丽在走廊交谈了约10分钟。', source: '证人', sourceId: 'colonel', category: '证词' },
-    { id: 'tl-oe-008', time: '02:00', title: '列车员听到声音', description: '列车员说他在2点左右听到赫伯德夫人包厢有声音。', source: '证人', sourceId: 'conductor', category: '证词' }
+    { id: 'tl-oe-001', time: '22:00', title: '列车发车', description: '东方快车从贝尔格莱德站发车，开始前往加来的旅程。', source: '场景', sourceId: 'intro', category: '行程', quote: '东方快车从贝尔格莱德站发车。' },
+    { id: 'tl-oe-002', time: '00:37', title: '雷切特按铃', description: '列车员说大约12:37听到雷切特先生按铃，过去时他用法语说"没事，我搞错了"。', source: '证人', sourceId: 'conductor', category: '证词', quote: '大约12:37的时候听到雷切特先生按铃，我过去时他用法语说"没事，我搞错了"。' },
+    { id: 'tl-oe-003', time: '00:20', title: '列车因大雪停车', description: '列车因前方大雪覆盖轨道，被迫停在南斯拉夫荒野中。', source: '场景', sourceId: 'corridor', category: '行程', quote: '列车因大雪被迫停车。' },
+    { id: 'tl-oe-004', time: '01:15', title: '怀表停止', description: '现场发现的怀表停在1:15，推测这是谋杀发生的时间。', source: '证据', sourceId: 'watch', category: '物证', quote: '怀表指针停在1:15。' },
+    { id: 'tl-oe-005', time: '01:15', title: '列车员听到动静', description: '列车员追问后承认1:15左右听到声音，以为是赫伯德夫人在叫他，过去时她说有个男人在她包厢里。', source: '证人', sourceId: 'conductor', category: '证词', quote: '1:15左右我好像听到了什么声音，但我以为是赫伯德夫人在叫我。' },
+    { id: 'tl-oe-006', time: '01:15', title: '赫伯德夫人声称有男人', description: '赫伯德夫人说昨晚有个男人在她包厢里，按铃叫列车员，但他来的时候那人已经走了。', source: '证人', sourceId: 'mrs-hubbard', category: '证词', quote: '昨晚有个男人在我包厢里！我按铃叫列车员，但他来的时候那人已经走了。' },
+    { id: 'tl-oe-007', time: '01:30', title: '上校与玛丽在走廊', description: '上校说他和玛丽在走廊交谈了约10分钟。', source: '证人', sourceId: 'colonel', category: '证词', quote: '我和玛丽在走廊交谈了约10分钟。' }
   ];
 
   // 时间线矛盾
   const timelineContradictions = [
-    { id: 'tc-oe-001', event1: 'tl-oe-003', event2: 'tl-oe-002', description: '赫伯德夫人说00:10有人在她包厢并按铃，但列车员说23:00开始巡逻后00:10在其他车厢，两人说法矛盾。', confidence: 15 },
-    { id: 'tc-oe-002', event1: 'tl-oe-007', event2: 'tl-oe-006', description: '上校说01:30和玛丽在走廊交谈，但玛丽说她01:20就已经睡着了，两人证词时间冲突。', confidence: 15 }
+    { id: 'tc-oe-001', event1: 'tl-oe-002', event2: 'tl-oe-005', description: '列车员初始证词说12:37后"没听到什么动静"，但追问后承认1:15听到声音。前后证词不一致。', confidence: 15 },
+    { id: 'tc-oe-002', event1: 'tl-oe-004', event2: 'tl-oe-005', description: '怀表停在1:15，列车员也在1:15听到动静。时间完全吻合——怀表可能是故意设置的误导。', confidence: 15 }
   ];
 
 
@@ -313,11 +312,12 @@ const CaseData_orientExpress = (function() {
   const objectives = [
     { id: 'obj-oe-001', phase: 'investigation', title: '调查案发现场', description: '在包厢中收集所有可用的证据', type: 'collect_evidence', target: 5, hint: '点击场景中的物品来收集证据' },
     { id: 'obj-oe-002', phase: 'investigation', title: '询问关键证人', description: '至少询问3名证人了解案发经过', type: 'interview_witness', target: 3, hint: '点击证人卡片与他们对话' },
-    { id: 'obj-oe-003', phase: 'investigation', title: '整理推理笔记', description: '打开笔记，记录你的推理思路', type: 'open_notebook', target: 1, hint: '点击顶部"笔记"按钮' },
-    { id: 'obj-oe-004', phase: 'investigation', title: '发现证词矛盾', description: '在证人证词中找出至少1个矛盾', type: 'find_contradiction', target: 1, hint: '仔细对比不同证人的证词' },
+    { id: 'obj-oe-003', phase: 'investigation', title: '建立关联假设', description: '通过证据关联板发现至少1条关键关联', type: 'find_relation', target: 1, hint: '点击顶部「关联」按钮，选择两个证据/证人进行关联' },
+    { id: 'obj-oe-004', phase: 'investigation', title: '整理推理笔记', description: '打开笔记，记录你的推理思路', type: 'open_notebook', target: 1, hint: '点击顶部"笔记"按钮' },
     { id: 'obj-oe-005', phase: 'investigation', title: '准备进入审判', description: '收集足够证据后，进入审判阶段', type: 'enter_trial', target: 1, hint: '点击"进入审判"按钮' },
     { id: 'obj-oe-006', phase: 'trial', title: '质询所有证人', description: '在审判中质询所有证人', type: 'question_all_witnesses', target: 1, hint: '点击证人进行质询' },
-    { id: 'obj-oe-007', phase: 'trial', title: '出示关键证据', description: '在质询中出示至少2次证据', type: 'present_evidence', target: 2, hint: '点击"出示证据"按钮' }
+    { id: 'obj-oe-007', phase: 'trial', title: '发现证词矛盾', description: '通过「异议！」出示证据反驳证词，找出至少1个矛盾', type: 'find_contradiction', target: 1, hint: '在证人证词中找到可疑之处，点击「异议！」并出示证据' },
+    { id: 'obj-oe-008', phase: 'trial', title: '出示关键证据', description: '在质询中出示至少2次证据', type: 'present_evidence', target: 2, hint: '点击"出示证据"按钮' }
   ];
 
   // ========== 笔记关键词配置 ==========
@@ -356,9 +356,11 @@ const CaseData_orientExpress = (function() {
       id: 'link-handkerchief-hubbard',
       from: 'handkerchief', to: 'mrs-hubbard',
       fromType: 'evidence', toType: 'witness',
-      title: '手帕的H字母',
-      conclusion: '现场手帕绣着字母"H"，而赫伯德夫人(Hubbard)的姓氏首字母正是H。这块手帕可能属于她。',
-      confidence: 15
+      title: '手帕的H字母（初步假设）',
+      conclusion: '现场手帕绣着字母"H"，而赫伯德夫人(Hubbard)的姓氏首字母正是H。这块手帕可能属于她——但这只是初步假设，H也可能是其他语言的字母。',
+      confidence: 10,
+      category: 'preliminary',
+      note: '初步假设：H可能指向赫伯德夫人，但需进一步验证字母的真实含义。'
     },
     {
       id: 'link-ash-mary',
@@ -372,9 +374,13 @@ const CaseData_orientExpress = (function() {
       id: 'link-handkerchief-princess',
       from: 'handkerchief', to: 'princess',
       fromType: 'evidence', toType: 'witness',
-      title: '俄文的H',
-      conclusion: '手帕上的"H"在俄文中对应"N"，而公主的教名娜塔莉亚(Natalia)首字母正是N。这块手帕的真正主人可能是公主。',
-      confidence: 25
+      title: '俄文的H（排除后的结论）',
+      conclusion: '手帕上的"H"在俄文中对应"N"，而公主的教名娜塔莉亚(Natalia)首字母正是N。赫伯德夫人的H只是表面巧合，手帕的真正主人是公主。',
+      confidence: 25,
+      requiresLink: 'link-handkerchief-hubbard',
+      category: 'conclusion',
+      excludesLink: 'link-handkerchief-hubbard',
+      note: '最终结论：排除赫伯德夫人后，俄文H=N指向公主娜塔莉亚。'
     },
     {
       id: 'link-window-body',
@@ -407,6 +413,9 @@ const CaseData_orientExpress = (function() {
         type: 'relation',
         hint: '收集线索后在线索关联板中建立关联，找到关键关联后可进入审判'
       },
+      // 核心论证链：完成这些关联才能获得高评级
+      coreLinkIds: ['link-watch-conductor', 'link-window-body', 'link-handkerchief-princess'],
+      minContradictions: 1,
       description: '阿加莎·克里斯蒂经典作品改编。深夜列车上发生谋杀案，12名乘客各怀秘密，你需要通过收集证据、询问证人、关联线索来揭开真相。',
       difficulty: '中等',
       author: '阿加莎·克里斯蒂',

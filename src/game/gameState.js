@@ -11,46 +11,52 @@ const GameState = (function() {
   // 游戏数据（动态加载后赋值）
   let gameScenes, gameEvidence, gameWitnesses, gameDialogs, gameContradictions;
 
+  // 创建完整初始状态（首次初始化与复玩重置共享，确保字段一致）
+  function createInitialState() {
+    return {
+      currentScene: 'intro',
+      gamePhase: 'intro',
+      collectedEvidence: [],
+      interviewedWitnesses: [],
+      contradictionsFound: [],
+      confidence: 100,
+      choices: {},
+      dialogIndex: 0,
+      currentWitness: null,
+      showEvidenceBar: false,
+      selectedEvidence: null,
+      evidenceMode: 'view',
+      dialogueHistory: [],
+      witnessReaction: 'normal',
+      showHistory: false,
+      isTransitioning: false,
+      // 审判阶段新增状态
+      trialPhase: 'opening',  // opening | questioning | closing | verdict
+      currentWitnessIndex: 0,
+      witnessStates: {},  // { witnessId: { questioned, followedUp, contradicted, emotion } }
+      objectionActive: false,  // 异议动画是否激活
+      // 时间线系统
+      discoveredTimeline: [],  // 已发现的时间线事件ID
+      timelineContradictionsFound: [],  // 已发现的时间线矛盾ID
+      // 笔记关键词系统
+      discoveredKeywords: [],  // 已发现的关键词ID
+      // 游戏引导系统
+      tutorialCompleted: false,  // 新手教程是否完成（实际持久化在 localStorage，此处为运行时镜像）
+      currentObjective: null,    // 当前目标ID
+      completedObjectives: [],   // 已完成的目标ID
+      lastActionTime: Date.now(), // 最后操作时间（用于进度提示）
+      // 内容深度系统
+      gameStartTime: Date.now(),  // 游戏开始时间
+      achievementsUnlocked: [],   // 已解锁成就ID（本局内解锁记录）
+      endingReached: null,        // 达成的结局ID
+      evidencePresented: 0,       // 审判中出示证据次数
+      notebookOpened: false,      // 笔记是否已打开（用于目标系统）
+      pendingSaveChoice: false    // 是否等待用户选择继续/重新开始
+    };
+  }
+
   // 游戏状态
-  let state = {
-    currentScene: 'intro',
-    gamePhase: 'intro',
-    collectedEvidence: [],
-    interviewedWitnesses: [],
-    contradictionsFound: [],
-    confidence: 100,
-    choices: {},
-    dialogIndex: 0,
-    currentWitness: null,
-    showEvidenceBar: false,
-    selectedEvidence: null,
-    evidenceMode: 'view',
-    dialogueHistory: [],
-    witnessReaction: 'normal',
-    showHistory: false,
-    isTransitioning: false,
-    // 审判阶段新增状态
-    trialPhase: 'opening',  // opening | questioning | closing | verdict
-    currentWitnessIndex: 0,
-    witnessStates: {},  // { witnessId: { questioned, followedUp, contradicted, emotion } }
-    objectionActive: false,  // 异议动画是否激活
-    // 时间线系统
-    discoveredTimeline: [],  // 已发现的时间线事件ID
-    timelineContradictionsFound: [],  // 已发现的时间线矛盾ID
-    // 笔记关键词系统
-    discoveredKeywords: [],  // 已发现的关键词ID
-    // 游戏引导系统
-    tutorialCompleted: false,  // 新手教程是否完成
-    currentObjective: null,    // 当前目标ID
-    completedObjectives: [],   // 已完成的目标ID
-    lastActionTime: Date.now(), // 最后操作时间（用于进度提示）
-    // 内容深度系统
-    gameStartTime: Date.now(),  // 游戏开始时间
-    achievementsUnlocked: [],   // 已解锁成就ID
-    endingReached: null,        // 达成的结局ID
-    evidencePresented: 0,       // 审判中出示证据次数
-    notebookOpened: false       // 笔记是否已打开（用于目标系统）
-  };
+  let state = createInitialState();
 
   // 存档key（包含案件ID，实现存档隔离）
   const SAVE_KEY = `fun-detective-save-${currentCaseId}`;
@@ -224,8 +230,12 @@ const GameState = (function() {
     const hasSave = !!localStorage.getItem(SAVE_KEY);
     const forceReset = urlParams.get('reset') === '1';
     if (urlParams.get('continue') === '1' && hasSave) {
-      // 明确选择继续
-      state = JSON.parse(localStorage.getItem(SAVE_KEY));
+      // 明确选择继续：合并到现有 state，不替换引用
+      try {
+        Object.assign(state, JSON.parse(localStorage.getItem(SAVE_KEY)));
+      } catch (e) {
+        console.error('存档解析失败:', e);
+      }
       state.pendingSaveChoice = false;
     } else if (forceReset) {
       // 明确选择重新开始
@@ -296,25 +306,58 @@ const GameState = (function() {
   function continueSavedGame() {
     const saved = localStorage.getItem(SAVE_KEY);
     if (saved) {
-      state = JSON.parse(saved);
+      try {
+        const savedData = JSON.parse(saved);
+        // 用 Object.assign 合并到现有 state 对象，不替换引用
+        // 否则外部持有的 GameState.state 仍指向旧对象，pendingSaveChoice 不会更新
+        Object.assign(state, savedData);
+      } catch (e) {
+        console.error('存档解析失败:', e);
+      }
     }
     state.pendingSaveChoice = false;
     window._gameState = state;
     if (window.GameRender) GameRender.render();
   }
 
-  // 重置存档（重新开始）
+  // 重置存档（重新开始）——全量重置所有局内状态
   function resetSavedGame() {
     localStorage.removeItem(SAVE_KEY);
-    state.pendingSaveChoice = false;
-    // 重置到初始状态
-    state.gamePhase = 'intro';
-    state.currentScene = 'intro';
-    state.collectedEvidence = [];
-    state.interviewedWitnesses = [];
-    state.contradictionsFound = [];
-    state.dialogIndex = 0;
-    state.confidence = 100;
+
+    // 全量重置：用初始状态覆盖所有字段，避免遗漏
+    const initial = createInitialState();
+    Object.keys(state).forEach(key => {
+      delete state[key];
+    });
+    Object.assign(state, initial);
+
+    // 教程完成标记持久化在 localStorage（按案件隔离），复玩时不重复弹出教程
+    try {
+      const tutorialKey = `fun-detective-tutorial-${currentCaseId}`;
+      if (localStorage.getItem(tutorialKey) === '1') {
+        state.tutorialCompleted = true;
+      }
+    } catch (e) { /* 忽略 localStorage 异常 */ }
+
+    // 清除本局证据关联数据（PlayerData 中按案件存储的关联记录）
+    try {
+      if (window.PlayerData && typeof PlayerData.clearEvidenceLinks === 'function') {
+        PlayerData.clearEvidenceLinks();
+      }
+    } catch (e) { /* 忽略 */ }
+
+    // 重新初始化证人状态（确保所有证人都有默认状态条目）
+    if (gameWitnesses) {
+      gameWitnesses.forEach(w => {
+        state.witnessStates[w.id] = {
+          questioned: false,
+          followedUp: false,
+          contradicted: false,
+          emotion: 'normal'
+        };
+      });
+    }
+
     window._gameState = state;
     if (window.GameRender) GameRender.render();
   }

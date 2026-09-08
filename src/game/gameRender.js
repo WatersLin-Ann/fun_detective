@@ -360,7 +360,7 @@ const GameRender = (function() {
             }
           }).join('')}
           </div>
-          <div class="absolute top-20 right-4 flex flex-col gap-2">
+          <div class="scene-exits absolute top-20 right-4 flex flex-col gap-2">
             ${scene.exits.map(exit => `<button class="bg-white/90 hover:bg-white text-stone-800 px-4 py-2 rounded-lg text-sm font-medium shadow-lg transition-all hover:scale-105 game-button" style="min-height: 44px;" onclick="window.__exit('${exit.to}')">${exit.label} →</button>`).join('')}
           </div>
         </div>
@@ -390,10 +390,14 @@ const GameRender = (function() {
         renderTrialClosing();
       }
 
-      // 异议动画遮罩
-      if (st.objectionActive) {
-        const overlay = document.getElementById('objection-overlay');
-        if (overlay) overlay.classList.remove('hidden');
+      // 异议动画遮罩：双向同步状态
+      const objectionOverlay = document.getElementById('objection-overlay');
+      if (objectionOverlay) {
+        if (st.objectionActive) {
+          objectionOverlay.classList.remove('hidden');
+        } else {
+          objectionOverlay.classList.add('hidden');
+        }
       }
     }
 
@@ -476,13 +480,19 @@ const GameRender = (function() {
             }).join('')}
           </div>
 
-          ${questionedCount >= gameWitnesses.length ? `
-            <button class="w-full py-3 bg-amber-600 rounded-lg font-bold hover:bg-amber-500 transition-all" onclick="window.__goToClosing()">
-              进入总结陈词 →
-            </button>
-          ` : `
-            <p class="text-center text-stone-500 text-sm">询问所有证人后可进入总结陈词</p>
-          `}
+          ${(() => {
+            const allQuestioned = questionedCount >= gameWitnesses.length;
+            const contradictionCount = (st.contradictionsFound || []).length;
+            const minContradictions = window.GameData?.meta?.minContradictions || 1;
+            const hasEnoughContradictions = contradictionCount >= minContradictions;
+            if (allQuestioned && hasEnoughContradictions) {
+              return `<button class="w-full py-3 bg-amber-600 rounded-lg font-bold hover:bg-amber-500 transition-all" onclick="window.__goToClosing()">进入总结陈词 →</button>`;
+            }
+            const missing = [];
+            if (!allQuestioned) missing.push(`还需询问 ${gameWitnesses.length - questionedCount} 名证人`);
+            if (!hasEnoughContradictions) missing.push(`还需发现 ${minContradictions - contradictionCount} 条矛盾（通过「异议！」出示证据反驳证词）`);
+            return `<div class="text-center text-stone-500 text-sm space-y-1"><p>进入总结陈词前还需：</p>${missing.map(m => `<p class="text-amber-400/80">• ${m}</p>`).join('')}</div>`;
+          })()}
         </div>
       `;
 
