@@ -5,15 +5,16 @@
   "scripts": {
     "dev": "astro dev --host 0.0.0.0",
     "start": "astro dev --host 0.0.0.0",
-    "build": "node scripts/validate-case-data.cjs && astro build && node scripts/smoke-test.cjs --dist dist",
+    "build": "node scripts/validate-case-data.cjs && node scripts/scan-english-fragments.cjs && astro build && node scripts/smoke-test.cjs --dist dist",
     "preview": "astro preview",
     "astro": "astro",
     "validate:cases": "node scripts/validate-case-data.cjs",
+    "lint:text": "node scripts/scan-english-fragments.cjs",
     "sync:game": "node scripts/sync-game-js.js",
     "test:smoke": "node scripts/smoke-test.cjs",
     "test:visual": "node scripts/visual-regression.cjs",
     "test:keyboard": "node scripts/keyboard-test.cjs",
-    "test:all": "node scripts/smoke-test.cjs && node scripts/validate-case-data.cjs"
+    "test:all": "node scripts/smoke-test.cjs && node scripts/validate-case-data.cjs && node scripts/scan-english-fragments.cjs"
   },
   "dependencies": {
     "astro": "^7.2.10",

@@ -54,7 +54,7 @@ const featuredGames = gameCases.slice(0, 6);
         <div class="card p-6 text-center">
           <div class="w-12 h-12 bg-primary-100 text-primary-700 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">1</div>
           <h3 class="font-bold mb-2">选择诡计类型</h3>
-          <p class="text-sm text-stone-600">从10种经典诡计类型中找到你想要的核心谜题</p>
+          <p class="text-sm text-stone-600">从{stats.tricks}种经典诡计类型中找到你想要的核心谜题</p>
         </div>
         <div class="card p-6 text-center">
           <div class="w-12 h-12 bg-primary-100 text-primary-700 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">2</div>
@@ -104,7 +104,7 @@ const featuredGames = gameCases.slice(0, 6);
       <div class="flex items-center justify-between mb-8">
         <div>
           <h2 class="text-2xl font-bold mb-2">游戏模板库</h2>
-          <p class="text-stone-600">5个可复用的推理游戏设计模板，每个包含完整的阶段设计</p>
+          <p class="text-stone-600">{stats.templates}个可复用的推理游戏设计模板，每个包含完整的阶段设计</p>
         </div>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -140,7 +140,7 @@ const featuredGames = gameCases.slice(0, 6);
       <div class="flex items-center justify-between mb-8">
         <div>
           <h2 class="text-2xl font-bold mb-2">诡计类型 → 游戏机制</h2>
-          <p class="text-stone-600">10种经典诡计类型对应的游戏机制和关卡设计要点</p>
+          <p class="text-stone-600">{stats.tricks}种经典诡计类型对应的游戏机制和关卡设计要点</p>
         </div>
         <a href="/fun_detective/game-design/tricks" class="text-primary-600 hover:underline text-sm">查看完整映射 →</a>
       </div>
@@ -169,7 +169,7 @@ const featuredGames = gameCases.slice(0, 6);
       <div class="flex items-center justify-between mb-8">
         <div>
           <h2 class="text-2xl font-bold mb-2">经典游戏案例</h2>
-          <p class="text-stone-600">12个推理游戏案例深度分析，学习优秀的设计实践</p>
+          <p class="text-stone-600">共 {stats.gameCases} 个推理游戏案例，本页精选展示 {featuredGames.length} 个，学习优秀的设计实践</p>
         </div>
         <a href="/fun_detective/categories/游戏" class="text-primary-600 hover:underline text-sm">查看全部 →</a>
       </div>

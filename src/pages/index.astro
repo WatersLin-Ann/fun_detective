@@ -18,41 +18,123 @@ for (const continent of continents) {
 
 // 每页显示数量
 const PAGE_SIZE = 12;
+
+// Hero「案件速览」：按日期确定性轮换，构建时选出初始 3 条
+const orderedPicks = [...cases].sort((a, b) => a.slug.localeCompare(b.slug, 'zh-CN'));
+const now = new Date();
+const dayOfYear = Math.floor(
+  (now.getTime() - new Date(now.getFullYear(), 0, 0).getTime()) / 86400000,
+);
+const pickOffset = orderedPicks.length > 0 ? dayOfYear % orderedPicks.length : 0;
+const heroPicks = [0, 1, 2].map(
+  (i) => orderedPicks[(pickOffset + i) % Math.max(orderedPicks.length, 1)],
+).filter(Boolean);
+// 供客户端「换一批」使用的精简数据
+const pickData = orderedPicks.map((c) => ({
+  slug: `/fun_detective/case/${c.slug}`,
+  name: c.基本信息.案件名称,
+  source: c.sourceType,
+  region: c.region,
+  difficulty: (c.设计视图.难度评分?.综合 || 0).toFixed(1),
+}));
+// 数据最近录入时间
+const latestDate = cases
+  .map((c) => c.元数据?.录入日期 || '')
+  .sort()
+  .pop() || '';
 ---
 
 <BaseLayout title="首页" description="全球虚拟真实案件案例库，为小说创作和游戏设计提供灵感">
   <!-- Hero 区域 -->
   <section class="bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 text-white py-16">
     <div class="container-page">
-      <div class="max-w-3xl">
-        <h1 class="text-4xl md:text-5xl font-bold mb-4 animate-fade-in">
-          探索全球<span class="text-accent-400">案件</span>的奥秘
-        </h1>
-        <p class="text-lg text-primary-200 mb-8 animate-fade-in-delay-1">
-          汇集推理小说、真实案件、影视游戏中的经典案例，为小说创作和游戏设计提供结构化的灵感与参考。
-        </p>
-        <div class="flex flex-wrap gap-8 animate-fade-in-delay-2">
-          <div>
-            <div class="text-3xl font-bold text-accent-400">{stats.total}</div>
-            <div class="text-sm text-primary-300">案件总数</div>
+      <div class="flex flex-col lg:flex-row gap-10 lg:gap-12 items-center">
+        <!-- 左侧：主张与统计 -->
+        <div class="flex-1 min-w-0 w-full">
+          <h1 class="text-4xl md:text-5xl font-bold mb-4 animate-fade-in">
+            探索全球<span class="text-accent-400">案件</span>的奥秘
+          </h1>
+          <p class="text-lg text-primary-200 mb-8 animate-fade-in-delay-1 max-w-2xl">
+            汇集推理小说、真实案件、影视游戏中的经典案例，为小说创作和游戏设计提供结构化的灵感与参考。
+          </p>
+          <div class="flex flex-wrap gap-x-8 gap-y-4 animate-fade-in-delay-2">
+            <div>
+              <div class="text-3xl font-bold text-accent-400">{stats.total}</div>
+              <div class="text-sm text-primary-300 inline-flex items-center gap-1">
+                案件总数
+                <button type="button" class="stat-info" aria-label="案件总数口径：库内全部案件条目数，按条目去重" title="口径：库内全部案件条目数，按条目去重">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </button>
+              </div>
+            </div>
+            <div>
+              <div class="text-3xl font-bold text-accent-400">{Object.keys(stats.bySourceType).length}</div>
+              <div class="text-sm text-primary-300 inline-flex items-center gap-1">
+                来源类型
+                <button type="button" class="stat-info" aria-label="来源类型口径：按来源类型去重后的数量" title="口径：按来源类型去重后的数量">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </button>
+              </div>
+            </div>
+            <div>
+              <div class="text-3xl font-bold text-accent-400">{Object.keys(stats.byContinent).length}</div>
+              <div class="text-sm text-primary-300 inline-flex items-center gap-1">
+                覆盖大洲
+                <button type="button" class="stat-info" aria-label="覆盖大洲口径：按大洲去重后的数量" title="口径：按大洲去重后的数量">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </button>
+              </div>
+            </div>
+            <div>
+              <div class="text-3xl font-bold text-accent-400">{Object.keys(stats.byRegion).length}</div>
+              <div class="text-sm text-primary-300 inline-flex items-center gap-1">
+                国家/地区
+                <button type="button" class="stat-info" aria-label="国家/地区口径：按国家或地区去重后的数量" title="口径：按国家/地区去重后的数量">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </button>
+              </div>
+            </div>
+            <div>
+              <div class="text-3xl font-bold text-accent-400">{stats.avgDifficulty}</div>
+              <div class="text-sm text-primary-300 inline-flex items-center gap-1">
+                平均难度
+                <button type="button" class="stat-info" aria-label="平均难度口径：全部案件综合难度的算术平均值，保留1位小数，范围0到5" title="口径：全部案件综合难度的算术平均值，保留1位小数，范围0–5">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </button>
+              </div>
+            </div>
           </div>
-          <div>
-            <div class="text-3xl font-bold text-accent-400">{Object.keys(stats.bySourceType).length}</div>
-            <div class="text-sm text-primary-300">来源类型</div>
-          </div>
-          <div>
-            <div class="text-3xl font-bold text-accent-400">{Object.keys(stats.byContinent).length}</div>
-            <div class="text-sm text-primary-300">覆盖大洲</div>
-          </div>
-          <div>
-            <div class="text-3xl font-bold text-accent-400">{Object.keys(stats.byRegion).length}</div>
-            <div class="text-sm text-primary-300">国家/地区</div>
-          </div>
-          <div>
-            <div class="text-3xl font-bold text-accent-400">{stats.avgDifficulty}</div>
-            <div class="text-sm text-primary-300">平均难度</div>
-          </div>
+          {latestDate && <p class="text-xs text-primary-300/80 mt-4">数据更新至 {latestDate}</p>}
         </div>
+
+        <!-- 右侧：案件速览（首屏内容锚点，填补留白） -->
+        <aside class="w-full lg:w-[360px] lg:flex-shrink-0" aria-label="案件速览">
+          <div class="bg-white/10 rounded-2xl border border-white/15 p-5 backdrop-blur-sm">
+            <div class="flex items-center justify-between mb-3">
+              <h2 class="text-white font-semibold">案件速览</h2>
+              <button id="hero-shuffle" type="button" class="text-primary-200 hover:text-white text-sm inline-flex items-center gap-1 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                换一批
+              </button>
+            </div>
+            <ul id="hero-pick-list" class="flex flex-col gap-2 mb-3">
+              {heroPicks.map((c) => (
+                <li>
+                  <a href={`/fun_detective/case/${c.slug}`} class="hero-pick group flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 hover:bg-white/10 transition-colors">
+                    <span class="min-w-0">
+                      <span class="block text-sm font-medium text-white truncate group-hover:text-accent-300 transition-colors">{c.基本信息.案件名称}</span>
+                      <span class="block text-xs text-primary-300 mt-0.5">{c.sourceType} · {c.region}</span>
+                    </span>
+                    <span class="text-xs text-accent-300 flex-shrink-0">难度 {(c.设计视图.难度评分?.综合 || 0).toFixed(1)}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+            <a href="#case-grid" class="block text-center text-sm text-primary-100 border border-white/20 rounded-lg py-2 hover:bg-white/10 transition-colors">
+              浏览全部 {stats.total} 件案件 ↓
+            </a>
+          </div>
+        </aside>
       </div>
     </div>
   </section>
@@ -63,18 +145,21 @@ const PAGE_SIZE = 12;
       <div class="flex flex-col md:flex-row gap-4">
         <!-- 搜索框 -->
         <div class="flex-1 relative">
+          <label for="search-input" class="sr-only">搜索案件名称、简介或诡计</label>
           <input
             type="text"
             id="search-input"
             placeholder="搜索案件名称、简介、诡计...（支持模糊匹配）"
             class="input pl-10"
+            aria-describedby="search-live"
           />
-          <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
         </div>
         <!-- 筛选器 -->
         <div class="flex flex-wrap gap-3 items-center">
+          <label class="sr-only" for="filter-source">按类型筛选</label>
           <select id="filter-source" class="input w-auto">
             <option value="">全部类型</option>
             {sourceTypes.map((type) => <option value={type}>{type}</option>)}
@@ -82,15 +167,22 @@ const PAGE_SIZE = 12;
 
           <!-- 自定义二级下拉菜单：地区→国家 -->
           <div class="region-dropdown" id="region-dropdown">
-            <button type="button" class="input w-auto flex items-center justify-between gap-2 cursor-pointer" id="region-trigger">
+            <button
+              type="button"
+              class="input w-auto flex items-center justify-between gap-2 cursor-pointer"
+              id="region-trigger"
+              aria-haspopup="true"
+              aria-expanded="false"
+              aria-controls="region-menu"
+            >
               <span id="region-trigger-text">全部地区</span>
               <svg class="w-4 h-4 text-stone-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
               </svg>
             </button>
-            <div class="region-menu" id="region-menu">
+            <div class="region-menu" id="region-menu" role="menu" aria-label="按大洲或国家筛选">
               <!-- 全部地区 -->
-              <div class="region-menu-item" data-region="" data-continent="">
+              <div class="region-menu-item" role="menuitem" tabindex="-1" data-region="" data-continent="">
                 <span>全部地区</span>
               </div>
               <!-- 各地区分组 -->
@@ -98,20 +190,20 @@ const PAGE_SIZE = 12;
                 const countries = continentCountries[continent] || [];
                 const hasChildren = countries.length > 0;
                 return (
-                  <div class={`region-menu-item ${hasChildren ? 'has-children' : ''}`} data-continent={continent}>
+                  <div class={`region-menu-item ${hasChildren ? 'has-children' : ''}`} role="menuitem" tabindex="-1" data-continent={continent} aria-haspopup={hasChildren ? 'true' : 'false'}>
                     <span class="region-menu-label">{continent}</span>
                     {hasChildren && (
                       <>
                         <svg class="w-4 h-4 text-stone-400 ml-auto flex-shrink-0 submenu-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                         </svg>
-                        <div class="region-submenu">
+                        <div class="region-submenu" role="menu" aria-label={`${continent}下的国家`}>
                           <div class="region-submenu-title">{continent} · 全部国家</div>
-                          <div class="region-submenu-item" data-region="" data-continent={continent}>
+                          <div class="region-submenu-item" role="menuitem" tabindex="-1" data-region="" data-continent={continent}>
                             全部国家
                           </div>
                           {countries.map((country) => (
-                            <div class="region-submenu-item" data-region={country} data-continent={continent}>
+                            <div class="region-submenu-item" role="menuitem" tabindex="-1" data-region={country} data-continent={continent}>
                               {country}
                             </div>
                           ))}
@@ -124,6 +216,7 @@ const PAGE_SIZE = 12;
             </div>
           </div>
 
+          <label class="sr-only" for="filter-sort">排序方式</label>
           <select id="filter-sort" class="input w-auto">
             <option value="date">最新录入</option>
             <option value="name">名称排序</option>
@@ -140,7 +233,7 @@ const PAGE_SIZE = 12;
     <div class="container-page">
       <div class="flex items-center justify-between mb-6">
         <h2 class="text-2xl font-bold">全部案件</h2>
-        <span id="result-count" class="text-stone-500">共 {cases.length} 条</span>
+        <span id="result-count" class="text-stone-500" aria-live="off">共 {cases.length} 条</span>
       </div>
       <div id="case-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {cases.map((caseData) => (
@@ -159,10 +252,32 @@ const PAGE_SIZE = 12;
           加载更多
         </button>
       </div>
+      <!-- 屏幕阅读器结果播报 -->
+      <div id="search-live" class="sr-only" role="status" aria-live="polite"></div>
     </div>
   </section>
 
   <style>
+    /* 统计口径提示按钮 */
+    .stat-info {
+      display: inline-flex;
+      align-items: center;
+      color: rgba(199, 210, 254, 0.7);
+      transition: color 0.15s;
+    }
+    .stat-info:hover,
+    .stat-info:focus-visible {
+      color: #fff;
+      outline: none;
+    }
+    /* Hero 速览条目 */
+    .hero-pick {
+      outline-offset: 2px;
+    }
+    .hero-pick:focus-visible {
+      outline: 2px solid #fbbf24;
+    }
+
     /* 二级下拉菜单样式 */
     .region-dropdown {
       position: relative;
@@ -193,12 +308,21 @@ const PAGE_SIZE = 12;
       color: #44403c;
       position: relative;
       transition: background 0.15s;
+      user-select: none;
     }
-    .region-menu-item:hover {
+    .region-menu-item:hover,
+    .region-menu-item.keyboard-focus,
+    .region-submenu-item:hover,
+    .region-submenu-item.keyboard-focus {
       background: #f5f5f4;
     }
     .region-menu-item.has-children:hover {
       background: #f5f5f4;
+    }
+    .region-menu-item:focus,
+    .region-submenu-item:focus {
+      outline: none;
+      background: #eef2ff;
     }
     .region-menu-label {
       flex: 1;
@@ -218,7 +342,8 @@ const PAGE_SIZE = 12;
       z-index: 51;
       padding: 4px 0;
     }
-    .region-menu-item.has-children:hover > .region-submenu {
+    .region-menu-item.has-children:hover > .region-submenu,
+    .region-menu-item.has-children.open-kbd > .region-submenu {
       display: block;
     }
     .region-submenu-title {
@@ -234,9 +359,9 @@ const PAGE_SIZE = 12;
       font-size: 14px;
       color: #44403c;
       transition: background 0.15s;
+      user-select: none;
     }
     .region-submenu-item:hover {
-      background: #f5f5f4;
       color: #1c1917;
     }
     /* 移动端：点击展开二级 */
@@ -261,91 +386,50 @@ const PAGE_SIZE = 12;
   </style>
 
   <script>
-    // 导入 fuse.js 模糊搜索
-    import Fuse from 'fuse.js';
+    import { initCaseBrowser } from '../scripts/case-browser';
 
-    // 客户端搜索和筛选
+    // ===== 元素引用 =====
     const searchInput = document.getElementById('search-input') as HTMLInputElement;
     const filterSource = document.getElementById('filter-source') as HTMLSelectElement;
     const filterSort = document.getElementById('filter-sort') as HTMLSelectElement;
     const caseGrid = document.getElementById('case-grid')!;
     const noResults = document.getElementById('no-results')!;
     const resultCount = document.getElementById('result-count')!;
-    const loadMoreBtn = document.getElementById('load-more-btn')!;
+    const loadMoreBtn = document.getElementById('load-more-btn') as HTMLButtonElement;
     const loadMoreContainer = document.getElementById('load-more-container')!;
+    const liveRegion = document.getElementById('search-live')!;
 
-    // 二级下拉菜单元素
     const regionDropdown = document.getElementById('region-dropdown')!;
-    const regionTrigger = document.getElementById('region-trigger')!;
+    const regionTrigger = document.getElementById('region-trigger') as HTMLButtonElement;
     const regionTriggerText = document.getElementById('region-trigger-text')!;
     const regionMenu = document.getElementById('region-menu')!;
 
     // 当前选中的筛选值
-    let selectedRegion = '';      // 国家名，空表示全部
-    let selectedContinent = '';   // 大洲名，空表示全部
+    let selectedRegion = '';
+    let selectedContinent = '';
 
-    // 检测是否为触屏设备
+    // 初始化时从 URL 恢复地区选择
+    const initParams = new URLSearchParams(window.location.search);
+    selectedRegion = initParams.get('region') || '';
+    selectedContinent = initParams.get('continent') || '';
+
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
-    // 分页配置
-    const PAGE_SIZE = 12;
-    let currentPage = 1;
-    let currentFiltered: CaseItem[] = [];
-
-    // 从 DOM 中提取所有案件数据
-    interface CaseItem {
-      element: HTMLElement;
-      name: string;
-      source: string;
-      continent: string;
-      region: string;
-      difficulty: number;
-      date: string;
-      searchText: string;
-    }
-
-    const caseItems: CaseItem[] = Array.from(caseGrid.querySelectorAll('[data-case]')).map((el) => {
-      const element = el as HTMLElement;
-      return {
-        element,
-        name: element.dataset.name || '',
-        source: element.dataset.source || '',
-        continent: element.dataset.continent || '',
-        region: element.dataset.region || '',
-        difficulty: parseFloat(element.dataset.difficulty || '0'),
-        date: element.dataset.date || '',
-        searchText: (element.dataset.searchtext || '').toLowerCase(),
-      };
-    });
-
-    // 初始化 fuse.js 模糊搜索
-    const fuse = new Fuse(caseItems, {
-      keys: [
-        { name: 'name', weight: 0.5 },
-        { name: 'searchText', weight: 0.3 },
-        { name: 'source', weight: 0.1 },
-        { name: 'region', weight: 0.1 },
-      ],
-      threshold: 0.4,
-      includeScore: true,
-      minMatchCharLength: 1,
-    });
-
-    // ===== 二级下拉菜单逻辑 =====
-
-    // 打开/关闭下拉
-    function toggleDropdown(open?: boolean) {
-      const shouldOpen = open !== undefined ? open : !regionDropdown.classList.contains('open');
-      regionDropdown.classList.toggle('open', shouldOpen);
-      if (!shouldOpen) {
-        // 关闭时收起所有移动端展开的子菜单
-        regionMenu.querySelectorAll('.has-children.open-submenu').forEach((el) => {
-          el.classList.remove('open-submenu');
+    // ===== 二级下拉菜单逻辑（含完整键盘契约） =====
+    function setOpen(open: boolean) {
+      regionDropdown.classList.toggle('open', open);
+      regionTrigger.setAttribute('aria-expanded', String(open));
+      if (!open) {
+        regionMenu.querySelectorAll('.has-children.open-submenu,.has-children.open-kbd').forEach((el) => {
+          el.classList.remove('open-submenu', 'open-kbd');
         });
       }
     }
+    function toggleDropdown(open?: boolean) {
+      const shouldOpen = open !== undefined ? open : !regionDropdown.classList.contains('open');
+      setOpen(shouldOpen);
+    }
 
-    // 更新触发按钮显示文本
     function updateTriggerText() {
       if (selectedRegion) {
         regionTriggerText.textContent = selectedRegion;
@@ -356,144 +440,190 @@ const PAGE_SIZE = 12;
       }
     }
 
-    // 选中一个值（国家或大洲）
+    // 把地区选择写入 URL（保留 q/source/sort/page 等其他参数）
+    function writeRegionToUrl() {
+      const params = new URLSearchParams(window.location.search);
+      if (selectedContinent) params.set('continent', selectedContinent);
+      else params.delete('continent');
+      if (selectedRegion) params.set('region', selectedRegion);
+      else params.delete('region');
+      params.delete('page');
+      const qs = params.toString();
+      window.history.replaceState(null, '', window.location.pathname + (qs ? `?${qs}` : ''));
+    }
+
     function selectRegion(region: string, continent: string) {
       selectedRegion = region;
       selectedContinent = continent;
       updateTriggerText();
-      toggleDropdown(false);
-      applyFilters();
+      setOpen(false);
+      writeRegionToUrl();
+      browser.refresh();
+      regionTrigger.focus();
     }
 
-    // 点击触发按钮
+    // 键盘导航：收集当前可聚焦的菜单项
+    function visibleItems(): HTMLElement[] {
+      const items: HTMLElement[] = [];
+      regionMenu.querySelectorAll<HTMLElement>('.region-menu-item, .region-submenu-item').forEach((el) => {
+        const sub = el.closest('.region-submenu');
+        if (sub) {
+          const parent = sub.parentElement!;
+          // 子菜单仅在父级展开（PC hover/kbd 或移动端 open-submenu）时可聚焦
+          const expanded = parent.classList.contains('open-kbd') || parent.classList.contains('open-submenu')
+            || parent.matches(':hover');
+          if (expanded) items.push(el);
+        } else {
+          items.push(el);
+        }
+      });
+      return items;
+    }
+    function focusItem(el: HTMLElement | null | undefined) {
+      if (!el) return;
+      el.focus();
+    }
+
+    function activateItem(el: HTMLElement) {
+      if (el.classList.contains('region-submenu-item')) {
+        selectRegion(el.dataset.region || '', el.dataset.continent || '');
+        return;
+      }
+      const hasChildren = el.classList.contains('has-children');
+      if (isTouchDevice && hasChildren) {
+        el.classList.toggle('open-submenu');
+      } else if (!hasChildren) {
+        selectRegion(el.dataset.region || '', el.dataset.continent || '');
+      } else {
+        el.classList.add('open-kbd');
+      }
+    }
+
     regionTrigger.addEventListener('click', (e) => {
       e.stopPropagation();
       toggleDropdown();
     });
+    regionTrigger.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        if (!regionDropdown.classList.contains('open')) setOpen(true);
+        focusItem(visibleItems()[0]);
+      }
+    });
 
-    // 点击菜单项
     regionMenu.addEventListener('click', (e) => {
       const target = e.target as HTMLElement;
-
-      // 点击了子菜单项（国家或全部国家）
       const submenuItem = target.closest('.region-submenu-item') as HTMLElement | null;
       if (submenuItem) {
         e.stopPropagation();
-        const region = submenuItem.dataset.region || '';
-        const continent = submenuItem.dataset.continent || '';
-        selectRegion(region, continent);
+        selectRegion(submenuItem.dataset.region || '', submenuItem.dataset.continent || '');
         return;
       }
-
-      // 点击了一级菜单项
       const menuItem = target.closest('.region-menu-item') as HTMLElement | null;
       if (menuItem) {
         e.stopPropagation();
-        const hasChildren = menuItem.classList.contains('has-children');
-
-        if (isTouchDevice && hasChildren) {
-          // 移动端：有子菜单的项点击展开/收起子菜单
-          menuItem.classList.toggle('open-submenu');
-        } else if (!hasChildren) {
-          // 无子菜单的项（全部地区）直接选中
-          const region = menuItem.dataset.region || '';
-          const continent = menuItem.dataset.continent || '';
-          selectRegion(region, continent);
-        }
-        // PC端有子菜单的项靠hover显示子菜单，点击不做操作
+        activateItem(menuItem);
       }
     });
 
-    // 点击外部关闭下拉
-    document.addEventListener('click', (e) => {
-      if (!regionDropdown.contains(e.target as Node)) {
-        toggleDropdown(false);
-      }
-    });
-
-    // ===== 筛选和显示逻辑 =====
-
-    // 更新显示（支持分页）
-    function updateDisplay() {
-      caseItems.forEach((item) => {
-        item.element.style.display = 'none';
-      });
-
-      const endIndex = currentPage * PAGE_SIZE;
-      const toShow = currentFiltered.slice(0, endIndex);
-      toShow.forEach((item) => {
-        caseGrid.appendChild(item.element);
-        item.element.style.display = '';
-      });
-
-      if (endIndex >= currentFiltered.length) {
-        loadMoreContainer.classList.add('hidden');
-      } else {
-        loadMoreContainer.classList.remove('hidden');
-        loadMoreBtn.textContent = `加载更多（已显示 ${toShow.length}/${currentFiltered.length}）`;
-      }
-
-      resultCount.textContent = `共 ${currentFiltered.length} 条`;
-      noResults.classList.toggle('hidden', currentFiltered.length > 0);
-    }
-
-    function applyFilters() {
-      const query = searchInput.value.trim();
-      const source = filterSource.value;
-      const sort = filterSort.value;
-
-      // 先用 fuse.js 进行模糊搜索
-      let filtered: CaseItem[];
-      if (query) {
-        const results = fuse.search(query);
-        filtered = results.map((r) => r.item);
-      } else {
-        filtered = [...caseItems];
-      }
-
-      // 应用类型、地区/国家筛选
-      filtered = filtered.filter((item) => {
-        const matchSource = !source || item.source === source;
-        // 选了具体国家 → 按国家匹配
-        const matchRegion = !selectedRegion || item.region === selectedRegion;
-        // 没选国家但选了大洲 → 按大洲匹配
-        const matchContinent = !selectedContinent || selectedRegion || item.continent === selectedContinent;
-        return matchSource && matchRegion && matchContinent;
-      });
-
-      // 排序
-      if (!query || sort !== 'date') {
-        filtered.sort((a, b) => {
-          switch (sort) {
-            case 'name':
-              return a.name.localeCompare(b.name, 'zh-CN');
-            case 'difficulty-desc':
-              return b.difficulty - a.difficulty;
-            case 'difficulty-asc':
-              return a.difficulty - b.difficulty;
-            case 'date':
-            default:
-              return b.date.localeCompare(a.date);
+    regionMenu.addEventListener('keydown', (e) => {
+      const current = document.activeElement as HTMLElement;
+      const items = visibleItems();
+      const idx = items.indexOf(current);
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault();
+          focusItem(items[(idx + 1 + items.length) % items.length]);
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          focusItem(items[(idx - 1 + items.length) % items.length]);
+          break;
+        case 'ArrowRight': {
+          const parent = current.classList.contains('region-menu-item') ? current : current.closest('.has-children') as HTMLElement | null;
+          if (parent?.classList.contains('has-children')) {
+            e.preventDefault();
+            parent.classList.add('open-kbd', 'open-submenu');
+            focusItem(parent.querySelector('.region-submenu-item') as HTMLElement);
           }
-        });
+          break;
+        }
+        case 'ArrowLeft': {
+          const sub = current.closest('.region-submenu');
+          if (sub) {
+            e.preventDefault();
+            const parent = sub.parentElement!;
+            parent.classList.remove('open-kbd');
+            focusItem(parent);
+          }
+          break;
+        }
+        case 'Enter':
+        case ' ':
+          e.preventDefault();
+          activateItem(current);
+          break;
+        case 'Escape':
+          e.preventDefault();
+          setOpen(false);
+          regionTrigger.focus();
+          break;
+        case 'Tab':
+          setOpen(false);
+          break;
       }
-
-      currentFiltered = filtered;
-      currentPage = 1;
-      updateDisplay();
-    }
-
-    // 加载更多
-    loadMoreBtn.addEventListener('click', () => {
-      currentPage++;
-      updateDisplay();
     });
 
-    searchInput.addEventListener('input', applyFilters);
-    filterSource.addEventListener('change', applyFilters);
-    filterSort.addEventListener('change', applyFilters);
+    document.addEventListener('click', (e) => {
+      if (!regionDropdown.contains(e.target as Node)) setOpen(false);
+    });
 
-    // 初始化显示
-    applyFilters();
+    // ===== 列表浏览（搜索/筛选/排序/分页/URL同步/加载反馈） =====
+    const browser = initCaseBrowser({
+      grid: caseGrid,
+      search: searchInput,
+      source: filterSource,
+      sort: filterSort,
+      loadMoreBtn,
+      loadMoreContainer,
+      count: resultCount,
+      noResults,
+      live: liveRegion,
+      pageSize: 12,
+      syncUrl: true,
+      extraFilter: (item) => {
+        const matchRegion = !selectedRegion || item.region === selectedRegion;
+        const matchContinent = !selectedContinent || selectedRegion || item.continent === selectedContinent;
+        return matchRegion && matchContinent;
+      },
+    });
+
+    updateTriggerText();
+
+    // ===== Hero「换一批」 =====
+    const pickList = document.getElementById('hero-pick-list');
+    const shuffleBtn = document.getElementById('hero-shuffle');
+    if (pickList && shuffleBtn) {
+      const pickData: Array<{ slug: string; name: string; source: string; region: string; difficulty: string }> = JSON.parse(
+        document.getElementById('hero-pick-data')?.textContent || '[]',
+      );
+      let pickCursor = 3;
+      shuffleBtn.addEventListener('click', () => {
+        if (pickData.length === 0) return;
+        const frag = document.createDocumentFragment();
+        for (let i = 0; i < Math.min(3, pickData.length); i++) {
+          const c = pickData[(pickCursor + i) % pickData.length];
+          const li = document.createElement('li');
+          li.innerHTML = `<a href="${c.slug}" class="hero-pick group flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 hover:bg-white/10 transition-colors">
+            <span class="min-w-0"><span class="block text-sm font-medium text-white truncate">${c.name}</span>
+            <span class="block text-xs text-primary-300 mt-0.5">${c.source} · ${c.region}</span></span>
+            <span class="text-xs text-accent-300 flex-shrink-0">难度 ${c.difficulty}</span></a>`;
+          frag.appendChild(li);
+        }
+        pickList.replaceChildren(frag);
+        pickCursor = (pickCursor + 3) % pickData.length;
+      });
+    }
   </script>
+  <script type="application/json" id="hero-pick-data" set:html={JSON.stringify(pickData)} />
 </BaseLayout>

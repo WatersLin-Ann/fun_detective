@@ -1,8 +1,11 @@
 ---
 import BaseLayout from '@layouts/BaseLayout.astro';
 import { getStats } from '@lib/caseLoader';
+import pkg from '../../package.json';
 
 const stats = getStats();
+// 技术栈版本构建时从 package.json 读取，避免手写版本与实际依赖漂移
+const astroMajor = String(pkg.dependencies.astro).replace(/^[\^~]/, '').split('.')[0];
 ---
 
 <BaseLayout title="关于" description="关于 Fun Detective 项目">
@@ -32,25 +35,25 @@ const stats = getStats();
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 my-8">
           <div class="card p-4 text-center">
             <div class="text-2xl font-bold text-primary-700">{stats.total}</div>
-            <div class="text-sm text-stone-500">案件总数</div>
+            <div class="text-sm text-stone-500" title="口径：库内全部案件条目数，按条目去重">案件总数</div>
           </div>
           <div class="card p-4 text-center">
             <div class="text-2xl font-bold text-primary-700">{Object.keys(stats.bySourceType).length}</div>
-            <div class="text-sm text-stone-500">来源类型</div>
+            <div class="text-sm text-stone-500" title="口径：按来源类型去重后的数量">来源类型</div>
           </div>
           <div class="card p-4 text-center">
             <div class="text-2xl font-bold text-primary-700">{Object.keys(stats.byRegion).length}</div>
-            <div class="text-sm text-stone-500">覆盖地区</div>
+            <div class="text-sm text-stone-500" title="口径：按国家/地区去重后的数量">覆盖地区</div>
           </div>
           <div class="card p-4 text-center">
             <div class="text-2xl font-bold text-accent-600">{stats.avgDifficulty}</div>
-            <div class="text-sm text-stone-500">平均难度</div>
+            <div class="text-sm text-stone-500" title="口径：全部案件综合难度的算术平均值，保留1位小数，范围0–5">平均难度</div>
           </div>
         </div>
 
         <h2 class="text-xl font-bold mt-8 mb-4">技术栈</h2>
         <ul class="space-y-2 text-stone-700">
-          <li>前端框架：Astro 4.x + TypeScript</li>
+          <li>前端框架：Astro {astroMajor} + TypeScript（版本构建时自动读取 package.json）</li>
           <li>样式：Tailwind CSS</li>
           <li>数据：飞书多维表格 → GitHub JSON</li>
           <li>部署：GitHub Pages</li>
