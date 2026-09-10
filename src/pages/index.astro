@@ -17,7 +17,7 @@ for (const continent of continents) {
 }
 
 // 每页显示数量
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 50;
 
 // Hero「案件速览」：按日期确定性轮换，构建时选出初始 3 条
 const orderedPicks = [...cases].sort((a, b) => a.slug.localeCompare(b.slug, 'zh-CN'));
@@ -46,70 +46,70 @@ const latestDate = cases
 
 <BaseLayout title="首页" description="全球虚拟真实案件案例库，为小说创作和游戏设计提供灵感">
   <!-- Hero 区域 -->
-  <section class="bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 text-white py-16">
+  <section class="bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 text-white py-8">
     <div class="container-page">
-      <div class="flex flex-col lg:flex-row gap-10 lg:gap-12 items-center">
+      <div class="flex flex-col lg:flex-row gap-6 lg:gap-10 items-center">
         <!-- 左侧：主张与统计 -->
         <div class="flex-1 min-w-0 w-full">
-          <h1 class="text-4xl md:text-5xl font-bold mb-4 animate-fade-in">
-            探索全球<span class="text-accent-400">案件</span>的奥秘
+          <h1 class="text-2xl md:text-3xl font-bold mb-3 animate-fade-in">
+            探索全球<span class="text-accent-400">经典案件</span>的诡计与叙事
           </h1>
-          <p class="text-lg text-primary-200 mb-8 animate-fade-in-delay-1 max-w-2xl">
-            汇集推理小说、真实案件、影视游戏中的经典案例，为小说创作和游戏设计提供结构化的灵感与参考。
+          <p class="text-base text-primary-200 mb-5 animate-fade-in-delay-1 max-w-2xl">
+            汇集推理小说、真实案件、影视游戏中的经典案例，为推理爱好者和创作者提供结构化的案件参考与延伸阅读指引。
           </p>
-          <div class="flex flex-wrap gap-x-8 gap-y-4 animate-fade-in-delay-2">
+          <div class="flex flex-wrap gap-x-6 gap-y-2 animate-fade-in-delay-2">
             <div>
-              <div class="text-3xl font-bold text-accent-400">{stats.total}</div>
-              <div class="text-sm text-primary-300 inline-flex items-center gap-1">
+              <div class="text-2xl font-bold text-accent-400">{stats.total}</div>
+              <div class="text-xs text-primary-300 inline-flex items-center gap-1">
                 案件总数
                 <button type="button" class="stat-info" aria-label="案件总数口径：库内全部案件条目数，按条目去重" title="口径：库内全部案件条目数，按条目去重">
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </button>
               </div>
             </div>
             <div>
-              <div class="text-3xl font-bold text-accent-400">{Object.keys(stats.bySourceType).length}</div>
-              <div class="text-sm text-primary-300 inline-flex items-center gap-1">
+              <div class="text-2xl font-bold text-accent-400">{Object.keys(stats.bySourceType).length}</div>
+              <div class="text-xs text-primary-300 inline-flex items-center gap-1">
                 来源类型
                 <button type="button" class="stat-info" aria-label="来源类型口径：按来源类型去重后的数量" title="口径：按来源类型去重后的数量">
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </button>
               </div>
             </div>
             <div>
-              <div class="text-3xl font-bold text-accent-400">{Object.keys(stats.byContinent).length}</div>
-              <div class="text-sm text-primary-300 inline-flex items-center gap-1">
+              <div class="text-2xl font-bold text-accent-400">{Object.keys(stats.byContinent).length}</div>
+              <div class="text-xs text-primary-300 inline-flex items-center gap-1">
                 覆盖大洲
                 <button type="button" class="stat-info" aria-label="覆盖大洲口径：按大洲去重后的数量" title="口径：按大洲去重后的数量">
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </button>
               </div>
             </div>
             <div>
-              <div class="text-3xl font-bold text-accent-400">{Object.keys(stats.byRegion).length}</div>
-              <div class="text-sm text-primary-300 inline-flex items-center gap-1">
+              <div class="text-2xl font-bold text-accent-400">{Object.keys(stats.byRegion).length}</div>
+              <div class="text-xs text-primary-300 inline-flex items-center gap-1">
                 国家/地区
                 <button type="button" class="stat-info" aria-label="国家/地区口径：按国家或地区去重后的数量" title="口径：按国家/地区去重后的数量">
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </button>
               </div>
             </div>
             <div>
-              <div class="text-3xl font-bold text-accent-400">{stats.avgDifficulty}</div>
-              <div class="text-sm text-primary-300 inline-flex items-center gap-1">
+              <div class="text-2xl font-bold text-accent-400">{stats.avgDifficulty}</div>
+              <div class="text-xs text-primary-300 inline-flex items-center gap-1">
                 平均难度
                 <button type="button" class="stat-info" aria-label="平均难度口径：全部案件综合难度的算术平均值，保留1位小数，范围0到5" title="口径：全部案件综合难度的算术平均值，保留1位小数，范围0–5">
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </button>
               </div>
             </div>
           </div>
-          {latestDate && <p class="text-xs text-primary-300/80 mt-4">数据更新至 {latestDate}</p>}
+          {latestDate && <p class="text-xs text-primary-300/80 mt-3">数据更新至 {latestDate}</p>}
         </div>
 
         <!-- 右侧：案件速览（首屏内容锚点，填补留白） -->
-        <aside class="w-full lg:w-[360px] lg:flex-shrink-0" aria-label="案件速览">
-          <div class="bg-white/10 rounded-2xl border border-white/15 p-5 backdrop-blur-sm">
+        <aside class="w-full lg:w-[320px] lg:flex-shrink-0" aria-label="案件速览">
+          <div class="bg-white/10 rounded-2xl border border-white/15 p-4 backdrop-blur-sm">
             <div class="flex items-center justify-between mb-3">
               <h2 class="text-white font-semibold">案件速览</h2>
               <button id="hero-shuffle" type="button" class="text-primary-200 hover:text-white text-sm inline-flex items-center gap-1 transition-colors">
@@ -120,7 +120,7 @@ const latestDate = cases
             <ul id="hero-pick-list" class="flex flex-col gap-2 mb-3">
               {heroPicks.map((c) => (
                 <li>
-                  <a href={`/fun_detective/case/${c.slug}`} class="hero-pick group flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 hover:bg-white/10 transition-colors">
+                  <a href={`/fun_detective/case/${c.slug}`} class="hero-pick group flex items-center justify-between gap-3 rounded-lg px-3 py-2 hover:bg-white/10 transition-colors">
                     <span class="min-w-0">
                       <span class="block text-sm font-medium text-white truncate group-hover:text-accent-300 transition-colors">{c.基本信息.案件名称}</span>
                       <span class="block text-xs text-primary-300 mt-0.5">{c.sourceType} · {c.region}</span>
@@ -229,13 +229,13 @@ const latestDate = cases
   </section>
 
   <!-- 案件列表 -->
-  <section class="py-12">
+  <section class="py-8">
     <div class="container-page">
-      <div class="flex items-center justify-between mb-6">
-        <h2 class="text-2xl font-bold">全部案件</h2>
-        <span id="result-count" class="text-stone-500" aria-live="off">共 {cases.length} 条</span>
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-bold">全部案件</h2>
+        <span id="result-count" class="text-stone-500 text-sm" aria-live="off">共 {cases.length} 条</span>
       </div>
-      <div id="case-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div id="case-grid" class="case-masonry">
         {cases.map((caseData) => (
           <CaseCard caseData={caseData} />
         ))}
@@ -246,18 +246,89 @@ const latestDate = cases
         </svg>
         <p class="text-stone-500">没有找到匹配的案件</p>
       </div>
-      <!-- 加载更多按钮 -->
-      <div id="load-more-container" class="text-center mt-8">
+      <!-- 加载更多按钮（JS禁用时的降级方案） -->
+      <div id="load-more-container" class="text-center mt-6">
         <button id="load-more-btn" class="btn btn-primary">
           加载更多
         </button>
+      </div>
+      <!-- 无限滚动哨兵元素 -->
+      <div id="scroll-sentinel" class="h-1" aria-hidden="true"></div>
+      <!-- 全部加载完成提示 -->
+      <div id="all-loaded" class="hidden text-center py-6 text-sm text-stone-400">
+        已加载全部案件
       </div>
       <!-- 屏幕阅读器结果播报 -->
       <div id="search-live" class="sr-only" role="status" aria-live="polite"></div>
     </div>
   </section>
 
+  <!-- 回到顶部按钮 -->
+  <button id="back-to-top" type="button" aria-label="回到顶部" class="back-to-top">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+    </svg>
+  </button>
+
   <style>
+    /* 瀑布流布局 */
+    .case-masonry {
+      column-count: 1;
+      column-gap: 16px;
+    }
+    @media (min-width: 768px) {
+      .case-masonry {
+        column-count: 2;
+      }
+    }
+    @media (min-width: 1024px) {
+      .case-masonry {
+        column-count: 3;
+      }
+    }
+    .case-masonry > article {
+      break-inside: avoid;
+      margin-bottom: 16px;
+      display: inline-block;
+      width: 100%;
+    }
+
+    /* 回到顶部按钮 */
+    .back-to-top {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: #4338ca;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(67, 56, 202, 0.4);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(10px);
+      transition: all 0.2s ease;
+      z-index: 40;
+      cursor: pointer;
+      border: none;
+    }
+    .back-to-top.visible {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+    .back-to-top:hover {
+      background: #3730a3;
+      transform: translateY(-2px);
+    }
+    .back-to-top:focus-visible {
+      outline: 2px solid #6366f1;
+      outline-offset: 2px;
+    }
+
     /* 统计口径提示按钮 */
     .stat-info {
       display: inline-flex;
@@ -589,7 +660,7 @@ const latestDate = cases
       count: resultCount,
       noResults,
       live: liveRegion,
-      pageSize: 12,
+      pageSize: 50,
       syncUrl: true,
       extraFilter: (item) => {
         const matchRegion = !selectedRegion || item.region === selectedRegion;
@@ -599,6 +670,50 @@ const latestDate = cases
     });
 
     updateTriggerText();
+
+    // ===== 无限滚动 =====
+    const sentinel = document.getElementById('scroll-sentinel');
+    const allLoaded = document.getElementById('all-loaded');
+    if (sentinel && 'IntersectionObserver' in window) {
+      const observer = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) {
+          const loadBtn = document.getElementById('load-more-btn') as HTMLButtonElement | null;
+          const container = document.getElementById('load-more-container');
+          if (loadBtn && !loadBtn.disabled && container && !container.classList.contains('hidden')) {
+            loadBtn.click();
+          }
+        }
+      }, { rootMargin: '300px' });
+      observer.observe(sentinel);
+    }
+
+    // 监听加载更多容器状态，全部加载完显示提示
+    const loadContainer = document.getElementById('load-more-container');
+    if (loadContainer && allLoaded) {
+      const observer = new MutationObserver(() => {
+        if (loadContainer.classList.contains('hidden')) {
+          allLoaded.classList.remove('hidden');
+        } else {
+          allLoaded.classList.add('hidden');
+        }
+      });
+      observer.observe(loadContainer, { attributes: true, attributeFilter: ['class'] });
+    }
+
+    // ===== 回到顶部 =====
+    const backToTop = document.getElementById('back-to-top');
+    if (backToTop) {
+      window.addEventListener('scroll', () => {
+        if (window.scrollY > 500) {
+          backToTop.classList.add('visible');
+        } else {
+          backToTop.classList.remove('visible');
+        }
+      }, { passive: true });
+      backToTop.addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    }
 
     // ===== Hero「换一批」 =====
     const pickList = document.getElementById('hero-pick-list');

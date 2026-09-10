@@ -1,8 +1,25 @@
 ---
 import GameLayout from '@layouts/GameLayout.astro';
+
+const isDev = import.meta.env.DEV;
 ---
 
 <GameLayout title="东方快车：推理审判" description="可交互推理游戏原型">
+  <!-- 线上环境遮罩：游戏仅本地测试 -->
+  {!isDev && (
+    <div class="fixed inset-0 z-[100] flex items-center justify-center" style="background: rgba(13,13,18,0.97); backdrop-filter: blur(8px);">
+      <div class="text-center px-6 max-w-md">
+        <div class="text-6xl mb-6">🔒</div>
+        <h2 class="text-2xl font-bold mb-3" style="color: #e8e8f0;">游戏原型内部测试中</h2>
+        <p class="text-base mb-2" style="color: #8888a0;">可玩游戏原型目前仅在本地开发环境开放。</p>
+        <p class="text-sm mb-8" style="color: #666680;">线上版本暂不提供游戏体验，您可以继续浏览案件资料库。</p>
+        <a href="/fun_detective/" class="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-bold text-sm transition-colors" style="background: #f59e0b; color: #0d0d12;">
+          返回案件资料库
+        </a>
+      </div>
+    </div>
+  )}
+
   <!-- 加载态容器 -->
   <div id="game-loading" class="fixed inset-0 z-50 flex items-center justify-center" style="background: var(--game-bg, #0d0d12);">
     <div class="text-center">

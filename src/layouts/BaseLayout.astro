@@ -6,7 +6,9 @@ interface Props {
   description?: string;
 }
 
-const { title, description = '全球虚拟真实案件案例库，为小说创作和游戏设计提供灵感' } = Astro.props;
+const { title, description = '全球虚拟真实案件案例库，为推理爱好者和创作者提供结构化参考' } = Astro.props;
+// 线上环境屏蔽游戏入口，本地开发环境保留
+const isDev = import.meta.env.DEV;
 ---
 
 <!DOCTYPE html>
@@ -36,7 +38,7 @@ const { title, description = '全球虚拟真实案件案例库，为小说创�
             <a href="/fun_detective/categories/推理小说" class="hover:text-accent-400 transition-colors">推理小说</a>
             <a href="/fun_detective/categories/真实案件" class="hover:text-accent-400 transition-colors">真实案件</a>
             <a href="/fun_detective/categories/游戏" class="hover:text-accent-400 transition-colors">游戏案例</a>
-            <a href="/fun_detective/game-design" class="hover:text-accent-400 transition-colors">游戏设计</a>
+            {isDev && <a href="/fun_detective/game-design" class="hover:text-accent-400 transition-colors">游戏设计</a>}
             <a href="/fun_detective/about" class="hover:text-accent-400 transition-colors">关于</a>
           </nav>
           <button id="mobile-menu-btn" class="md:hidden p-2 hover:bg-primary-800 rounded-lg">
@@ -52,7 +54,7 @@ const { title, description = '全球虚拟真实案件案例库，为小说创�
             <a href="/fun_detective/categories/推理小说" class="px-3 py-2 rounded-lg hover:bg-primary-800">推理小说</a>
             <a href="/fun_detective/categories/真实案件" class="px-3 py-2 rounded-lg hover:bg-primary-800">真实案件</a>
             <a href="/fun_detective/categories/游戏" class="px-3 py-2 rounded-lg hover:bg-primary-800">游戏案例</a>
-            <a href="/fun_detective/game-design" class="px-3 py-2 rounded-lg hover:bg-primary-800">游戏设计</a>
+            {isDev && <a href="/fun_detective/game-design" class="px-3 py-2 rounded-lg hover:bg-primary-800">游戏设计</a>}
             <a href="/fun_detective/about" class="px-3 py-2 rounded-lg hover:bg-primary-800">关于</a>
           </nav>
         </div>
@@ -70,7 +72,7 @@ const { title, description = '全球虚拟真实案件案例库，为小说创�
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
             <h3 class="text-white font-bold text-lg mb-4">Fun Detective</h3>
-            <p class="text-sm">全球虚拟真实案件案例库，为小说创作和游戏设计提供灵感与参考。</p>
+            <p class="text-sm">全球虚拟真实案件案例库，为推理爱好者和创作者提供结构化的案件参考与延伸阅读指引。</p>
           </div>
           <div>
             <h3 class="text-white font-bold text-lg mb-4">快速链接</h3>
@@ -79,7 +81,7 @@ const { title, description = '全球虚拟真实案件案例库，为小说创�
               <li><a href="/fun_detective/categories/推理小说" class="hover:text-white transition-colors">推理小说</a></li>
               <li><a href="/fun_detective/categories/真实案件" class="hover:text-white transition-colors">真实案件</a></li>
               <li><a href="/fun_detective/categories/游戏" class="hover:text-white transition-colors">游戏案例</a></li>
-              <li><a href="/fun_detective/game-design" class="hover:text-white transition-colors">游戏设计</a></li>
+              {isDev && <li><a href="/fun_detective/game-design" class="hover:text-white transition-colors">游戏设计</a></li>}
             </ul>
           </div>
           <div>
