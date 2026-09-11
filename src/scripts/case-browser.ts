@@ -9,6 +9,7 @@ export interface CaseItem {
   continent: string;
   region: string;
   difficulty: number;
+  year: number;
   date: string;
   searchText: string;
 }
@@ -55,6 +56,7 @@ export function initCaseBrowser(opts: BrowserOptions): CaseBrowser {
       continent: element.dataset.continent || '',
       region: element.dataset.region || '',
       difficulty: parseFloat(element.dataset.difficulty || '0'),
+      year: parseInt(element.dataset.year || '0', 10),
       date: element.dataset.date || '',
       searchText: (element.dataset.searchtext || '').toLowerCase(),
     };
@@ -160,6 +162,10 @@ export function initCaseBrowser(opts: BrowserOptions): CaseBrowser {
             return b.difficulty - a.difficulty;
           case 'difficulty-asc':
             return a.difficulty - b.difficulty;
+          case 'year-desc':
+            return b.year - a.year;
+          case 'year-asc':
+            return a.year - b.year;
           case 'date':
           default:
             return b.date.localeCompare(a.date);
