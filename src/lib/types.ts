@@ -1,4 +1,4 @@
-// 案件数据类型定义
+﻿// 案件数据类型定义
 
 export interface ReferenceLink {
   标题: string;
