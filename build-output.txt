@@ -1,0 +1,45 @@
+﻿
+> fun-detective@1.0.0 build
+> node scripts/validate-case-data.cjs && node scripts/scan-english-fragments.cjs && astro build && node scripts/smoke-test.cjs --dist dist
+
+═══════════════════════════════════════════
+  案件数据 Schema 校验
+═══════════════════════════════════════════
+
+✅  OK  data-orient-express.js
+   全部通过
+
+✅  OK  data-phoenix-wright.js
+   全部通过
+
+✅  OK  data-study-in-scarlet.js
+   全部通过
+
+═══════════════════════════════════════════
+  总计: 3 个案件, 0 个错误, 0 个警告
+═══════════════════════════════════════════
+
+✅ 校验通过。
+node.exe : <anonymous_script>:1
+所在位置 行:1 字符: 1
++ & "C:\Users\Administrator\AppData\Local\Doubao\User Data\sandbox_runt ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (<anonymous_script>:1:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+﻿{
+^
+
+SyntaxError: Unexpected token '﻿', "﻿{
+  "id":"... is not valid JSON
+    at JSON.parse (<anonymous>)
+    at Object.<anonymous> (E:\Work\AIProjects\fun_detective\scripts\scan-english-fragments.cjs:91:21)
+    at Module._compile (node:internal/modules/cjs/loader:1781:14)
+    at Object..js (node:internal/modules/cjs/loader:1913:10)
+    at Module.load (node:internal/modules/cjs/loader:1505:32)
+    at Function._load (node:internal/modules/cjs/loader:1309:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)
+    at node:internal/main/run_main_module:36:49
+
+Node.js v22.23.2
