@@ -694,6 +694,11 @@ const latestDate = cases
       },
     });
 
+    // 年代筛选变化时触发重新筛选
+    filterYear.addEventListener('change', () => {
+      browser.refresh();
+    });
+
     updateTriggerText();
 
     // ===== 无限滚动 =====
