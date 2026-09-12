@@ -692,6 +692,31 @@ const latestDate = cases
         }
         return matchRegion && matchContinent && matchYear;
       },
+      onAfterRender: (shown, total) => {
+        // 根据结果数量动态调整列数，避免少量结果时出现整列空白
+        const isDesktop = window.innerWidth >= 1024;
+        const isTablet = window.innerWidth >= 768 && window.innerWidth < 1024;
+        let cols = 3;
+        if (!isDesktop && !isTablet) {
+          cols = 1;
+        } else if (isTablet) {
+          cols = total <= 2 ? 1 : 2;
+        } else {
+          // 桌面端：结果少时减少列数，避免整列空白
+          if (total <= 3) cols = 1;
+          else if (total <= 6) cols = 2;
+          else cols = 3;
+        }
+        caseGrid.style.columnCount = String(cols);
+        // 少量结果时居中显示
+        if (cols === 1 && total <= 3) {
+          caseGrid.style.maxWidth = '480px';
+          caseGrid.style.margin = '0 auto';
+        } else {
+          caseGrid.style.maxWidth = '';
+          caseGrid.style.margin = '';
+        }
+      },
     });
 
     // 年代筛选变化时触发重新筛选
