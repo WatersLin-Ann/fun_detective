@@ -9,8 +9,8 @@ export interface CaseItem {
   continent: string;
   region: string;
   difficulty: number;
-  year: number;
   date: string;
+  year: number;
   searchText: string;
 }
 
@@ -56,8 +56,8 @@ export function initCaseBrowser(opts: BrowserOptions): CaseBrowser {
       continent: element.dataset.continent || '',
       region: element.dataset.region || '',
       difficulty: parseFloat(element.dataset.difficulty || '0'),
-      year: parseInt(element.dataset.year || '0', 10),
       date: element.dataset.date || '',
+      year: parseInt(element.dataset.year || '0', 10),
       searchText: (element.dataset.searchtext || '').toLowerCase(),
     };
   });

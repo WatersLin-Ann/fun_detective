@@ -1,4 +1,4 @@
-﻿// 案件数据类型定义
+// 案件数据类型定义
 
 export interface ReferenceLink {
   标题: string;
@@ -23,11 +23,11 @@ export interface BasicInfo {
   大洲: string;
   地区: string;
   年代?: string;
-  发表年份?: number;
   案件状态: string;
   一句话简介: string;
   参考链接?: ReferenceLink[];
   推荐视频?: RelatedVideo[];
+  发表年份?: number;
 }
 
 export interface StoryView {
