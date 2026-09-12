@@ -76,17 +76,13 @@ const searchText = [
   data-year={基本信息.发表年份 || ''}
   data-searchtext={searchText}
 >
-  <!-- 来源类型视觉封面（确定性生成，替代空白图片区） -->
+  <!-- 来源类型视觉封面（渐变色底 + 淡化图标） -->
   <div
     class="case-cover"
     role="img"
     aria-label={`${cover.label} · ${caseData.continent}${caseData.region} · ${基本信息.案件名称}`}
     style={`background:${cover.gradient};`}
   >
-    <div class="case-cover-meta">
-      <span class="case-cover-type">{cover.label}</span>
-      <span class="case-cover-region">{caseData.continent} · {caseData.region}</span>
-    </div>
     <svg class="case-cover-icon" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       {cover.icon === 'book' && (
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
@@ -106,16 +102,16 @@ const searchText = [
     </svg>
   </div>
 
-  <!-- 卡片头部 -->
-  <div class="p-4 flex-1 flex flex-col">
-    <div class="flex items-start justify-between gap-2 mb-2">
-      <span class={`tag ${difficultyLevel === 'easy' ? 'difficulty-easy' : difficultyLevel === 'medium' ? 'difficulty-medium' : 'difficulty-hard'}`}>
+  <!-- 卡片内容区 -->
+  <div class="p-3 flex-1 flex flex-col">
+    <div class="flex items-center justify-between gap-2 mb-1.5">
+      <span class={`tag tag-sm ${difficultyLevel === 'easy' ? 'difficulty-easy' : difficultyLevel === 'medium' ? 'difficulty-medium' : 'difficulty-hard'}`}>
         难度 {difficulty.toFixed(1)}
       </span>
-      <span class="tag tag-primary">{caseData.sourceType}</span>
+      <span class="tag tag-sm tag-primary">{caseData.sourceType}</span>
     </div>
 
-    <h3 class="text-base font-bold mb-2 line-clamp-2 card-title">
+    <h3 class="text-sm font-bold mb-1.5 line-clamp-1 card-title">
       <a
         class="card-stretched-link"
         href={`/fun_detective/case/${caseData.slug}`}
@@ -125,31 +121,31 @@ const searchText = [
       </a>
     </h3>
 
-    <p class="text-stone-600 text-sm mb-3 line-clamp-2 flex-1">
+    <p class="text-stone-600 text-xs mb-2 line-clamp-2 flex-1 leading-relaxed">
       {基本信息.一句话简介}
     </p>
 
-    <!-- 标签 -->
+    <!-- 诡计标签 -->
     <div class="flex flex-wrap gap-1 mb-2">
       {(设计视图.诡计类型 || []).slice(0, 2).map((trick) => (
-        <span class="tag tag-accent">{trick}</span>
+        <span class="tag tag-sm tag-accent">{trick}</span>
       ))}
     </div>
 
     <!-- 延伸阅读引导 -->
     {hasExtendedReading && (
-      <div class="flex items-center gap-3 text-xs text-stone-500 mb-2">
+      <div class="flex items-center gap-3 text-[11px] text-stone-500 mb-2">
         {refLinkCount > 0 && (
           <span class="inline-flex items-center gap-1">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.837 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
             </svg>
             {refLinkCount}篇资料
           </span>
         )}
         {videoCount > 0 && (
           <span class="inline-flex items-center gap-1">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
             </svg>
             {videoCount}个视频
@@ -158,31 +154,37 @@ const searchText = [
       </div>
     )}
 
-    <!-- 元信息 -->
-    <div class="flex items-center justify-between text-xs text-stone-500 pt-2 border-t border-stone-100">
-      <span class="flex items-center gap-1">
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <!-- 底部元信息 -->
+    <div class="flex items-center justify-between text-[11px] text-stone-500 pt-2 border-t border-stone-100 mt-auto">
+      <span class="inline-flex items-center gap-1 truncate">
+        <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
-        {caseData.continent} · {caseData.region}
+        <span class="truncate">{caseData.region}</span>
       </span>
-      <span class="flex items-center gap-2">
+      <span class="flex items-center gap-2 flex-shrink-0">
         {基本信息.发表年份 && (
-          <span class="flex items-center gap-0.5">
+          <span class="inline-flex items-center gap-0.5">
             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
             {基本信息.发表年份}
           </span>
         )}
-        <span>{基本信息.案件状态}</span>
+        {基本信息.案件状态 && <span>{基本信息.案件状态}</span>}
       </span>
     </div>
   </div>
 </article>
 
 <style>
+  .line-clamp-1 {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
   .line-clamp-2 {
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -196,47 +198,31 @@ const searchText = [
     overflow: hidden;
   }
 
-  /* ===== 卡片视觉封面 ===== */
+  /* ===== 卡片视觉封面（瘦身版） ===== */
   .card-clickable {
     position: relative;
   }
   .case-cover {
     position: relative;
-    height: 72px;
+    height: 40px;
     overflow: hidden;
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    padding: 10px 12px;
-    color: rgba(255, 255, 255, 0.95);
-  }
-  .case-cover-meta {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    z-index: 1;
-  }
-  .case-cover-type {
-    align-self: flex-start;
-    font-size: 11px;
-    font-weight: 600;
-    padding: 1px 8px;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.18);
-    backdrop-filter: blur(2px);
-  }
-  .case-cover-region {
-    font-size: 10px;
-    color: rgba(255, 255, 255, 0.82);
+    flex-shrink: 0;
   }
   .case-cover-icon {
     position: absolute;
-    right: 12px;
+    right: 10px;
     top: 50%;
     transform: translateY(-50%);
-    width: 40px;
-    height: 40px;
-    color: rgba(255, 255, 255, 0.12);
+    width: 28px;
+    height: 28px;
+    color: rgba(255, 255, 255, 0.18);
+  }
+
+  /* ===== 小号标签 ===== */
+  .tag-sm {
+    font-size: 10px !important;
+    padding: 1px 6px !important;
+    line-height: 1.5;
   }
 
   /* ===== 移动端横向布局 ===== */
@@ -245,19 +231,19 @@ const searchText = [
       flex-direction: row !important;
     }
     .case-cover {
-      width: 40%;
+      width: 32%;
       height: auto;
       min-height: 100%;
       flex-shrink: 0;
     }
     .case-cover-icon {
-      width: 32px;
-      height: 32px;
-      right: 8px;
+      width: 24px;
+      height: 24px;
+      right: 6px;
     }
     .card-clickable > div:not(.case-cover) {
-      width: 60%;
-      padding: 12px !important;
+      width: 68%;
+      padding: 10px !important;
     }
   }
 
