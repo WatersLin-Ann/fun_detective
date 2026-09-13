@@ -1,5 +1,5 @@
 // 案件数据加载器
-import type { CaseData, CaseWithSlug } from './types';
+import type { CaseData, CaseWithSlug, RelatedWork, RelationType } from './types';
 
 // 导入所有案件 JSON 文件（Vite 静态导入）
 const caseModules = import.meta.glob('../../cases/**/*.json', {
@@ -57,12 +57,16 @@ export function loadAllCases(): CaseWithSlug[] {
 
 // 兼容旧数据：根据地区推断大洲
 function inferContinent(region: string): string {
-  const eurasia = ['中国', '日本', '韩国', '英国', '法国', '德国', '芬兰', '爱沙尼亚', '葡萄牙', '俄罗斯', '苏联'];
+  const asia = ['中国', '日本', '韩国', '印度', '约旦'];
+  const europe = ['英国', '法国', '德国', '芬兰', '爱沙尼亚', '葡萄牙', '西班牙', '俄罗斯', '苏联', '挪威', '荷兰'];
   const northAmerica = ['美国', '加拿大'];
+  const southAmerica = ['阿根廷'];
   const oceania = ['澳大利亚', '新西兰'];
 
-  if (eurasia.includes(region)) return '欧亚大陆';
-  if (northAmerica.includes(region)) return '北美';
+  if (asia.includes(region)) return '亚洲';
+  if (europe.includes(region)) return '欧洲';
+  if (northAmerica.includes(region)) return '北美洲';
+  if (southAmerica.includes(region)) return '南美洲';
   if (oceania.includes(region)) return '大洋洲';
   return '其他';
 }
@@ -82,8 +86,8 @@ export function getSourceTypes(): string[] {
 // 获取所有大洲
 export function getContinents(): string[] {
   const cases = loadAllCases();
-  // 按固定顺序排序：欧亚大陆、北美、大洋洲、其他
-  const order = ['欧亚大陆', '北美', '大洋洲', '其他'];
+  // 按固定顺序排序：亚洲、欧洲、北美洲、南美洲、大洋洲、其他
+  const order = ['亚洲', '欧洲', '北美洲', '南美洲', '大洋洲', '其他'];
   const continents = [...new Set(cases.map((c) => c.continent))];
   return continents.sort((a, b) => {
     const ia = order.indexOf(a);
@@ -185,4 +189,100 @@ export function getGameTemplates(): Record<string, any> {
 // 获取所有游戏案例
 export function getGameCases(): CaseWithSlug[] {
   return loadAllCases().filter((c) => c.sourceType === '游戏');
+}
+
+// ========== 关联作品：反向索引 ==========
+
+// 关联关系反向映射表
+const reverseRelationMap: Record<RelationType, RelationType> = {
+  '改编为': '改编自',
+  '改编自': '改编为',
+  '原型为': '改编为',
+  '衍生': '灵感来源',
+  '灵感来源': '衍生',
+  '同系列': '同系列',
+  '翻拍': '翻拍',
+  '其他': '其他',
+};
+
+/**
+ * 构建关联作品反向索引
+ * key: 被关联的站内Slug
+ * value: 反向关联的作品信息数组（含来源案件的 slug 和基本信息）
+ */
+function buildReverseRelationIndex(): Map<string, Array<{ work: RelatedWork; fromSlug: string; fromName: string; fromSourceType: string }>> {
+  const index = new Map<string, Array<{ work: RelatedWork; fromSlug: string; fromName: string; fromSourceType: string }>>();
+  const cases = loadAllCases();
+
+  for (const c of cases) {
+    const works = c.基本信息.关联作品 || [];
+    for (const work of works) {
+      if (work.站内Slug) {
+        const key = work.站内Slug;
+        if (!index.has(key)) {
+          index.set(key, []);
+        }
+        index.get(key)!.push({
+          work,
+          fromSlug: c.slug,
+          fromName: c.基本信息.案件名称,
+          fromSourceType: c.sourceType,
+        });
+      }
+    }
+  }
+
+  return index;
+}
+
+/**
+ * 获取指定案件的所有关联作品（正向 + 反向合并）
+ * 正向：当前案件的 基本信息.关联作品
+ * 反向：其他案件的 关联作品 中通过 站内Slug 指向当前案件的条目
+ */
+export function getRelatedWorks(slug: string): RelatedWork[] {
+  const currentCase = getCaseBySlug(slug);
+  if (!currentCase) return [];
+
+  // 正向关联
+  const forwardWorks: RelatedWork[] = [...(currentCase.基本信息.关联作品 || [])];
+
+  // 反向关联
+  const reverseIndex = buildReverseRelationIndex();
+  const reverseEntries = reverseIndex.get(slug) || [];
+
+  const reverseWorks: RelatedWork[] = reverseEntries.map(({ work, fromSlug, fromName, fromSourceType }) => {
+    // 将对方案件本身作为关联作品展示
+    const reverseRelation = reverseRelationMap[work.关联关系] || '其他';
+    // 推断对方作品类型：根据来源类型映射
+    const workTypeMap: Record<string, RelatedWork['作品类型']> = {
+      '推理小说': '小说',
+      '影视': '电影',
+      '游戏': '游戏',
+      '真实案件': '其他',
+      '历史谜案': '其他',
+      '其他': '其他',
+    };
+    return {
+      作品名称: fromName,
+      作品类型: workTypeMap[fromSourceType] || '其他',
+      关联关系: reverseRelation,
+      站内Slug: fromSlug,
+      _isReverse: true,
+    };
+  });
+
+  // 合并并去重（按 站内Slug 或 作品名称+作品类型 去重）
+  const seen = new Set<string>();
+  const result: RelatedWork[] = [];
+
+  for (const work of [...forwardWorks, ...reverseWorks]) {
+    const key = work.站内Slug || `${work.作品名称}-${work.作品类型}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      result.push(work);
+    }
+  }
+
+  return result;
 }

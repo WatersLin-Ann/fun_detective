@@ -1,0 +1,78 @@
+---
+import type { RelatedWork } from '@lib/types';
+
+interface Props {
+  works: RelatedWork[];
+}
+
+const { works } = Astro.props;
+
+// 作品类型图标映射
+const workTypeIcon: Record<string, string> = {
+  '小说': '📖',
+  '电影': '🎬',
+  '电视剧': '📺',
+  '纪录片': '🎥',
+  '游戏': '🎮',
+  '动画': '🎨',
+  '漫画': '📚',
+  '其他': '🔗',
+};
+
+// 关联关系标签颜色
+const relationTagClass: Record<string, string> = {
+  '改编为': 'bg-blue-100 text-blue-800',
+  '改编自': 'bg-green-100 text-green-800',
+  '原型为': 'bg-purple-100 text-purple-800',
+  '衍生': 'bg-amber-100 text-amber-800',
+  '灵感来源': 'bg-pink-100 text-pink-800',
+  '同系列': 'bg-indigo-100 text-indigo-800',
+  '翻拍': 'bg-orange-100 text-orange-800',
+  '其他': 'bg-stone-100 text-stone-700',
+};
+---
+
+{works.length > 0 && (
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    {works.map((work) => {
+      const isInternal = Boolean(work.站内Slug);
+      const href = isInternal
+        ? `/fun_detective/case/${encodeURI(work.站内Slug!)}`
+        : work.外部链接 || '#';
+      const linkAttrs = isInternal
+        ? {}
+        : { target: '_blank', rel: 'noopener noreferrer' };
+
+      return (
+        <a
+          href={href}
+          {...linkAttrs}
+          class="block border border-stone-200 rounded-lg p-4 hover:border-primary-400 hover:bg-primary-50 transition-colors group"
+        >
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-xl flex-shrink-0">{workTypeIcon[work.作品类型] || '🔗'}</span>
+            <span class="text-sm text-stone-500">{work.作品类型}</span>
+            {work.年份 && <span class="text-sm text-stone-400">{work.年份}</span>}
+            <span class={`tag text-xs ml-auto whitespace-nowrap ${relationTagClass[work.关联关系] || 'bg-stone-100 text-stone-700'}`}>
+              {work.关联关系}
+            </span>
+          </div>
+          <h3 class="font-bold text-lg text-primary-800 group-hover:text-primary-700 transition-colors mb-1">
+            {work.作品名称}
+          </h3>
+          {work.创作者 && (
+            <div class="text-sm text-stone-600 mb-1">{work.创作者}</div>
+          )}
+          {work.简介 && (
+            <p class="text-sm text-stone-500 line-clamp-2">{work.简介}</p>
+          )}
+          <div class="mt-2 text-right">
+            <span class="text-xs text-primary-600 font-medium">
+              {isInternal ? '查看详情 →' : '了解更多 ↗'}
+            </span>
+          </div>
+        </a>
+      );
+    })}
+  </div>
+)}

@@ -15,6 +15,22 @@ export interface RelatedVideo {
   视频类型?: '解说' | '纪录片' | '预告片' | '实况' | '评测' | '其他';
 }
 
+export type WorkType = '小说' | '电影' | '电视剧' | '纪录片' | '游戏' | '动画' | '漫画' | '其他';
+export type RelationType = '改编为' | '改编自' | '原型为' | '衍生' | '灵感来源' | '同系列' | '翻拍' | '其他';
+
+export interface RelatedWork {
+  作品名称: string;
+  作品类型: WorkType;
+  关联关系: RelationType;
+  创作者?: string;
+  年份?: number;
+  简介?: string;
+  站内Slug?: string;
+  外部链接?: string;
+  /** 内部标记：是否为反向关联自动生成 */
+  _isReverse?: boolean;
+}
+
 export interface BasicInfo {
   案件名称: string;
   来源类型: string;
@@ -27,6 +43,7 @@ export interface BasicInfo {
   一句话简介: string;
   参考链接?: ReferenceLink[];
   推荐视频?: RelatedVideo[];
+  关联作品?: RelatedWork[];
   发表年份?: number;
 }
 
