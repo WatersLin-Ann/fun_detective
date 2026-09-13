@@ -58,7 +58,7 @@ export function loadAllCases(): CaseWithSlug[] {
 // 兼容旧数据：根据地区推断大洲
 function inferContinent(region: string): string {
   const asia = ['中国', '日本', '韩国', '印度', '约旦'];
-  const europe = ['英国', '法国', '德国', '芬兰', '爱沙尼亚', '葡萄牙', '西班牙', '俄罗斯', '苏联', '挪威', '荷兰'];
+  const europe = ['英国', '法国', '德国', '芬兰', '爱沙尼亚', '葡萄牙', '西班牙', '俄罗斯', '苏联', '挪威', '荷兰', '波兰', '意大利'];
   const northAmerica = ['美国', '加拿大'];
   const southAmerica = ['阿根廷'];
   const oceania = ['澳大利亚', '新西兰'];

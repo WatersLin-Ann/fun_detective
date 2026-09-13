@@ -46,6 +46,37 @@ const currentTrickTypes = new Set(设计视图.诡计类型 || []);
 const currentRegion = caseData.region;
 const currentDifficulty = 设计视图.难度评分?.综合 || 3;
 
+// 轻量 Markdown 渲染：支持 **粗体**，转义 HTML，保留换行
+// 兼容字符串、数组、对象等多种输入格式
+function renderMd(text: unknown): string {
+  if (!text) return '';
+  // 数组：逐行处理后用换行连接
+  if (Array.isArray(text)) {
+    return text.map((item) => renderMd(item)).filter(Boolean).join('\n');
+  }
+  // 对象：尝试提取文本字段
+  if (typeof text === 'object') {
+    const obj = text as Record<string, unknown>;
+    const parts: string[] = [];
+    for (const key of ['姓名', '身份', '角色', '描述', '内容', '时间', '事件', '与案件关系', '动机', '关键行为']) {
+      if (obj[key]) parts.push(`${key}：${obj[key]}`);
+    }
+    if (parts.length === 0) {
+      // 兜底：所有值拼接
+      for (const v of Object.values(obj)) {
+        if (typeof v === 'string' && v.trim()) parts.push(v);
+      }
+    }
+    return renderMd(parts.join(' | '));
+  }
+  let html = String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  return html;
+}
+
 const relatedCases = allCases
   .filter((c) => c.slug !== caseData.slug)
   .map((c) => {
@@ -163,21 +194,21 @@ const videoSourceIcon: Record<string, string> = {
       {故事视图.故事摘要 && (
         <div class="card p-6 mb-6">
           <h2 class="text-xl font-bold mb-3 text-primary-800">故事摘要</h2>
-          <p class="text-stone-700 leading-relaxed whitespace-pre-wrap">{故事视图.故事摘要}</p>
+          <p class="text-stone-700 leading-relaxed whitespace-pre-wrap" set:html={renderMd(故事视图.故事摘要)} />
         </div>
       )}
 
       {故事视图.完整故事 && (
         <div class="card p-6 mb-6">
           <h2 class="text-xl font-bold mb-3 text-primary-800">完整故事</h2>
-          <p class="text-stone-700 leading-relaxed whitespace-pre-wrap">{故事视图.完整故事}</p>
+          <p class="text-stone-700 leading-relaxed whitespace-pre-wrap" set:html={renderMd(故事视图.完整故事)} />
         </div>
       )}
 
       {故事视图.人物关系 && (
         <div class="card p-6 mb-6">
           <h2 class="text-xl font-bold mb-3 text-primary-800">👥 人物关系</h2>
-          <p class="text-stone-700 leading-relaxed whitespace-pre-wrap">{故事视图.人物关系}</p>
+          <p class="text-stone-700 leading-relaxed whitespace-pre-wrap" set:html={renderMd(故事视图.人物关系)} />
         </div>
       )}
 
@@ -204,14 +235,14 @@ const videoSourceIcon: Record<string, string> = {
       {故事视图.关键时间线 && (
         <div class="card p-6 mb-6">
           <h2 class="text-xl font-bold mb-3 text-primary-800">⏱️ 关键时间线</h2>
-          <p class="text-stone-700 leading-relaxed whitespace-pre-wrap">{故事视图.关键时间线}</p>
+          <p class="text-stone-700 leading-relaxed whitespace-pre-wrap" set:html={renderMd(故事视图.关键时间线)} />
         </div>
       )}
 
       {故事视图.结局 && (
         <div class="card p-6 mb-6 border-l-4 border-accent-500">
           <h2 class="text-xl font-bold mb-3 text-primary-800">🔍 结局/真相</h2>
-          <p class="text-stone-700 leading-relaxed whitespace-pre-wrap">{故事视图.结局}</p>
+          <p class="text-stone-700 leading-relaxed whitespace-pre-wrap" set:html={renderMd(故事视图.结局)} />
         </div>
       )}
 
